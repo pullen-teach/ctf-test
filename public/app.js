@@ -18,6 +18,32 @@
     return ((performance.now() - started) / 1000).toFixed(1);
   }
 
+  // v86 needs WebAssembly. Some managed browsers (work laptops, locked-down
+  // school devices) switch it off by policy, e.g. Chrome's
+  // DefaultJavaScriptJitSetting = 2. Then run lite mode (lite.js): a simulated
+  // shell with the same missions. Add ?lite to the address to force it.
+  const forceLite = new URLSearchParams(location.search).has("lite");
+  if (typeof WebAssembly !== "object" || forceLite) {
+    bootText.textContent = "Starting Linux Quest lite mode…";
+    setStatus("Starting lite mode…");
+    meter.style.width = "60%";
+    const tag = document.querySelector(".tag");
+    window.quest = { emulator: null, done, lite: true };
+    window.LinuxQuestLite.start(document.getElementById("terminal"), { onMission: markDone })
+      .then(() => {
+        meter.style.width = "100%";
+        bootEl.classList.add("gone");
+        if (tag) tag.textContent = "Lite mode";
+        setStatus("Ready (lite mode) in " + seconds() + " s");
+        window.questReadySeconds = Number(seconds());
+      })
+      .catch((e) => {
+        bootText.textContent = "Lite mode could not start: " + e.message;
+        setStatus("Can't start");
+      });
+    return;
+  }
+
   const emulator = new V86({
     wasm_path: "v86/v86.wasm",
     bios: { url: "bios/seabios.bin" },
