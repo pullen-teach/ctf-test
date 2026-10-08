@@ -1,12 +1,12 @@
 # Mission complete
 
-You learned how to teach yourself a command, then used four tools that security analysts use every day:
+You learned to move around a Linux system and to teach yourself any command, then used the tools security analysts reach for every day:
 
 | Tool | What it did |
 |---|---|
+| `pwd`, `ls`, `cd` | moved you through a folder trail |
 | `cat` | read files, and `cat -n` numbered the lines |
 | `--help` | made every command explain itself |
-| `pwd`, `cd`, `cd ..` | moved you through a folder trail |
 | `ls -a` | showed hidden files |
 | `find` | searched folders by file name |
 | `grep` | searched 40,000 lines in a second |

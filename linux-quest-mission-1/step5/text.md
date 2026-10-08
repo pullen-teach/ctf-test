@@ -1,26 +1,28 @@
-# Mission 5: Decoder ring
+# Mission 5: Search party
 
 ```
 cd ~/mission5
-cat message.b64
+cat README.txt
 ```{{exec}}
 
-It looks like gibberish, but it is not encrypted. It is **encoded** with base64:
-a way of writing any data using only letters, digits, `+`, `/` and `=`.
-There is no secret key. Anyone can decode it.
+`access.log` has 40,000 lines. One intruder logged in exactly once.
 
-**Useful command:** `base64`. Use `--help` to discover what it can do.
+Their **token** on that line is the flag. Scrolling would take all day.
+
+**Useful commands:** `grep`, `head`, `wc`. Use `--help` to discover what they can do.
+
+When you have the flag, record it with `submit` and press **CHECK**.
 
 <br>
 
 <details><summary>Hint</summary>
 
-Read the help for `base64` and look for the option that turns base64 back into normal text.:
+Read the help for `grep` and look at the **Usage** line at the top: it shows what goes first and what goes second.
 
 ```
-base64 --help
+grep --help
 ```
 
-The full manual page has even more: `man base64` (press `q` to quit).
+The full manual page has even more: `man grep` (press `q` to quit).
 
 </details>

@@ -6,8 +6,8 @@ chosen branch updates the scenarios.
 
 ## linux-quest-mission-1
 
-Five steps: read files with cat and its --help (`cat -n`), navigation (pwd, cd, cd ..) to a hidden file (ls -a), find
-by name, grep a log, base64 decode. Steps name useful commands and hint at
+Six steps: navigation (cd, ls; the flag is a file name), cat with --help (`cat -n`),
+hidden files (ls -a), find by name, grep a log, base64 decode. Steps name useful commands and hint at
 `--help`; they never give the answer.
 
 - `intro/background.sh` runs hidden as root at start: creates the unprivileged

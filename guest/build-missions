@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds the five missions. Flags are random on every boot. Only SHA-256 hashes
+# Builds the six missions. Flags are random on every boot. Only SHA-256 hashes
 # of the flags are kept (/etc/quest), so there is no answer file to read.
 H=/home/player
 Q=/etc/quest
@@ -10,11 +10,30 @@ pick() { printf '%s\n' "$@" | shuf -n1; }
 rnd()  { head -c 32 /dev/urandom | base64 | tr -dc 'a-z0-9' | cut -c1-"$1"; }
 keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
 
-# 1: let the cat out of the bag. cat --help shows -n, which numbers lines.
-F=$(flag cat); keep 1 "$F"
-mkdir -p "$H/mission1"
+# 1: make your move. Signpost file names (read with ls) lead to a file named after the flag.
+F=$(flag moves); keep 1 "$F"
+set -- $(printf '%s\n' park library market harbor station arcade | shuf | head -n 3)
+wrong=$1; right=$2; other=$3
+mid=$(pick fountain gazebo tunnel bridge kiosk); end=$(pick locker crate shed cellar toolbox)
+M1="$H/mission1"; T1="$M1/town"; E1="$T1/$right/$mid/$end"
+mkdir -p "$T1/$wrong" "$T1/$other" "$E1"
+# (touch is not available in this small kernel, so ": >" creates the empty files)
+for f in "$M1/start-here--go-into-town" \
+         "$T1/sign--go-into-the-$wrong" \
+         "$T1/$wrong/dead-end--go-back-up-and-try-the-$right" \
+         "$T1/$other/nothing-here--go-back-up" \
+         "$T1/$right/go-into-the-$mid-then-the-$end" \
+         "$T1/$right/$mid/almost-there--keep-going-into-the-$end" \
+         "$E1/you-made-it--the-flag-is-the-file-name" \
+         "$E1/$F"; do
+  : > "$f"
+done
+
+# 2: let the cat out of the bag. cat --help shows -n, which numbers lines.
+F=$(flag cat); keep 2 "$F"
+mkdir -p "$H/mission2"
 line=$(awk -v s="$(hex | cut -c1-6)" 'BEGIN { srand(("0x" s) + 0); print 30 + int(rand() * 66) }')
-printf 'The cat is hiding in bag.txt.\nEvery line in the bag looks like a flag, but only line %s is real.\n' "$line" > "$H/mission1/README.txt"
+printf 'The cat is hiding in bag.txt.\nEvery line in the bag looks like a flag, but only line %s is real.\n' "$line" > "$H/mission2/README.txt"
 awk -v line="$line" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
   srand(("0x" seed) + 0)
   for (i = 1; i <= 100; i++) {
@@ -22,32 +41,21 @@ awk -v line="$line" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
     h = ""; for (k = 0; k < 8; k++) h = h substr("0123456789abcdef", 1 + int(rand() * 16), 1)
     print "meow CYBA{cat-" h "}"
   }
-}' > "$H/mission1/bag.txt"
+}' > "$H/mission2/bag.txt"
 
-# 2: make your moves. Follow note.txt through town/, then ls -a at the end.
-F=$(flag moves); keep 2 "$F"
-mkdir -p "$H/mission2"
-set -- $(printf '%s\n' park library market harbor station arcade | shuf | head -n 3)
-wrong=$1; right=$2; other=$3
-mid=$(pick fountain gazebo tunnel bridge kiosk); end=$(pick locker crate shed cellar toolbox)
-T2="$H/mission2/town"
-mkdir -p "$T2/$wrong" "$T2/$other" "$T2/$right/$mid/$end"
-printf 'A flag is hidden at the end of a trail inside town/.\nStart with:  cd town\nEvery folder has a note.txt that tells you where to go next.\n' > "$H/mission2/README.txt"
-printf 'Start of the trail. Go into the %s.\n' "$wrong" > "$T2/note.txt"
-printf 'Dead end! Go back up one level (cd ..) and try the %s.\n' "$right" > "$T2/$wrong/note.txt"
-printf 'Nothing here. Go back up and read the note in town/ again.\n' > "$T2/$other/note.txt"
-printf 'Good choice. Go into the %s, then the %s.\nTip: you can do both at once:  cd %s/%s\n' "$mid" "$end" "$mid" "$end" > "$T2/$right/note.txt"
-printf 'Almost there. Keep going into the %s.\n' "$end" > "$T2/$right/$mid/note.txt"
-printf 'You made it! The flag is in this folder, but it is hidden.\nOne hidden file is a decoy.\n' > "$T2/$right/$mid/$end/note.txt"
-echo "Close, but this hidden file is a decoy." > "$T2/$right/$mid/$end/.old-$(rnd 4)"
-printf 'You made your moves.\nFlag: %s\n' "$F" > "$T2/$right/$mid/$end/.$(pick treasure stash secret-notes backup-codes)"
+# 3: hidden file (ls -a)
+F=$(flag hidden); keep 3 "$F"
+mkdir -p "$H/mission3"
+echo "Nothing to see here. Or is there? Some files are shy." > "$H/mission3/notes.txt"
+echo "Close, but this hidden file is a decoy." > "$H/mission3/.old-$(rnd 4)"
+printf 'You found the hidden file.\nFlag: %s\n' "$F" > "$H/mission3/.$(pick treasure stash secret-notes backup-codes)"
 
-# 3: find by name
-F=$(flag finder); keep 3 "$F"
+# 4: find by name
+F=$(flag finder); keep 4 "$F"
 ext=$(pick key gem relic)
 # One awk process builds all 20 folders and ~80 files (spawning a process per
 # file is slow inside the browser emulator).
-awk -v base="$H/mission3/archive" -v ext="$ext" -v flag="$F" -v seed="$(hex | cut -c1-6)" '
+awk -v base="$H/mission4/archive" -v ext="$ext" -v flag="$F" -v seed="$(hex | cut -c1-6)" '
 function r(n,   s, k) { s = ""; for (k = 0; k < n; k++) s = s substr("abcdefghijklmnopqrstuvwxyz0123456789", 1 + int(rand() * 36), 1); return s }
 BEGIN {
   srand(("0x" seed) + 0)
@@ -57,12 +65,12 @@ BEGIN {
   for (k = 1; k <= nd; k++) for (c = 1; c <= 4; c++) { f = d[k] "/" r(6) "." E[1 + int(rand() * 3)]; print "junk " r(20) > f; close(f) }
   f = d[1 + int(rand() * nd)] "/" r(6) "." ext; print "Flag: " flag > f; close(f)
 }'
-printf 'Somewhere in archive/ is ONE file ending in .%s\nIt holds the flag.\n' "$ext" > "$H/mission3/README.txt"
+printf 'Somewhere in archive/ is ONE file ending in .%s\nIt holds the flag.\n' "$ext" > "$H/mission4/README.txt"
 
-# 4: grep a log
-F=$(flag grep); keep 4 "$F"
+# 5: grep a log
+F=$(flag grep); keep 5 "$F"
 who=$(pick nightowl ghost_fox zero_cool red_panda pixel_wolf)
-mkdir -p "$H/mission4"
+mkdir -p "$H/mission5"
 awk -v who="$who" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
   srand(("0x" seed) + 0); split("alice bob carol dave erin frank grace heidi ivan judy", u, " ")
   split("LOGIN_OK LOGIN_FAIL VIEW_PAGE DOWNLOAD LOGOUT", a, " ")
@@ -73,13 +81,13 @@ awk -v who="$who" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
     if (i == hit) printf "%s user=%s action=LOGIN_OK token=%s\n", stamp, who, flag
     else printf "%s user=%s action=%s token=%08x\n", stamp, u[1 + int(rand() * 10)], a[1 + int(rand() * 5)], int(rand() * 2147483647)
   }
-}' > "$H/mission4/access.log"
-printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n' "$who" > "$H/mission4/README.txt"
+}' > "$H/mission5/access.log"
+printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n' "$who" > "$H/mission5/README.txt"
 
-# 5: base64
-F=$(flag decoded); keep 5 "$F"
-mkdir -p "$H/mission5"
-printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F" | base64 > "$H/mission5/message.b64"
+# 6: base64
+F=$(flag decoded); keep 6 "$F"
+mkdir -p "$H/mission6"
+printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F" | base64 > "$H/mission6/message.b64"
 
 chmod 755 "$Q"; chmod 644 "$Q"/*
 chown -R 1000:1000 "$H"

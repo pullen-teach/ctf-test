@@ -1,27 +1,28 @@
-# Mission 3: Needle in the tree
+# Mission 3: Now you see me
 
 ```
 cd ~/mission3
-cat README.txt
+ls
 ```{{exec}}
 
-The `archive` folder holds about 80 files in 20 folders.
-Exactly **one** of them has the file ending named in `README.txt`, and it holds the flag.
+There is a flag in this folder, but plain `ls` will not show it.
 
-Opening folders one by one is too slow. Let the computer search.
+On Linux, a file whose name starts with a dot is **hidden**. Watch out: one hidden file is a decoy.
 
-**Useful commands:** `find`, `cat`. Use `--help` to discover what they can do.
+**Useful commands:** `ls`, `cat`. Use `--help` to discover what they can do.
+
+When you have the flag, record it with `submit` and press **CHECK**.
 
 <br>
 
 <details><summary>Hint</summary>
 
-Read the help for `find` and look for a way to match a file's **name** against a pattern. In a pattern, `*` means "anything".:
+Read the help for `ls` and look for an option that also shows names starting with `.`
 
 ```
-find --help
+ls --help
 ```
 
-The full manual page has even more: `man find` (press `q` to quit).
+The full manual page has even more: `man ls` (press `q` to quit).
 
 </details>

@@ -1,39 +1,30 @@
-# Mission 2: Make your moves
+# Mission 2: Let the cat out of the bag
 
 ```
 cd ~/mission2
 cat README.txt
 ```{{exec}}
 
-Moving around is the first real skill on the command line:
+`cat` prints a file on the screen. You just used it to read `README.txt`.
 
-| Command | What it does |
-|---|---|
-| `pwd` | where am I? |
-| `ls` | what is in this folder? |
-| `cd NAME` | move into a folder |
-| `cd ..` | go back up one level |
-| `cd ~` | go home |
+The cat is hiding in `bag.txt`: 100 lines, and every one looks like a flag. Only the line number in `README.txt` is real. Counting 100 lines by hand is how mistakes happen.
 
-A flag is hidden at the end of a trail inside `town/`. Every folder has a `note.txt` that tells
-you where to go next. Some turns are dead ends.
+Almost every Linux command can **explain itself**: type its name, a space, then `--help`. Ask `cat` for its help and look for an option that numbers the lines. You will use `--help` in every mission after this one.
 
-At the end the flag is there, but **hidden**: files whose names start with a dot do not show up
-in plain `ls`. One hidden file is a decoy.
+**Useful command:** `cat`.
 
-**Useful commands:** `pwd`, `ls`, `cd`, `cat`. Use `--help` to discover what they can do.
+When you have the flag, record it with `submit` and press **CHECK**.
 
 <br>
 
 <details><summary>Hint</summary>
 
-Lost? `pwd` shows where you are and `cd ..` goes back up. At the end of the trail, read the
-help for `ls` and look for an option that also shows names starting with `.`:
+Read the help for `cat` and look for the option that **numbers** the lines. Options go between the command and the file name.
 
 ```
-ls --help
+cat --help
 ```
 
-The full manual page has even more: `man ls` (press `q` to quit).
+The full manual page has even more: `man cat` (press `q` to quit).
 
 </details>

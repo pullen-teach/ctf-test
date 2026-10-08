@@ -100,24 +100,26 @@ equivalent):
 
 ## Missions
 
-### Keep the existing five
+### Keep the existing six
 
-Text, hints and file layout as in `ctf-test`. The hints name the command and point to its
-`--help`; they never give the answer. Keep it that way.
+Text, hints and file layout as in `ctf-test`; `guest/make-missions.py` is the single source
+for the briefs. The hints name the command and point to its `--help`; they never give the
+answer. Keep it that way.
 
 | # | Title | Skill |
 |---|---|---|
-| 1 | Let the cat out of the bag | `cat`, and `cat --help` to find `-n` (flag is on line N of a 100-line file where every line looks like a flag) |
-| 2 | Now you see me | `ls -a`, hidden files, one decoy |
-| 3 | Needle in the tree | `find -name` in about 80 files across 20 folders |
-| 4 | Search party | `grep` in a 12,000-line access log |
-| 5 | Decoder ring | `base64 -d` |
+| 1 | Make your move | `pwd`, `ls`, `cd`, `cd ..`: follow signpost file names through `town/`; the last folder holds a file named after the flag (no `cat` yet) |
+| 2 | Let the cat out of the bag | `cat`, and `cat --help` to find `-n` (flag is on line N of a 100-line file where every line looks like a flag) |
+| 3 | Now you see me | `ls -a`, hidden files, one decoy |
+| 4 | Needle in the tree | `find -name` in about 80 files across 20 folders |
+| 5 | Search party | `grep` in a 12,000-line access log |
+| 6 | Decoder ring | `base64 -d` |
 
 ### Add two new ones
 
 Both are simulated and served by the backend, with the same panel format and hint style.
 
-**6. Knock knock (`curl`)**
+**7. Knock knock (`curl`)**
 - `README.txt` names a server, `http://vault-server.quest/`.
 - The page body says "Nothing to see here. Servers say more than their page shows."
 - The flag is in a response header (`X-Flag`), so the student must find `-i` or `-I` in
@@ -127,8 +129,8 @@ Both are simulated and served by the backend, with the same panel format and hin
   `curl: (6) Could not resolve host: <host>`.
 - There are no real outbound requests: no allowlist of real sites for now.
 
-**7. Remote access (`ssh`)**
-- A note found in mission 6's response body (or a file in `~/mission7`) gives an account
+**8. Remote access (`ssh`)**
+- A note found in mission 7's response body (or a file in `~/mission8`) gives an account
   `analyst@10.0.0.7` and a password.
 - `ssh analyst@10.0.0.7` prompts for the password without echoing it, then switches the
   prompt to `analyst@vault-server:~$`, a second simulated machine with its own filesystem.
@@ -142,7 +144,7 @@ Both are simulated and served by the backend, with the same panel format and hin
   - permissions (cannot read `/etc/quest` answers or `/root`);
   - `--help` output for each command;
   - world determinism from a seed.
-- **End-to-end test** (Playwright or the repo's tool) that solves all seven missions by typing
+- **End-to-end test** (Playwright or the repo's tool) that solves all eight missions by typing
   into the terminal, in both practice and competition mode, run once with
   `--js-flags=--jitless`.
 - **API tests** for `submit`: wrong flag, another user's flag, rate limit, replay.

@@ -1,6 +1,6 @@
 {
   "title": "Linux Quest: Mission 1",
-  "description": "Five hidden flags on a real Linux server. Read files with cat and learn to ask commands for help, then move around with cd and use ls, find, grep and base64.",
+  "description": "Six hidden flags on a real Linux server. Move around with cd and ls, read files with cat and --help, then find hidden files and use find, grep and base64.",
   "details": {
     "intro": {
       "text": "intro/text.md",
@@ -9,29 +9,34 @@
     },
     "steps": [
       {
-        "title": "Let the cat out of the bag",
+        "title": "Make your move",
         "text": "step1/text.md",
         "verify": "step1/verify.sh"
       },
       {
-        "title": "Make your moves",
+        "title": "Let the cat out of the bag",
         "text": "step2/text.md",
         "verify": "step2/verify.sh"
       },
       {
-        "title": "Needle in the tree",
+        "title": "Now you see me",
         "text": "step3/text.md",
         "verify": "step3/verify.sh"
       },
       {
-        "title": "Search party",
+        "title": "Needle in the tree",
         "text": "step4/text.md",
         "verify": "step4/verify.sh"
       },
       {
-        "title": "Decoder ring",
+        "title": "Search party",
         "text": "step5/text.md",
         "verify": "step5/verify.sh"
+      },
+      {
+        "title": "Decoder ring",
+        "text": "step6/text.md",
+        "verify": "step6/verify.sh"
       }
     ],
     "finish": {

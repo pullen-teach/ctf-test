@@ -16,15 +16,17 @@ await page.screenshot({ path: "v86-ready.png" });
 // Solve every mission by typing into the guest's serial console, like a student.
 const send = (s) => page.evaluate((s) => window.quest.emulator.serial0_send(s), s);
 const cmds = [
-  'cd ~/mission1 && cat README.txt && cat --help; cat -n bag.txt | tail -3',
+  'cd ~/mission1 && ls && cd town && ls && cd $(ls | sed -n "s/sign--go-into-the-//p") && ls && cd .. && cd $(ls */ | sed -n "s/dead-end--go-back-up-and-try-the-//p") && cd $(ls | sed -n "s/go-into-the-\\(.*\\)-then-the-\\(.*\\)/\\1\\/\\2/p") && pwd && ls',
+  'submit "$(ls | grep -o "CYBA{[^}]*}")"',
+  'cd ~/mission2 && cat README.txt && cat --help; cat -n bag.txt | tail -3',
   'submit "$(sed -n "$(grep -o "line [0-9][0-9]*" README.txt | cut -c6-)p" bag.txt | grep -o "CYBA{[^}]*}")"',
-  'cd ~/mission2/town && cd $(grep -o "into the [a-z]*" note.txt | cut -d" " -f3) && cat note.txt && cd .. && cd $(cat */note.txt | grep -o "try the [a-z]*" | cut -d" " -f3) && cd $(grep -o "the [a-z]*" note.txt | head -2 | cut -d" " -f2 | tr "\\n" "/") && pwd && ls -a',
+  'cd ~/mission3 && ls -a',
   'submit "$(cat .[!.]* | grep -o "CYBA{[^}]*}")"',
-  'cd ~/mission3 && cat README.txt',
+  'cd ~/mission4 && cat README.txt',
   'submit "$(cat $(find archive -name "*.$(grep -o "in \\.[a-z]*" README.txt | cut -c5-)") | grep -o "CYBA{[^}]*}")"',
-  'cd ~/mission4 && grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log',
+  'cd ~/mission5 && grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log',
   'submit "$(grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log | sed "s/.*token=//")"',
-  'cd ~/mission5 && base64 -d message.b64',
+  'cd ~/mission6 && base64 -d message.b64',
   'submit "$(base64 -d message.b64 | grep -o "CYBA{[^}]*}")"',
 ];
 for (const c of cmds) {
@@ -37,7 +39,7 @@ for (const c of cmds) {
   }
   console.log("cmd", ((Date.now() - t) / 1000).toFixed(1) + "s", c.slice(0, 50));
 }
-await page.waitForFunction(() => window.quest.done.size === 5, null, { timeout: 90000 }).catch(() => {});
+await page.waitForFunction(() => window.quest.done.size === 6, null, { timeout: 90000 }).catch(() => {});
 console.log("missions done:", await page.evaluate(() => [...window.quest.done].join(",")), "status:", await page.textContent("#status"));
 await send("clear; whoami; cat /etc/quest/1 | cut -c1-12; ls /root; hint 1\n");
 await page.waitForTimeout(3000);

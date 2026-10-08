@@ -10,7 +10,7 @@
   const meter = document.getElementById("meter-fill");
   const started = performance.now();
   const done = new Set();
-  const TOTAL = 5;
+  const TOTAL = 6;
 
   function setStatus(text) {
     statusEl.textContent = text;
