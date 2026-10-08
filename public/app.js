@@ -25,17 +25,15 @@
   // shell with the same missions. Add ?lite to the address to force it.
   const forceLite = new URLSearchParams(location.search).has("lite");
   if (typeof WebAssembly !== "object" || forceLite) {
-    bootText.textContent = "Starting Linux Quest lite mode…";
+    bootText.textContent = "Starting CyberQuest lite mode…";
     setStatus("Starting lite mode…");
     meter.style.width = "60%";
-    const tag = document.querySelector(".tag");
     window.quest = { emulator: null, done, lite: true };
     window.questGuide.setRunner((cmd) => window.LinuxQuestLite.typeLine(cmd));
     window.LinuxQuestLite.start(document.getElementById("terminal"), { onMission: markDone })
       .then(() => {
         meter.style.width = "100%";
         bootEl.classList.add("gone");
-        if (tag) tag.textContent = "Lite mode";
         setStatus("Ready (lite mode) in " + seconds() + " s");
         window.questReadySeconds = Number(seconds());
       })

@@ -71,43 +71,57 @@
   const next = el("next");
   const state = el("m-state");
   const dots = el("m-dots");
+  const body = document.querySelector(".guide-body");
+
+  const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  // Missions you can open: every captured one, plus the first one not yet captured.
+  const reachable = () => { let i = 0; while (i < N - 1 && done.has(i + 1)) i++; return i; };
 
   function render() {
     const m = MISSIONS[current];
     const n = current + 1;
-    count.textContent = "Mission " + n + " of " + N;
-    const runs = m.run.map((c) => '<button class="run" type="button" data-cmd="' + c + '" title="Click to type this into the terminal"><span class="run-cmd">' + c + '</span><span class="run-go" aria-hidden="true">&#9654;</span></button>').join("");
-    article.innerHTML =
-      '<h2>Mission ' + n + ': ' + m.title + '</h2>' +
-      '<div class="runs">' + runs + '</div>' +
-      m.body.map((p) => "<p>" + p + "</p>").join("") +
-      '<p class="useful"><b>Useful ' + (m.useful.length > 1 ? "commands" : "command") + ':</b> ' + m.useful.map((u) => "<code>" + u + "</code>").join(", ") + "</p>" +
-      '<p class="submit-line">When you have the flag, type <code>submit</code> and paste it, for example <code>submit CQ{word-1a2b3c4d}</code></p>' +
-      '<details class="hint"><summary>Hint</summary><div>' + m.hint + "</div></details>";
-    article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
     const ok = done.has(n);
-    state.textContent = ok ? "Flag captured" : "";
+    count.textContent = "Mission " + n + " of " + N;
+    const runs = m.run.map((c) =>
+      '<button class="run" type="button" data-cmd="' + esc(c) + '" aria-label="Run ' + esc(c) + ' in the terminal">' +
+      '<span class="run-prompt" aria-hidden="true">$</span><span class="run-cmd">' + esc(c) + '</span>' +
+      '<span class="run-go" aria-hidden="true">Run &#9654;</span></button>').join("");
+    article.innerHTML =
+      '<h2>' + m.title + '</h2>' +
+      '<div class="runs"><span class="label">Start here</span>' + runs + '</div>' +
+      m.body.map((p) => "<p>" + p + "</p>").join("") +
+      '<div class="card tools"><span class="label">Useful ' + (m.useful.length > 1 ? "commands" : "command") + '</span><div class="chips">' +
+        m.useful.map((u) => '<code class="chip">' + u + "</code>").join("") + '</div></div>' +
+      '<div class="card submit-card' + (ok ? " is-done" : "") + '"><span class="label">' + (ok ? "Flag captured" : "Found the flag?") + '</span>' +
+        (ok ? "<p>Nice work. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CQ{word-1a2b3c4d}</pre>') + '</div>' +
+      '<details class="hint"><summary>Need a hint?</summary><div>' + m.hint + "</div></details>";
+    article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
+    state.textContent = ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
     state.className = ok ? "m-state ok" : "m-state";
     prev.disabled = current === 0;
     next.disabled = !ok;
-    next.textContent = current === N - 1 ? "Finish" : "Next mission";
-    dots.querySelectorAll("span").forEach((d, i) => {
+    next.innerHTML = current === N - 1 ? "Finish &rarr;" : "Next mission &rarr;";
+    const r = reachable();
+    dots.querySelectorAll("button").forEach((d, i) => {
       d.className = (i === current ? "here " : "") + (done.has(i + 1) ? "ok" : "");
+      d.disabled = i > r;
+      d.setAttribute("aria-current", i === current ? "step" : "false");
     });
-    article.scrollTop = 0;
+    body.scrollTop = 0;
   }
 
   function finish() {
     count.textContent = "Quest complete";
     article.innerHTML =
-      "<h2>All " + N + " flags captured</h2>" +
+      "<h2>Quest complete</h2><p class=\"big-win\">All " + N + " flags captured</p>" +
       "<p>You let the cat out of the bag with <code>--help</code>, found hidden files, searched folders and a 12,000-line log, and decoded a message that only looked secret.</p>" +
       "<p><b>Encoding is not encryption.</b> If no key is needed to undo it, it was never secret.</p>" +
       "<p>Reload the page for a fresh computer with new flags, and see how fast you can do it again.</p>";
-    state.textContent = "";
+    state.textContent = "Reload the page to play again with new flags.";
+    state.className = "m-state ok";
     next.disabled = true;
     prev.disabled = false;
-    dots.querySelectorAll("span").forEach((d) => (d.className = "ok"));
+    dots.querySelectorAll("button").forEach((d) => { d.className = "ok"; d.disabled = false; });
     current = N;
   }
 
@@ -117,7 +131,8 @@
     if (done.has(current + 1)) { current++; render(); }
   });
 
-  dots.innerHTML = MISSIONS.map(() => "<span></span>").join("");
+  dots.innerHTML = MISSIONS.map((m, i) => '<button type="button" title="Mission ' + (i + 1) + ': ' + m.title + '">' + (i + 1) + "</button>").join("");
+  dots.querySelectorAll("button").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; render(); } }));
   render();
 
   window.questGuide = {
