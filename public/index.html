@@ -13,7 +13,7 @@
     <strong class="brand">Linux Quest</strong>
     <span class="tag">Mission 1</span>
     <div class="track" id="track" aria-label="Missions completed">
-      <span class="step" data-n="1"></span><span class="step" data-n="2"></span><span class="step" data-n="3"></span><span class="step" data-n="4"></span>
+      <span class="step" data-n="1"></span><span class="step" data-n="2"></span><span class="step" data-n="3"></span><span class="step" data-n="4"></span><span class="step" data-n="5"></span>
     </div>
     <span class="status" id="status" role="status">Loading Linux…</span>
   </header>
@@ -38,29 +38,41 @@
           <li data-n="1">
             <span class="num">1</span>
             <div>
-              <h3>Now you see me</h3>
-              <p><code>cd ~/mission1</code>. A flag is hidden here, but plain <code>ls</code> will not show it.</p>
+              <h3>Ask for help</h3>
+              <p><code>cd ~/mission1</code>. A program called <code>vault</code> guards the flag. Find out how to make it explain itself.</p>
+              <p class="useful">Useful: <code>vault</code></p>
             </div>
           </li>
           <li data-n="2">
             <span class="num">2</span>
             <div>
-              <h3>Needle in the tree</h3>
-              <p><code>cd ~/mission2</code> and read <code>README.txt</code>. One file among 80 holds the flag.</p>
+              <h3>Now you see me</h3>
+              <p><code>cd ~/mission2</code>. A flag is hidden here, but plain <code>ls</code> will not show it.</p>
+              <p class="useful">Useful: <code>ls</code>, <code>cat</code></p>
             </div>
           </li>
           <li data-n="3">
             <span class="num">3</span>
             <div>
-              <h3>Search party</h3>
-              <p><code>cd ~/mission3</code>. One intruder hides in a 12,000-line log. Their token is the flag.</p>
+              <h3>Needle in the tree</h3>
+              <p><code>cd ~/mission3</code> and read <code>README.txt</code>. One file among 80 holds the flag.</p>
+              <p class="useful">Useful: <code>find</code>, <code>cat</code></p>
             </div>
           </li>
           <li data-n="4">
             <span class="num">4</span>
             <div>
+              <h3>Search party</h3>
+              <p><code>cd ~/mission4</code>. One intruder hides in a 12,000-line log. Their token is the flag.</p>
+              <p class="useful">Useful: <code>grep</code>, <code>head</code>, <code>wc</code></p>
+            </div>
+          </li>
+          <li data-n="5">
+            <span class="num">5</span>
+            <div>
               <h3>Decoder ring</h3>
-              <p><code>cd ~/mission4</code>. The message is not encrypted, only encoded.</p>
+              <p><code>cd ~/mission5</code>. The message is not encrypted, only encoded.</p>
+              <p class="useful">Useful: <code>base64</code></p>
             </div>
           </li>
         </ol>
@@ -72,7 +84,7 @@
           <li>Click the terminal and type the commands.</li>
           <li>A flag looks like <code>CQ{word-1a2b3c4d}</code>.</li>
           <li>Check it: <code>submit CQ{...}</code></li>
-          <li>Stuck? <code>hint 1</code> (or 2, 3, 4).</li>
+          <li>Stuck? <code>hint 1</code> (up to 5).</li>
         </ol>
         <p class="small">Flags change every time this page loads.</p>
       </section>

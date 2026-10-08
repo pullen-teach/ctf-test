@@ -112,6 +112,10 @@
   // ------------------------------------------------------- build the world
   // Mirrors guest/build-missions: random flags, only SHA-256 kept in /etc/quest.
   const FLAGHASH = {};
+  let VAULT_FLAG = "";
+  // What  cat /bin/vault  shows: the secret is never stored in plain text.
+  const VAULT_SCRIPT = "#!/bin/sh\n# vault: guards the Mission 1 flag. The way to open it is in its own help.\nSECRET='(scrambled)'\n";
+  const VAULT_HELP = "Usage: vault [OPTION]\n\nGuards a secret until someone asks it the right way.\n\nOptions:\n  -s, --status    show whether the vault is locked\n  -o, --open      open the vault and show what is inside\n  -v, --version   show the version number\n  -h, --help      show this help and exit\n";
   async function buildWorld() {
     for (const d of ["bin", "sbin", "etc", "proc", "sys", "dev", "tmp", "home"]) ROOT.kids[d] = mkdir(0o755, "root");
     ROOT.kids.tmp.mode = 0o777;
@@ -130,25 +134,31 @@
     const keep = async (n, f) => { FLAGHASH[n] = await sha256hex(f); put("/etc/quest/" + n, mkfile(FLAGHASH[n] + "\n", 0o644, "root")); };
     put("/etc/quest", mkdir(0o755, "root"));
 
-    // 1: hidden file
-    let F = flag("hidden"); await keep(1, F);
-    put(H + "/mission1", mkdir(0o755, USER));
-    put(H + "/mission1/notes.txt", mkfile("Nothing to see here. Or is there? Some files are shy.\n", 0o644, USER));
-    put(H + "/mission1/.old-" + rnd(4), mkfile("Close, but this hidden file is a decoy.\n", 0o644, USER));
-    put(H + "/mission1/." + pick(["vault", "stash", "secret-notes", "backup-codes"]), mkfile("You found the hidden file.\nFlag: " + F + "\n", 0o644, USER));
+    // 1: ask for help. vault only opens for students who read vault --help.
+    let F = flag("help"); await keep(1, F);
+    VAULT_FLAG = F;
+    put(H + "/mission1/README.txt", mkfile("A program called vault guards this mission's flag.\nType vault to meet it. It will not open for just anyone.\n", 0o644, USER));
+    ROOT.kids.bin.kids.vault = mkfile(VAULT_SCRIPT, 0o755, "root");
+
+    // 2: hidden file
+    F = flag("hidden"); await keep(2, F);
+    put(H + "/mission2", mkdir(0o755, USER));
+    put(H + "/mission2/notes.txt", mkfile("Nothing to see here. Or is there? Some files are shy.\n", 0o644, USER));
+    put(H + "/mission2/.old-" + rnd(4), mkfile("Close, but this hidden file is a decoy.\n", 0o644, USER));
+    put(H + "/mission2/." + pick(["treasure", "stash", "secret-notes", "backup-codes"]), mkfile("You found the hidden file.\nFlag: " + F + "\n", 0o644, USER));
 
     // 2: find by name
-    F = flag("finder"); await keep(2, F);
+    F = flag("finder"); await keep(3, F);
     const ext = pick(["key", "vault", "gem"]);
     const dirs = [];
     for (const a of ["alpha", "bravo", "charlie", "delta", "echo"])
-      for (let b = 0; b < 4; b++) { const d = H + "/mission2/archive/" + a + "/" + pick(["box", "bin", "shelf", "drawer"]) + "-" + rnd(4); if (!lookup(d).node) put(d, mkdir(0o755, USER)); dirs.push(d); }
+      for (let b = 0; b < 4; b++) { const d = H + "/mission3/archive/" + a + "/" + pick(["box", "bin", "shelf", "drawer"]) + "-" + rnd(4); if (!lookup(d).node) put(d, mkdir(0o755, USER)); dirs.push(d); }
     for (const d of dirs) for (let c = 0; c < 4; c++) put(d + "/" + rnd(6) + "." + pick(["txt", "log", "dat"]), mkfile("junk " + rnd(20) + "\n", 0o644, USER));
     put(pick(dirs) + "/" + rnd(6) + "." + ext, mkfile("Flag: " + F + "\n", 0o644, USER));
-    put(H + "/mission2/README.txt", mkfile("Somewhere in archive/ is ONE file ending in ." + ext + "\nIt holds the flag.\n", 0o644, USER));
+    put(H + "/mission3/README.txt", mkfile("Somewhere in archive/ is ONE file ending in ." + ext + "\nIt holds the flag.\n", 0o644, USER));
 
     // 3: grep a log
-    F = flag("grep"); await keep(3, F);
+    F = flag("grep"); await keep(4, F);
     const who = pick(["nightowl", "ghost_fox", "zero_cool", "red_panda", "pixel_wolf"]);
     const users = ["alice", "bob", "carol", "dave", "erin", "frank", "grace", "heidi", "ivan", "judy"];
     const acts = ["LOGIN_OK", "LOGIN_FAIL", "VIEW_PAGE", "DOWNLOAD", "LOGOUT"];
@@ -159,12 +169,12 @@
       lines[i] = i === hit ? stamp + " user=" + who + " action=LOGIN_OK token=" + F
         : stamp + " user=" + users[Math.floor(Math.random() * 10)] + " action=" + acts[Math.floor(Math.random() * 5)] + " token=" + Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
     }
-    put(H + "/mission3/access.log", mkfile(lines.join("\n") + "\n", 0o644, USER));
-    put(H + "/mission3/README.txt", mkfile("An intruder logged in ONCE as:  " + who + "\nTheir token is the flag.\n", 0o644, USER));
+    put(H + "/mission4/access.log", mkfile(lines.join("\n") + "\n", 0o644, USER));
+    put(H + "/mission4/README.txt", mkfile("An intruder logged in ONCE as:  " + who + "\nTheir token is the flag.\n", 0o644, USER));
 
     // 4: base64
-    F = flag("decoded"); await keep(4, F);
-    put(H + "/mission4/message.b64", mkfile(b64encode("Decoded! Encoding is not encryption.\nFlag: " + F + "\n", 76), 0o644, USER));
+    F = flag("decoded"); await keep(5, F);
+    put(H + "/mission5/message.b64", mkfile(b64encode("Decoded! Encoding is not encryption.\nFlag: " + F + "\n", 76), 0o644, USER));
   }
 
   // --------------------------------------------------------------- the shell
@@ -173,10 +183,11 @@
   let onMission = () => {};
 
   const HINTS = {
-    1: "Mission 1: the command to look up is ls.     Read: ls --help",
-    2: "Mission 2: the command to look up is find.   Read: find --help",
-    3: "Mission 3: the command to look up is grep.   Read: grep --help",
-    4: "Mission 4: the command to look up is base64. Read: base64 --help",
+    1: "Mission 1: most commands explain themselves if you add --help after the name.",
+    2: "Mission 2: the command to look up is ls.     Read: ls --help",
+    3: "Mission 3: the command to look up is find.   Read: find --help",
+    4: "Mission 4: the command to look up is grep.   Read: grep --help",
+    5: "Mission 5: the command to look up is base64. Read: base64 --help",
   };
 
   // Real BusyBox --help text, so --help reads the same as in the full Linux.
@@ -513,11 +524,20 @@
     async help() {
       return R("Linux Quest lite mode: a simulated shell (this browser blocks WebAssembly,\nso the real Linux computer can't run here).\n\nCommands that work:\n  " + Object.keys(CMDS).filter((c) => c !== "help").sort().join(" ") + "\n\nAlso: pipes |, > and >> redirects, ; and &&, quotes, * wildcards, Tab and the Up arrow.\n");
     },
-    async hint(args) { return R((HINTS[args[0]] || "Usage: hint 1   (or 2, 3, 4)") + "\n"); },
+    async vault(args) {
+      const a = args[0];
+      if (a === "-h" || a === "--help") return R(VAULT_HELP);
+      if (a === "-s" || a === "--status") return R("The vault is locked.\n");
+      if (a === "-v" || a === "--version") return R("vault 1.0 (Linux Quest)\n");
+      if (a === "-o" || a === "--open") return R("The vault swings open.\nFlag: " + VAULT_FLAG + "\n");
+      if (a === undefined) return R("The vault is locked. It only opens for people who read its instructions.\n", "", 1);
+      return R("vault: unrecognized option '" + a + "'\nTry 'vault --help' for more information.\n", "", 1);
+    },
+    async hint(args) { return R((HINTS[args[0]] || "Usage: hint 1   (or 2, 3, 4, 5)") + "\n"); },
     async submit(args) {
       if (!args[0]) return R("Usage: submit CQ{...}\n", "", 1);
       const h = await sha256hex(args[0]);
-      for (const n of [1, 2, 3, 4]) if (FLAGHASH[n] === h) { onMission(n); return R("Correct! [quest] mission " + n + " complete\n"); }
+      for (const n of [1, 2, 3, 4, 5]) if (FLAGHASH[n] === h) { onMission(n); return R("Correct! [quest] mission " + n + " complete\n"); }
       return R("Not a flag. Copy the whole thing, CQ{ to }.\n", "", 1);
     },
   };
@@ -714,7 +734,7 @@
       return runScript(r.node.data);
     }
     if (args.includes("--help") && HELP[name]) return R("", HELP[name], 1);
-    if (args.includes("--help") && CMDS[name]) return R("", "Usage: " + name + " ... (short help in lite mode)\n", 0);
+    if (args.includes("--help") && CMDS[name] && name !== "vault") return R("", "Usage: " + name + " ... (short help in lite mode)\n", 0);
     if (name === "man") return R("", "man: not available here. Try: " + (args[0] || "COMMAND") + " --help\n", 1);
     const fn = CMDS[name];
     if (fn) return fn(args, stdin);

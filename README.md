@@ -6,7 +6,9 @@ chosen branch updates the scenarios.
 
 ## linux-quest-mission-1
 
-Four steps: hidden files (ls -a), find by name, grep a log, base64 decode.
+Five steps: ask a command for help (`vault --help`), hidden files (ls -a), find
+by name, grep a log, base64 decode. Steps name useful commands and hint at
+`--help`; they never give the answer.
 
 - `intro/background.sh` runs hidden as root at start: creates the unprivileged
   user `player`, builds the four missions with random flags, and keeps only
@@ -18,10 +20,15 @@ Four steps: hidden files (ls -a), find by name, grep a log, base64 decode.
   and compares when the student presses CHECK.
 - Steps have hints but no solutions.
 
-Limits: this is a practice environment. The terminal starts as root before it
-switches to `player`, so a student who exits the `player` shell gets root. Root
-still can't read the answers (only fingerprints are kept), but it can read the
-mission files directly. Fine for practice; do not use it for anything graded.
+- `intro/foreground.sh` is one line: it clears the screen at once, waits for
+  setup, then replaces the root shell with `player` (`exec su - player`), so
+  typing `exit` ends the session instead of dropping to root.
+
+Limits: this is a practice environment. Killercoda opens every terminal as
+root, so the root prompt shows for a split second before the screen clears, and
+a student who opens a new terminal tab gets root there. Root still can't read
+the answers (only fingerprints are kept), but it can read the mission files
+directly. Fine for practice; do not use it for anything graded.
 
 ## Local test
 

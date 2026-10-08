@@ -1,20 +1,27 @@
-# Mission 3: Search party
+# Mission 3: Needle in the tree
 
 ```
 cd ~/mission3
 cat README.txt
-wc -l access.log
 ```{{exec}}
 
-`access.log` has 40,000 lines. One intruder logged in exactly once.
-Their **token** on that line is the flag.
+The `archive` folder holds about 80 files in 20 folders.
+Exactly **one** of them has the file ending named in `README.txt`, and it holds the flag.
 
-Scrolling would take all day.
+Opening folders one by one is too slow. Let the computer search.
+
+**Useful commands:** `find`, `cat`. Use `--help` to discover what they can do.
 
 <br>
 
 <details><summary>Hint</summary>
 
-`grep word file` prints only the lines that contain `word`. The username is in the README.
+Read the help for `find` and look for a way to match a file's **name** against a pattern. In a pattern, `*` means "anything".:
+
+```
+find --help
+```
+
+The full manual page has even more: `man find` (press `q` to quit).
 
 </details>

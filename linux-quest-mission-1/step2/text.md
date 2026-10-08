@@ -1,19 +1,24 @@
-# Mission 2: Needle in the tree
+# Mission 2: Now you see me
 
 ```
 cd ~/mission2
-cat README.txt
 ```{{exec}}
 
-The `archive` folder holds about 80 files in 20 folders.
-Exactly **one** of them has the file ending named in `README.txt`, and it holds the flag.
+There is a flag in this folder, but plain `ls` will not show it.
+On Linux, a file whose name starts with a dot is **hidden**. Watch out: one hidden file is a decoy.
 
-Opening folders one by one is too slow. Let the computer search.
+**Useful commands:** `ls`, `cat`. Use `--help` to discover what they can do.
 
 <br>
 
 <details><summary>Hint</summary>
 
-`find archive -name "*.txt"` finds every file ending in `.txt`. Change the ending to the one in the README.
+Read the help for `ls` and look for an option that also shows names starting with `.`:
+
+```
+ls --help
+```
+
+The full manual page has even more: `man ls` (press `q` to quit).
 
 </details>

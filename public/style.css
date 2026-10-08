@@ -7,6 +7,7 @@
   --green: #17875a;
   --amber: #f5a623;
   --terminal: #0e1726;
+  --t0: #17875a;
   --t1: #2a9fd6;
   --t2: #2459d8;
   --t3: #7448d4;
@@ -24,11 +25,12 @@ a { color: #2459d8; }
 .brand { font-size: 1.15rem; font-weight: 800; }
 .tag { background: var(--ink); color: #fff; border-radius: 999px; padding: 0.1rem 0.75rem; font-weight: 700; font-size: 0.9rem; }
 .track { display: flex; gap: 5px; }
-.step { width: 2.4rem; height: 0.7rem; border-radius: 3px; background: #e4eaf3; transition: background 0.5s; }
-.step[data-n="1"].done { background: var(--t1); }
-.step[data-n="2"].done { background: var(--t2); }
-.step[data-n="3"].done { background: var(--t3); }
-.step[data-n="4"].done { background: var(--t4); }
+.step { width: 2rem; height: 0.7rem; border-radius: 3px; background: #e4eaf3; transition: background 0.5s; }
+.step[data-n="1"].done { background: var(--t0); }
+.step[data-n="2"].done { background: var(--t1); }
+.step[data-n="3"].done { background: var(--t2); }
+.step[data-n="4"].done { background: var(--t3); }
+.step[data-n="5"].done { background: var(--t4); }
 .status { margin-left: auto; color: var(--muted); font-weight: 600; }
 
 .layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 22rem; }
@@ -68,3 +70,4 @@ body.won .status { color: var(--green); }
   .side { border-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } .step, #meter-fill, .boot { transition: none; } }
+.missions p.useful { color: var(--ink); font-size: 0.85rem; margin-top: 0.3rem; }

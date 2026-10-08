@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds the four missions. Flags are random on every boot. Only SHA-256 hashes
+# Builds the five missions. Flags are random on every boot. Only SHA-256 hashes
 # of the flags are kept (/etc/quest), so there is no answer file to read.
 H=/home/player
 Q=/etc/quest
@@ -10,19 +10,27 @@ pick() { printf '%s\n' "$@" | shuf -n1; }
 rnd()  { head -c 32 /dev/urandom | base64 | tr -dc 'a-z0-9' | cut -c1-"$1"; }
 keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
 
-# 1: hidden file
-F=$(flag hidden); keep 1 "$F"
+# 1: ask for help. vault only opens for students who read vault --help.
+F=$(flag help); keep 1 "$F"
 mkdir -p "$H/mission1"
-echo "Nothing to see here. Or is there? Some files are shy." > "$H/mission1/notes.txt"
-echo "Close, but this hidden file is a decoy." > "$H/mission1/.old-$(rnd 4)"
-printf 'You found the hidden file.\nFlag: %s\n' "$F" > "$H/mission1/.$(pick vault stash secret-notes backup-codes)"
+printf "A program called vault guards this mission's flag.\nType vault to meet it. It will not open for just anyone.\n" > "$H/mission1/README.txt"
+SECRET=$(printf 'Flag: %s\n' "$F" | base64 -w 0 | rev)
+sed "s|__SECRET__|$SECRET|" /etc/vault.tmpl > /bin/vault
+chmod 755 /bin/vault
 
-# 2: find by name
-F=$(flag finder); keep 2 "$F"
+# 2: hidden file
+F=$(flag hidden); keep 2 "$F"
+mkdir -p "$H/mission2"
+echo "Nothing to see here. Or is there? Some files are shy." > "$H/mission2/notes.txt"
+echo "Close, but this hidden file is a decoy." > "$H/mission2/.old-$(rnd 4)"
+printf 'You found the hidden file.\nFlag: %s\n' "$F" > "$H/mission2/.$(pick treasure stash secret-notes backup-codes)"
+
+# 3: find by name
+F=$(flag finder); keep 3 "$F"
 ext=$(pick key vault gem)
 # One awk process builds all 20 folders and ~80 files (spawning a process per
 # file is slow inside the browser emulator).
-awk -v base="$H/mission2/archive" -v ext="$ext" -v flag="$F" -v seed="$(hex | cut -c1-6)" '
+awk -v base="$H/mission3/archive" -v ext="$ext" -v flag="$F" -v seed="$(hex | cut -c1-6)" '
 function r(n,   s, k) { s = ""; for (k = 0; k < n; k++) s = s substr("abcdefghijklmnopqrstuvwxyz0123456789", 1 + int(rand() * 36), 1); return s }
 BEGIN {
   srand(("0x" seed) + 0)
@@ -32,12 +40,12 @@ BEGIN {
   for (k = 1; k <= nd; k++) for (c = 1; c <= 4; c++) { f = d[k] "/" r(6) "." E[1 + int(rand() * 3)]; print "junk " r(20) > f; close(f) }
   f = d[1 + int(rand() * nd)] "/" r(6) "." ext; print "Flag: " flag > f; close(f)
 }'
-printf 'Somewhere in archive/ is ONE file ending in .%s\nIt holds the flag.\n' "$ext" > "$H/mission2/README.txt"
+printf 'Somewhere in archive/ is ONE file ending in .%s\nIt holds the flag.\n' "$ext" > "$H/mission3/README.txt"
 
-# 3: grep a log
-F=$(flag grep); keep 3 "$F"
+# 4: grep a log
+F=$(flag grep); keep 4 "$F"
 who=$(pick nightowl ghost_fox zero_cool red_panda pixel_wolf)
-mkdir -p "$H/mission3"
+mkdir -p "$H/mission4"
 awk -v who="$who" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
   srand(("0x" seed) + 0); split("alice bob carol dave erin frank grace heidi ivan judy", u, " ")
   split("LOGIN_OK LOGIN_FAIL VIEW_PAGE DOWNLOAD LOGOUT", a, " ")
@@ -48,13 +56,13 @@ awk -v who="$who" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
     if (i == hit) printf "%s user=%s action=LOGIN_OK token=%s\n", stamp, who, flag
     else printf "%s user=%s action=%s token=%08x\n", stamp, u[1 + int(rand() * 10)], a[1 + int(rand() * 5)], int(rand() * 2147483647)
   }
-}' > "$H/mission3/access.log"
-printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n' "$who" > "$H/mission3/README.txt"
+}' > "$H/mission4/access.log"
+printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n' "$who" > "$H/mission4/README.txt"
 
-# 4: base64
-F=$(flag decoded); keep 4 "$F"
-mkdir -p "$H/mission4"
-printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F" | base64 > "$H/mission4/message.b64"
+# 5: base64
+F=$(flag decoded); keep 5 "$F"
+mkdir -p "$H/mission5"
+printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F" | base64 > "$H/mission5/message.b64"
 
 chmod 755 "$Q"; chmod 644 "$Q"/*
 chown -R 1000:1000 "$H"

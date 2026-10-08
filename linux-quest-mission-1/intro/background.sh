@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs hidden, as root, when the scenario starts. Builds Mission 1 with fresh
+# Runs hidden, as root, when the scenario starts. Builds the five missions with fresh
 # random flags every time, so no two students (and no two runs) share answers.
 set -euo pipefail
 Q=/root/.quest            # SHA-256 fingerprints of the flags (never the flags)
@@ -12,32 +12,65 @@ keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
 pick() { printf '%s\n' "$@" | shuf -n1; }
 rnd()  { head -c 32 /dev/urandom | base64 | tr -dc 'a-z0-9' | cut -c1-"$1"; }
 
-# ---- step 1: hidden file (ls -a) ----
-F1=$(flag hidden); keep 1 "$F1"
+# ---- step 1: ask for help (vault --help, then vault --open) ----
+F1=$(flag help); keep 1 "$F1"
 mkdir -p "$H/mission1"
-echo "Nothing to see here. Or is there? Some files are shy." > "$H/mission1/notes.txt"
-echo "Close, but this hidden file is a decoy." > "$H/mission1/.old-$(rnd 4)"
-printf 'You found the hidden file.\nFlag: %s\n' "$F1" > "$H/mission1/.$(pick vault stash secret-notes backup-codes)"
+printf 'A program called vault guards this mission'"'"'s flag.\nType vault to meet it. It will not open for just anyone.\n' > "$H/mission1/README.txt"
+SECRET=$(printf 'Flag: %s\n' "$F1" | base64 -w0 | rev)
+cat > /usr/local/bin/vault <<'VAULT'
+#!/bin/sh
+# vault: guards the Mission 1 flag. The way to open it is in its own help.
+SECRET='__SECRET__'
+case "$1" in
+  -h|--help)
+    cat <<'HELP'
+Usage: vault [OPTION]
 
-# ---- step 2: find by name ----
-F2=$(flag finder); keep 2 "$F2"
+Guards a secret until someone asks it the right way.
+
+Options:
+  -s, --status    show whether the vault is locked
+  -o, --open      open the vault and show what is inside
+  -v, --version   show the version number
+  -h, --help      show this help and exit
+HELP
+    ;;
+  -s|--status) echo "The vault is locked." ;;
+  -v|--version) echo "vault 1.0 (Linux Quest)" ;;
+  -o|--open) echo "The vault swings open."; printf '%s' "$SECRET" | rev | base64 -d ;;
+  "") echo "The vault is locked. It only opens for people who read its instructions."; exit 1 ;;
+  *) echo "vault: unrecognized option '$1'"; echo "Try 'vault --help' for more information."; exit 1 ;;
+esac
+VAULT
+sed -i "s|__SECRET__|$SECRET|" /usr/local/bin/vault
+chmod 755 /usr/local/bin/vault
+
+# ---- step 2: hidden file (ls -a) ----
+F2=$(flag hidden); keep 2 "$F2"
+mkdir -p "$H/mission2"
+echo "Nothing to see here. Or is there? Some files are shy." > "$H/mission2/notes.txt"
+echo "Close, but this hidden file is a decoy." > "$H/mission2/.old-$(rnd 4)"
+printf 'You found the hidden file.\nFlag: %s\n' "$F2" > "$H/mission2/.$(pick treasure stash secret-notes backup-codes)"
+
+# ---- step 3: find by name ----
+F3=$(flag finder); keep 3 "$F3"
 ext=$(pick key vault gem)
 for a in alpha bravo charlie delta echo; do
   for b in 1 2 3 4; do
-    d="$H/mission2/archive/$a/$(pick box bin shelf drawer)-$(rnd 4)"; mkdir -p "$d"
+    d="$H/mission3/archive/$a/$(pick box bin shelf drawer)-$(rnd 4)"; mkdir -p "$d"
     for _ in 1 2 3 4; do echo "junk $(rnd 20)" > "$d/$(rnd 6).$(pick txt log dat)"; done
   done
 done
-target="$(find "$H/mission2/archive" -mindepth 2 -type d | shuf -n1)/$(rnd 6).$ext"
-printf 'Flag: %s\n' "$F2" > "$target"
-printf 'Somewhere in archive/ is ONE file ending in .%s\nIt holds the flag.\n' "$ext" > "$H/mission2/README.txt"
+target="$(find "$H/mission3/archive" -mindepth 2 -type d | shuf -n1)/$(rnd 6).$ext"
+printf 'Flag: %s\n' "$F3" > "$target"
+printf 'Somewhere in archive/ is ONE file ending in .%s\nIt holds the flag.\n' "$ext" > "$H/mission3/README.txt"
 
-# ---- step 3: grep a log ----
-F3=$(flag grep); keep 3 "$F3"
+# ---- step 4: grep a log ----
+F4=$(flag grep); keep 4 "$F4"
 who=$(pick nightowl ghost_fox zero_cool red_panda pixel_wolf)
-mkdir -p "$H/mission3"
+mkdir -p "$H/mission4"
 # awk only, so the setup needs nothing beyond a stock Ubuntu image
-awk -v who="$who" -v flag="$F3" -v seed="$RANDOM$RANDOM" 'BEGIN {
+awk -v who="$who" -v flag="$F4" -v seed="$RANDOM$RANDOM" 'BEGIN {
   srand(seed); split("alice bob carol dave erin frank grace heidi ivan judy", u, " ")
   split("LOGIN_OK LOGIN_FAIL VIEW_PAGE DOWNLOAD LOGOUT", a, " ")
   hit = 5000 + int(rand() * 30000)
@@ -47,13 +80,13 @@ awk -v who="$who" -v flag="$F3" -v seed="$RANDOM$RANDOM" 'BEGIN {
     if (i == hit) printf "%s user=%s action=LOGIN_OK token=%s\n", stamp, who, flag
     else printf "%s user=%s action=%s token=%08x\n", stamp, u[1 + int(rand() * 10)], a[1 + int(rand() * 5)], int(rand() * 4294967295)
   }
-}' > "$H/mission3/access.log"
-printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n' "$who" > "$H/mission3/README.txt"
+}' > "$H/mission4/access.log"
+printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n' "$who" > "$H/mission4/README.txt"
 
-# ---- step 4: base64 ----
-F4=$(flag decoded); keep 4 "$F4"
-mkdir -p "$H/mission4"
-printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F4" | base64 -w 40 > "$H/mission4/message.b64"
+# ---- step 5: base64 ----
+F5=$(flag decoded); keep 5 "$F5"
+mkdir -p "$H/mission5"
+printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F5" | base64 -w 40 > "$H/mission5/message.b64"
 
 # ---- the submit command ----
 cat > /usr/local/bin/submit <<'SH'
@@ -66,7 +99,11 @@ SH
 chmod 755 /usr/local/bin/submit
 
 touch "$H/.answers"
-# Clear the screen when player logs in, so the root setup lines disappear.
-printf '\n# Linux Quest: start with a clean screen (interactive logins only)\ncase $- in *i*) clear ;; esac\n' >> "$H/.profile"
+# Clear the screen when player logs in, so the root lines that Killercoda types
+# into the terminal (foreground.sh) disappear. /etc/profile.d runs for every
+# login shell, whatever dotfiles the image gives the new user.
+cat > /etc/profile.d/zz-linux-quest.sh <<'SH'
+if [ "$(id -un)" = player ]; then case $- in *i*) clear ;; esac; fi
+SH
 chown -R player:player "$H"
 touch /tmp/.quest-ready

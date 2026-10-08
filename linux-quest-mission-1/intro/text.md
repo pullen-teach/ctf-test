@@ -1,6 +1,6 @@
 # Welcome to Linux Quest
 
-You are logged in to a **real Linux server**. Four flags are hidden on it, one per mission.
+You are logged in to a **real Linux server**. Five flags are hidden on it, one per mission.
 A flag looks like this: `CQ{word-1a2b3c4d}`
 
 **How every step works**

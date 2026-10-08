@@ -16,13 +16,15 @@ await page.screenshot({ path: "v86-ready.png" });
 // Solve every mission by typing into the guest's serial console, like a student.
 const send = (s) => page.evaluate((s) => window.quest.emulator.serial0_send(s), s);
 const cmds = [
-  'cd ~/mission1 && ls -a',
+  'cd ~/mission1 && cat README.txt && vault; vault --help',
+  'submit "$(vault --open | grep -o "CQ{[^}]*}")"',
+  'cd ~/mission2 && ls -a',
   'submit "$(cat .[!.]* | grep -o "CQ{[^}]*}")"',
-  'cd ~/mission2 && cat README.txt',
+  'cd ~/mission3 && cat README.txt',
   'submit "$(cat $(find archive -name "*.$(grep -o "in \\.[a-z]*" README.txt | cut -c5-)") | grep -o "CQ{[^}]*}")"',
-  'cd ~/mission3 && grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log',
+  'cd ~/mission4 && grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log',
   'submit "$(grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log | sed "s/.*token=//")"',
-  'cd ~/mission4 && base64 -d message.b64',
+  'cd ~/mission5 && base64 -d message.b64',
   'submit "$(base64 -d message.b64 | grep -o "CQ{[^}]*}")"',
 ];
 for (const c of cmds) {
@@ -35,9 +37,9 @@ for (const c of cmds) {
   }
   console.log("cmd", ((Date.now() - t) / 1000).toFixed(1) + "s", c.slice(0, 50));
 }
-await page.waitForFunction(() => window.quest.done.size === 4, null, { timeout: 90000 }).catch(() => {});
+await page.waitForFunction(() => window.quest.done.size === 5, null, { timeout: 90000 }).catch(() => {});
 console.log("missions done:", await page.evaluate(() => [...window.quest.done].join(",")), "status:", await page.textContent("#status"));
-await send("clear; whoami; cat /etc/quest/1 | cut -c1-12; ls /root; hint 2\n");
+await send("clear; whoami; cat /etc/quest/1 | cut -c1-12; ls /root; grep -c CQ /bin/vault; hint 1\n");
 await page.waitForTimeout(3000);
 await page.screenshot({ path: "v86-done.png" });
 console.log(logs.filter(l => /error/i.test(l)).slice(0, 5).join("\n"));

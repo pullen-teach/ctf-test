@@ -1,6 +1,6 @@
 {
   "title": "Linux Quest: Mission 1",
-  "description": "Four hidden flags on a real Linux server. Find them with ls, find, grep and base64.",
+  "description": "Five hidden flags on a real Linux server. Learn to ask commands for help, then use ls, find, grep and base64.",
   "details": {
     "intro": {
       "text": "intro/text.md",
@@ -8,10 +8,31 @@
       "foreground": "intro/foreground.sh"
     },
     "steps": [
-      { "title": "Now you see me", "text": "step1/text.md", "verify": "step1/verify.sh" },
-      { "title": "Needle in the tree", "text": "step2/text.md", "verify": "step2/verify.sh" },
-      { "title": "Search party", "text": "step3/text.md", "verify": "step3/verify.sh" },
-      { "title": "Decoder ring", "text": "step4/text.md", "verify": "step4/verify.sh" }
+      {
+        "title": "Ask for help",
+        "text": "step1/text.md",
+        "verify": "step1/verify.sh"
+      },
+      {
+        "title": "Now you see me",
+        "text": "step2/text.md",
+        "verify": "step2/verify.sh"
+      },
+      {
+        "title": "Needle in the tree",
+        "text": "step3/text.md",
+        "verify": "step3/verify.sh"
+      },
+      {
+        "title": "Search party",
+        "text": "step4/text.md",
+        "verify": "step4/verify.sh"
+      },
+      {
+        "title": "Decoder ring",
+        "text": "step5/text.md",
+        "verify": "step5/verify.sh"
+      }
     ],
     "finish": {
       "text": "finish/text.md"

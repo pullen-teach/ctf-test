@@ -10,6 +10,7 @@
   const meter = document.getElementById("meter-fill");
   const started = performance.now();
   const done = new Set();
+  const TOTAL = 5;
 
   function setStatus(text) {
     statusEl.textContent = text;
@@ -113,8 +114,8 @@
     done.add(n);
     document.querySelector('.missions li[data-n="' + n + '"]')?.classList.add("done");
     document.querySelector('.step[data-n="' + n + '"]')?.classList.add("done");
-    setStatus(done.size === 4 ? "All 4 flags captured" : done.size + " of 4 flags captured");
-    if (done.size === 4) document.body.classList.add("won");
+    setStatus(done.size === TOTAL ? "All " + TOTAL + " flags captured" : done.size + " of " + TOTAL + " flags captured");
+    if (done.size === TOTAL) document.body.classList.add("won");
   }
 
   // For automated tests and mentors poking at the console.
