@@ -66,5 +66,7 @@ SH
 chmod 755 /usr/local/bin/submit
 
 touch "$H/.answers"
+# Clear the screen when player logs in, so the root setup lines disappear.
+printf '\n# Linux Quest: start with a clean screen (interactive logins only)\ncase $- in *i*) clear ;; esac\n' >> "$H/.profile"
 chown -R player:player "$H"
 touch /tmp/.quest-ready
