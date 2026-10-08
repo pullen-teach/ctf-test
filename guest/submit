@@ -1,0 +1,12 @@
+#!/bin/sh
+# submit <flag>  checks your flag against all four missions.
+if [ -z "$1" ]; then echo "Usage: submit CQ{...}"; exit 1; fi
+h=$(printf '%s' "$1" | sha256sum | cut -d' ' -f1)
+for n in 1 2 3 4; do
+  if [ "$h" = "$(cat /etc/quest/$n)" ]; then
+    echo "Correct! [quest] mission $n complete"
+    exit 0
+  fi
+done
+echo "Not a flag. Copy the whole thing, CQ{ to }."
+exit 1

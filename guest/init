@@ -1,0 +1,17 @@
+#!/bin/sh
+# PID 1 inside the browser VM: set up the system, build Mission 1 with fresh
+# random flags, then hand the serial console to the unprivileged user "player".
+export PATH=/bin:/sbin
+mount -t proc proc /proc
+mount -t sysfs sys /sys
+mount -t devtmpfs dev /dev 2>/dev/null
+mkdir -p /dev/pts && mount -t devpts devpts /dev/pts
+mount -t tmpfs -o mode=1777 tmp /tmp
+hostname quest
+echo "[quest] building your missions..."
+/sbin/build-missions
+echo "[quest] ready"
+while true; do
+  setsid cttyhack su -l player
+  echo "[quest] restarting your shell..."; sleep 1
+done
