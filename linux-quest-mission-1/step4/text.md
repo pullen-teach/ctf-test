@@ -13,6 +13,12 @@ There is no secret key. Anyone can decode it.
 
 <details><summary>Hint</summary>
 
-When you do not know an option, ask the tool: `base64 --help`
+The command to look up is `base64`. Read its help and look for the option that decodes:
+
+```
+base64 --help
+```
+
+or the full manual page: `man base64` (press `q` to quit).
 
 </details>

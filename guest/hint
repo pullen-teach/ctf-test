@@ -1,8 +1,9 @@
 #!/bin/sh
+# Names the command to learn, never the answer. Students read its --help.
 case "$1" in
-  1) echo "Mission 1: names starting with a dot are hidden. Try: ls -a" ;;
-  2) echo "Mission 2: read README.txt for the ending, then: find archive -name \"*.ending\"" ;;
-  3) echo "Mission 3: grep prints only matching lines. Try: grep <username> access.log" ;;
-  4) echo "Mission 4: ask the tool. Try: base64 --help   (look for decode)" ;;
+  1) echo "Mission 1: the command to look up is ls.     Read: ls --help" ;;
+  2) echo "Mission 2: the command to look up is find.   Read: find --help" ;;
+  3) echo "Mission 3: the command to look up is grep.   Read: grep --help" ;;
+  4) echo "Mission 4: the command to look up is base64. Read: base64 --help" ;;
   *) echo "Usage: hint 1   (or 2, 3, 4)" ;;
 esac
