@@ -1,6 +1,6 @@
 # Mission 1: Make your move
 
-**Difficulty:** Easy
+**Difficulty:** Easy · **100 points**
 
 ```
 cd ~/mission1

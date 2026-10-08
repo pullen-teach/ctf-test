@@ -1,6 +1,6 @@
 # Mission 5: Search party
 
-**Difficulty:** Medium
+**Difficulty:** Medium · **200 points**
 
 ```
 cd ~/mission5

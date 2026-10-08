@@ -1,6 +1,6 @@
 # Mission 6: Decoder ring
 
-**Difficulty:** Hard
+**Difficulty:** Hard · **400 points**
 
 ```
 cd ~/mission6

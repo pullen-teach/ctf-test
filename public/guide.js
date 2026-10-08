@@ -10,6 +10,7 @@
     {
       "title": "Make your move",
       "level": "Easy",
+      "points": 100,
       "run": [
         "cd ~/mission1",
         "ls"
@@ -30,6 +31,7 @@
     {
       "title": "Let the cat out of the bag",
       "level": "Easy",
+      "points": 100,
       "run": [
         "cd ~/mission2",
         "cat README.txt"
@@ -47,6 +49,7 @@
     {
       "title": "Now you see me",
       "level": "Easy",
+      "points": 100,
       "run": [
         "cd ~/mission3",
         "ls"
@@ -64,6 +67,7 @@
     {
       "title": "Needle in the tree",
       "level": "Medium",
+      "points": 200,
       "run": [
         "cd ~/mission4",
         "cat README.txt"
@@ -81,6 +85,7 @@
     {
       "title": "Search party",
       "level": "Medium",
+      "points": 200,
       "run": [
         "cd ~/mission5",
         "cat README.txt"
@@ -99,6 +104,7 @@
     {
       "title": "Decoder ring",
       "level": "Hard",
+      "points": 400,
       "run": [
         "cd ~/mission6",
         "cat message.b64"
@@ -115,12 +121,20 @@
   ];
 
   const N = MISSIONS.length;
+  const el = (id) => document.getElementById(id);
   const done = new Set();
   const capturedAt = {};
+  const MAX = MISSIONS.reduce((t, m) => t + m.points, 0);
+  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0);
+  const scoreEl = el("score"), scorePts = el("score-pts");
+  function showScore(bump) {
+    if (!scorePts) return;
+    scorePts.textContent = score();
+    if (bump) { scoreEl.classList.remove("bump"); void scoreEl.offsetWidth; scoreEl.classList.add("bump"); }
+  }
   let current = 0;
   let runner = null;
 
-  const el = (id) => document.getElementById(id);
   const article = el("mission");
   const count = el("m-count");
   const prev = el("prev");
@@ -143,13 +157,13 @@
       '<span class="run-prompt" aria-hidden="true">$</span><span class="run-cmd">' + esc(c) + '</span>' +
       '<span class="run-go" aria-hidden="true">Run &#9654;</span></button>').join("");
     article.innerHTML =
-      '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + m.level.toLowerCase().replace(/\s+/g, "-") + '" title="Difficulty">' + m.level + '</span></div>' +
+      '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + m.level.toLowerCase().replace(/\s+/g, "-") + '" title="Difficulty and points">' + m.level + ' · ' + m.points + '</span></div>' +
       '<div class="runs"><span class="label">Start here</span>' + runs + '</div>' +
       m.body.map((p) => "<p>" + p + "</p>").join("") +
       '<div class="card tools"><span class="label">Useful ' + (m.useful.length > 1 ? "commands" : "command") + '</span><div class="chips">' +
         m.useful.map((u) => '<code class="chip">' + u + "</code>").join("") + '</div></div>' +
-      '<div class="card submit-card' + (ok ? " is-done" : "") + '"><span class="label">' + (ok ? "Flag captured" : "Found the flag?") + '</span>' +
-        (ok ? "<p>Captured at <span class=\"captured-at\">" + (capturedAt[n] || "") + "</span> on the clock. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
+      '<div class="card submit-card' + (ok ? " is-done" : "") + '"><span class="label">' + (ok ? "Flag captured" : "Found the flag? Worth " + m.points + " points") + '</span>' +
+        (ok ? "<p><span class=\"pts\">+" + m.points + " points</span>, captured at <span class=\"captured-at\">" + (capturedAt[n] || "") + "</span> on the clock. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
       '<details class="hint"><summary>Need a hint?</summary><div>' + m.hint + "</div></details>";
     article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
     state.textContent = ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
@@ -169,8 +183,10 @@
   function finish() {
     count.textContent = "Quest complete";
     article.innerHTML =
-      "<h2>Quest complete</h2><p class=\"big-win\">All " + N + " flags captured in " + (window.questClock ? window.questClock.text() : "") + "</p>" +
-      "<div class=\"card\"><span class=\"label\">Your times</span>" + MISSIONS.map((m, i) => "<div>" + (i + 1) + ". " + m.title + ": <span class=\"captured-at\">" + (capturedAt[i + 1] || "") + "</span></div>").join("") + "</div>" +
+      "<h2>Quest complete</h2><p class=\"big-win\">" + score() + " / " + MAX + " points in " + (window.questClock ? window.questClock.text() : "") + "</p>" +
+      "<div class=\"card\"><span class=\"label\">Your scorecard</span><table class=\"times\">" +
+      MISSIONS.map((m, i) => "<tr><td>" + (i + 1) + ". " + m.title + "</td><td class=\"num\">" + m.points + " pts</td><td class=\"num\">" + (capturedAt[i + 1] || "") + "</td></tr>").join("") +
+      "<tr class=\"total\"><td>Total</td><td class=\"num\">" + score() + " pts</td><td class=\"num\">" + (window.questClock ? window.questClock.text() : "") + "</td></tr></table></div>" +
       "<p>You moved around with <code>cd</code> and <code>ls</code>, let the cat out of the bag with <code>--help</code>, found hidden files, searched a folder tree and a 12,000-line log, and decoded a message that only looked secret.</p>" +
       "<p><b>Encoding is not encryption.</b> If no key is needed to undo it, it was never secret.</p>" +
       "<p>Reload the page for a fresh computer with new flags, and see if you can beat your time.</p>";
@@ -188,12 +204,14 @@
     if (done.has(current + 1)) { current++; render(); }
   });
 
-  dots.innerHTML = MISSIONS.map((m, i) => '<button type="button" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ')">' + (i + 1) + "</button>").join("");
+  if (el("score-max")) el("score-max").textContent = MAX;
+  showScore(false);
+  dots.innerHTML = MISSIONS.map((m, i) => '<button type="button" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ', ' + m.points + ' pts)">' + (i + 1) + "</button>").join("");
   dots.querySelectorAll("button").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; render(); } }));
   render();
 
   window.questGuide = {
-    done(n, at) { done.add(n); if (at && !capturedAt[n]) capturedAt[n] = at; if (current < N) render(); },
+    done(n, at) { const fresh = !done.has(n); done.add(n); if (at && !capturedAt[n]) capturedAt[n] = at; showScore(fresh); if (current < N) render(); },
     setRunner(fn) { runner = fn; },
     current: () => current + 1,
   };

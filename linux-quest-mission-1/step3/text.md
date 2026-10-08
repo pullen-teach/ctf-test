@@ -1,6 +1,6 @@
 # Mission 3: Now you see me
 
-**Difficulty:** Easy
+**Difficulty:** Easy · **100 points**
 
 ```
 cd ~/mission3

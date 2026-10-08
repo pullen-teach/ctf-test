@@ -144,7 +144,7 @@
     if (done.size === TOTAL) stopClock();
     window.questGuide.done(n, window.questClock.text());
     document.querySelector('.step[data-n="' + n + '"]')?.classList.add("done");
-    setStatus(done.size === TOTAL ? "All " + TOTAL + " flags captured" : done.size + " of " + TOTAL + " flags captured");
+    setStatus(done.size === TOTAL ? "All " + TOTAL + " flags captured" : done.size + " of " + TOTAL + " flags");
     if (done.size === TOTAL) document.body.classList.add("won");
   }
 

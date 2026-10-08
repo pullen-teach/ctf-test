@@ -1,6 +1,6 @@
 # Mission 2: Let the cat out of the bag
 
-**Difficulty:** Easy
+**Difficulty:** Easy · **100 points**
 
 ```
 cd ~/mission2

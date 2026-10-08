@@ -33,7 +33,11 @@ a { color: #2459d8; }
 .step[data-n="4"].done { background: var(--t3); }
 .step[data-n="5"].done { background: var(--t4); }
 .step[data-n="6"].done { background: var(--t5); }
-.clock { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; font: 700 1.15rem var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 0.2rem 0.7rem; }
+.score { margin-left: auto; display: inline-flex; align-items: baseline; gap: 0.15rem; font: 700 1.15rem var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 0.2rem 0.7rem; }
+.score-of { font-size: 0.8rem; color: var(--muted); }
+.score.bump { animation: bump 0.6s ease-out; }
+@keyframes bump { 0% { transform: scale(1); background: #e8f6ef; } 40% { transform: scale(1.12); background: #e8f6ef; } 100% { transform: scale(1); } }
+.clock { display: inline-flex; align-items: center; gap: 0.5rem; font: 700 1.15rem var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 0.2rem 0.7rem; }
 .clock-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #c9d2df; }
 .clock.running .clock-dot { background: #e5484d; animation: blink 1.4s steps(2) infinite; }
 .clock.stopped { color: var(--green); border-color: #b5e2cb; background: #e8f6ef; }
@@ -76,6 +80,11 @@ a { color: #2459d8; }
 .level.hard { background: #fde8ec; color: #b4233f; }
 .level.very-hard { background: #2a1430; color: #ff8fb1; }
 .captured-at { font: 700 0.95rem var(--mono); }
+.pts { font: 700 0.95rem var(--mono); color: var(--green); }
+.times { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.times td { padding: 0.3rem 0; border-bottom: 1px solid var(--line); }
+.times td.num { text-align: right; font: 700 0.9rem var(--mono); white-space: nowrap; padding-left: 0.8rem; }
+.times tr.total td { border-bottom: 0; font-weight: 800; }
 .mission p { margin: 0; }
 .mission p code, .hint code { white-space: nowrap; }
 .moves { display: block; line-height: 1.9; padding: 0.5rem 0.8rem; border-left: 3px solid var(--line); }
@@ -133,4 +142,4 @@ body.won .status { color: var(--green); }
   .guide-body { overflow: visible; }
   .guide-foot { position: sticky; bottom: 0; box-shadow: 0 -4px 12px rgba(18, 33, 58, 0.08); }
 }
-@media (prefers-reduced-motion: reduce) { .cursor, .clock.running .clock-dot { animation: none; } .step, #meter-fill, .boot { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cursor, .clock.running .clock-dot, .score.bump { animation: none; } .step, #meter-fill, .boot { transition: none; } }

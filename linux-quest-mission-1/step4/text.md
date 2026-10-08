@@ -1,6 +1,6 @@
 # Mission 4: Needle in the tree
 
-**Difficulty:** Medium
+**Difficulty:** Medium · **200 points**
 
 ```
 cd ~/mission4
