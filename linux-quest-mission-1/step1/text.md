@@ -1,5 +1,7 @@
 # Mission 1: Make your move
 
+**Difficulty:** Easy
+
 ```
 cd ~/mission1
 ls

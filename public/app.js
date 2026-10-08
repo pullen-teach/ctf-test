@@ -12,6 +12,36 @@
   const done = new Set();
   const TOTAL = 6;
 
+  // Competition clock: counts up from the first key typed in the terminal (or the
+  // first Run button) and stops when every flag is captured. It never cuts anyone off.
+  const clockEl = document.getElementById("clock");
+  const clockText = document.getElementById("clock-time");
+  let clockStart = null, clockStop = null, clockTimer = null;
+  function fmt(ms) {
+    const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60;
+    const p2 = (n) => String(n).padStart(2, "0");
+    return (h ? h + ":" + p2(m) : p2(m)) + ":" + p2(sec);
+  }
+  const elapsed = () => (clockStart === null ? 0 : (clockStop ?? performance.now()) - clockStart);
+  function tick() { clockText.textContent = fmt(elapsed()); }
+  function startClock() {
+    if (clockStart !== null) return;
+    clockStart = performance.now();
+    clockEl.classList.add("running");
+    clockTimer = setInterval(tick, 250);
+  }
+  function stopClock() {
+    if (clockStart === null || clockStop !== null) return;
+    clockStop = performance.now();
+    clearInterval(clockTimer); tick();
+    clockEl.classList.remove("running"); clockEl.classList.add("stopped");
+    clockEl.title = "Finished in " + fmt(elapsed());
+  }
+  window.questClock = { elapsed, text: () => fmt(elapsed()), start: () => startClock() };
+  const termBox = document.getElementById("terminal");
+  termBox.addEventListener("keydown", (e) => { if (!e.ctrlKey && !e.metaKey && !e.altKey) startClock(); }, true);
+  termBox.addEventListener("paste", startClock, true);
+
   function setStatus(text) {
     statusEl.textContent = text;
   }
@@ -29,7 +59,7 @@
     setStatus("Starting lite mode…");
     meter.style.width = "60%";
     window.quest = { emulator: null, done, lite: true };
-    window.questGuide.setRunner((cmd) => window.LinuxQuestLite.typeLine(cmd));
+    window.questGuide.setRunner((cmd) => { startClock(); window.LinuxQuestLite.typeLine(cmd); });
     window.LinuxQuestLite.start(document.getElementById("terminal"), { onMission: markDone })
       .then(() => {
         meter.style.width = "100%";
@@ -111,7 +141,8 @@
   function markDone(n) {
     if (done.has(n)) return;
     done.add(n);
-    window.questGuide.done(n);
+    if (done.size === TOTAL) stopClock();
+    window.questGuide.done(n, window.questClock.text());
     document.querySelector('.step[data-n="' + n + '"]')?.classList.add("done");
     setStatus(done.size === TOTAL ? "All " + TOTAL + " flags captured" : done.size + " of " + TOTAL + " flags captured");
     if (done.size === TOTAL) document.body.classList.add("won");
@@ -119,6 +150,7 @@
 
   // The panel's run buttons type straight into the guest's console.
   window.questGuide.setRunner((cmd) => {
+    startClock();
     emulator.serial0_send(cmd + "\n");
     document.querySelector("#terminal textarea")?.focus();
   });

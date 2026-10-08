@@ -33,7 +33,12 @@ a { color: #2459d8; }
 .step[data-n="4"].done { background: var(--t3); }
 .step[data-n="5"].done { background: var(--t4); }
 .step[data-n="6"].done { background: var(--t5); }
-.status { margin-left: auto; color: var(--muted); font-weight: 600; }
+.clock { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; font: 700 1.15rem var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 0.2rem 0.7rem; }
+.clock-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #c9d2df; }
+.clock.running .clock-dot { background: #e5484d; animation: blink 1.4s steps(2) infinite; }
+.clock.stopped { color: var(--green); border-color: #b5e2cb; background: #e8f6ef; }
+.clock.stopped .clock-dot { background: var(--green); }
+.status { color: var(--muted); font-weight: 600; }
 
 .layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(20rem, 30rem); }
 .terminal-wrap { position: relative; background: var(--terminal); min-height: 0; padding: 0.6rem; }
@@ -64,6 +69,13 @@ a { color: #2459d8; }
 .guide-body { overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
 .mission { display: flex; flex-direction: column; gap: 0.9rem; }
 .mission h2 { font-size: 1.3rem; margin: 0; line-height: 1.25; }
+.title-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.level { flex: none; font: 800 0.7rem var(--sans); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.6rem; border-radius: 999px; }
+.level.easy { background: #e8f6ef; color: #12704b; }
+.level.medium { background: #fff4de; color: #9a5b00; }
+.level.hard { background: #fde8ec; color: #b4233f; }
+.level.very-hard { background: #2a1430; color: #ff8fb1; }
+.captured-at { font: 700 0.95rem var(--mono); }
 .mission p { margin: 0; }
 .mission p code, .hint code { white-space: nowrap; }
 .moves { display: block; line-height: 1.9; padding: 0.5rem 0.8rem; border-left: 3px solid var(--line); }
@@ -121,4 +133,4 @@ body.won .status { color: var(--green); }
   .guide-body { overflow: visible; }
   .guide-foot { position: sticky; bottom: 0; box-shadow: 0 -4px 12px rgba(18, 33, 58, 0.08); }
 }
-@media (prefers-reduced-motion: reduce) { .cursor { animation: none; } .step, #meter-fill, .boot { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cursor, .clock.running .clock-dot { animation: none; } .step, #meter-fill, .boot { transition: none; } }

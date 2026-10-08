@@ -1,5 +1,7 @@
 # Mission 3: Now you see me
 
+**Difficulty:** Easy
+
 ```
 cd ~/mission3
 ls

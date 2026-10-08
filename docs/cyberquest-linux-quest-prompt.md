@@ -76,7 +76,8 @@ equivalent):
 
 - **Terminal:** a `<QuestTerminal/>` client component wrapping xterm.js, loaded client-only
   (dynamic import, no SSR).
-- **Mission panel:** one mission at a time, to the right of the terminal (stacked on narrow screens):
+- **Competition clock:** counts up (never down), starts at the student's first keystroke in the terminal, stops when every flag is captured, and records the time of each capture.
+- **Mission panel:** one mission at a time, to the right of the terminal (stacked on narrow screens), with a difficulty badge:
   - Back/Next, with Next locked until that mission's flag is accepted;
   - run buttons that type a command into the terminal;
   - a Hint disclosure;
@@ -105,6 +106,9 @@ equivalent):
 Text, hints and file layout as in `ctf-test`; `guest/make-missions.py` is the single source
 for the briefs. The hints name the command and point to its `--help`; they never give the
 answer. Keep it that way.
+
+Each mission carries a difficulty on CyberQuest's scale: Easy, Medium, Hard, Very Hard.
+The six below are Easy, Easy, Easy, Medium, Medium, Hard; the two new ones should be Hard and Very Hard.
 
 | # | Title | Skill |
 |---|---|---|

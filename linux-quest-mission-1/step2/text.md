@@ -1,5 +1,7 @@
 # Mission 2: Let the cat out of the bag
 
+**Difficulty:** Easy
+
 ```
 cd ~/mission2
 cat README.txt

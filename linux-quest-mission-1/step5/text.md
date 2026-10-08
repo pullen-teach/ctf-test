@@ -1,5 +1,7 @@
 # Mission 5: Search party
 
+**Difficulty:** Medium
+
 ```
 cd ~/mission5
 cat README.txt

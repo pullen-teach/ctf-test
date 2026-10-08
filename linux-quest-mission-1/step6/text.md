@@ -1,5 +1,7 @@
 # Mission 6: Decoder ring
 
+**Difficulty:** Hard
+
 ```
 cd ~/mission6
 cat message.b64

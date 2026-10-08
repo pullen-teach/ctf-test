@@ -9,6 +9,7 @@
   const MISSIONS = [
     {
       "title": "Make your move",
+      "level": "Easy",
       "run": [
         "cd ~/mission1",
         "ls"
@@ -28,6 +29,7 @@
     },
     {
       "title": "Let the cat out of the bag",
+      "level": "Easy",
       "run": [
         "cd ~/mission2",
         "cat README.txt"
@@ -44,6 +46,7 @@
     },
     {
       "title": "Now you see me",
+      "level": "Easy",
       "run": [
         "cd ~/mission3",
         "ls"
@@ -60,6 +63,7 @@
     },
     {
       "title": "Needle in the tree",
+      "level": "Medium",
       "run": [
         "cd ~/mission4",
         "cat README.txt"
@@ -76,6 +80,7 @@
     },
     {
       "title": "Search party",
+      "level": "Medium",
       "run": [
         "cd ~/mission5",
         "cat README.txt"
@@ -93,6 +98,7 @@
     },
     {
       "title": "Decoder ring",
+      "level": "Hard",
       "run": [
         "cd ~/mission6",
         "cat message.b64"
@@ -110,6 +116,7 @@
 
   const N = MISSIONS.length;
   const done = new Set();
+  const capturedAt = {};
   let current = 0;
   let runner = null;
 
@@ -136,13 +143,13 @@
       '<span class="run-prompt" aria-hidden="true">$</span><span class="run-cmd">' + esc(c) + '</span>' +
       '<span class="run-go" aria-hidden="true">Run &#9654;</span></button>').join("");
     article.innerHTML =
-      '<h2>' + m.title + '</h2>' +
+      '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + m.level.toLowerCase().replace(/\s+/g, "-") + '" title="Difficulty">' + m.level + '</span></div>' +
       '<div class="runs"><span class="label">Start here</span>' + runs + '</div>' +
       m.body.map((p) => "<p>" + p + "</p>").join("") +
       '<div class="card tools"><span class="label">Useful ' + (m.useful.length > 1 ? "commands" : "command") + '</span><div class="chips">' +
         m.useful.map((u) => '<code class="chip">' + u + "</code>").join("") + '</div></div>' +
       '<div class="card submit-card' + (ok ? " is-done" : "") + '"><span class="label">' + (ok ? "Flag captured" : "Found the flag?") + '</span>' +
-        (ok ? "<p>Nice work. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
+        (ok ? "<p>Captured at <span class=\"captured-at\">" + (capturedAt[n] || "") + "</span> on the clock. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
       '<details class="hint"><summary>Need a hint?</summary><div>' + m.hint + "</div></details>";
     article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
     state.textContent = ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
@@ -162,10 +169,11 @@
   function finish() {
     count.textContent = "Quest complete";
     article.innerHTML =
-      "<h2>Quest complete</h2><p class=\"big-win\">All " + N + " flags captured</p>" +
+      "<h2>Quest complete</h2><p class=\"big-win\">All " + N + " flags captured in " + (window.questClock ? window.questClock.text() : "") + "</p>" +
+      "<div class=\"card\"><span class=\"label\">Your times</span>" + MISSIONS.map((m, i) => "<div>" + (i + 1) + ". " + m.title + ": <span class=\"captured-at\">" + (capturedAt[i + 1] || "") + "</span></div>").join("") + "</div>" +
       "<p>You moved around with <code>cd</code> and <code>ls</code>, let the cat out of the bag with <code>--help</code>, found hidden files, searched a folder tree and a 12,000-line log, and decoded a message that only looked secret.</p>" +
       "<p><b>Encoding is not encryption.</b> If no key is needed to undo it, it was never secret.</p>" +
-      "<p>Reload the page for a fresh computer with new flags, and see how fast you can do it again.</p>";
+      "<p>Reload the page for a fresh computer with new flags, and see if you can beat your time.</p>";
     state.textContent = "Reload the page to play again with new flags.";
     state.className = "m-state ok";
     next.disabled = true;
@@ -180,12 +188,12 @@
     if (done.has(current + 1)) { current++; render(); }
   });
 
-  dots.innerHTML = MISSIONS.map((m, i) => '<button type="button" title="Mission ' + (i + 1) + ': ' + m.title + '">' + (i + 1) + "</button>").join("");
+  dots.innerHTML = MISSIONS.map((m, i) => '<button type="button" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ')">' + (i + 1) + "</button>").join("");
   dots.querySelectorAll("button").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; render(); } }));
   render();
 
   window.questGuide = {
-    done(n) { done.add(n); if (current < N) render(); },
+    done(n, at) { done.add(n); if (at && !capturedAt[n]) capturedAt[n] = at; if (current < N) render(); },
     setRunner(fn) { runner = fn; },
     current: () => current + 1,
   };

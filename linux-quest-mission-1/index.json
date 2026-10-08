@@ -9,32 +9,32 @@
     },
     "steps": [
       {
-        "title": "Make your move",
+        "title": "Make your move (Easy)",
         "text": "step1/text.md",
         "verify": "step1/verify.sh"
       },
       {
-        "title": "Let the cat out of the bag",
+        "title": "Let the cat out of the bag (Easy)",
         "text": "step2/text.md",
         "verify": "step2/verify.sh"
       },
       {
-        "title": "Now you see me",
+        "title": "Now you see me (Easy)",
         "text": "step3/text.md",
         "verify": "step3/verify.sh"
       },
       {
-        "title": "Needle in the tree",
+        "title": "Needle in the tree (Medium)",
         "text": "step4/text.md",
         "verify": "step4/verify.sh"
       },
       {
-        "title": "Search party",
+        "title": "Search party (Medium)",
         "text": "step5/text.md",
         "verify": "step5/verify.sh"
       },
       {
-        "title": "Decoder ring",
+        "title": "Decoder ring (Hard)",
         "text": "step6/text.md",
         "verify": "step6/verify.sh"
       }

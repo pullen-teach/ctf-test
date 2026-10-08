@@ -1,5 +1,7 @@
 # Mission 4: Needle in the tree
 
+**Difficulty:** Medium
+
 ```
 cd ~/mission4
 cat README.txt
