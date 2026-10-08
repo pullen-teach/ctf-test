@@ -112,10 +112,6 @@
   // ------------------------------------------------------- build the world
   // Mirrors guest/build-missions: random flags, only SHA-256 kept in /etc/quest.
   const FLAGHASH = {};
-  let VAULT_FLAG = "";
-  // What  cat /bin/vault  shows: the secret is never stored in plain text.
-  const VAULT_SCRIPT = "#!/bin/sh\n# vault: guards the Mission 1 flag. The way to open it is in its own help.\nSECRET='(scrambled)'\n";
-  const VAULT_HELP = "Usage: vault [OPTION]\n\nGuards a secret until someone asks it the right way.\n\nOptions:\n  -s, --status    show whether the vault is locked\n  -o, --open      open the vault and show what is inside\n  -v, --version   show the version number\n  -h, --help      show this help and exit\n";
   async function buildWorld() {
     for (const d of ["bin", "sbin", "etc", "proc", "sys", "dev", "tmp", "home"]) ROOT.kids[d] = mkdir(0o755, "root");
     ROOT.kids.tmp.mode = 0o777;
@@ -134,11 +130,12 @@
     const keep = async (n, f) => { FLAGHASH[n] = await sha256hex(f); put("/etc/quest/" + n, mkfile(FLAGHASH[n] + "\n", 0o644, "root")); };
     put("/etc/quest", mkdir(0o755, "root"));
 
-    // 1: ask for help. vault only opens for students who read vault --help.
-    let F = flag("help"); await keep(1, F);
-    VAULT_FLAG = F;
-    put(H + "/mission1/README.txt", mkfile("A program called vault guards this mission's flag.\nType vault to meet it. It will not open for just anyone.\n", 0o644, USER));
-    ROOT.kids.bin.kids.vault = mkfile(VAULT_SCRIPT, 0o755, "root");
+    // 1: let the cat out of the bag. cat --help shows -n, which numbers lines.
+    let F = flag("cat"); await keep(1, F);
+    const line = 30 + randInt(66), bag = [];
+    for (let i = 1; i <= 100; i++) bag.push("meow " + (i === line ? F : "CQ{cat-" + hex(4) + "}"));
+    put(H + "/mission1/README.txt", mkfile("The cat is hiding in bag.txt.\nEvery line in the bag looks like a flag, but only line " + line + " is real.\n", 0o644, USER));
+    put(H + "/mission1/bag.txt", mkfile(bag.join("\n") + "\n", 0o644, USER));
 
     // 2: hidden file
     F = flag("hidden"); await keep(2, F);
@@ -149,7 +146,7 @@
 
     // 2: find by name
     F = flag("finder"); await keep(3, F);
-    const ext = pick(["key", "vault", "gem"]);
+    const ext = pick(["key", "gem", "relic"]);
     const dirs = [];
     for (const a of ["alpha", "bravo", "charlie", "delta", "echo"])
       for (let b = 0; b < 4; b++) { const d = H + "/mission3/archive/" + a + "/" + pick(["box", "bin", "shelf", "drawer"]) + "-" + rnd(4); if (!lookup(d).node) put(d, mkdir(0o755, USER)); dirs.push(d); }
@@ -182,8 +179,17 @@
   const history = [];
   let onMission = () => {};
 
+  // Same briefs as the panel on the page; see guest/mission.
+  const MISSION_TEXT = {
+"1": "Mission 1: Let the cat out of the bag\n\n  cd ~/mission1\n  cat README.txt\n\ncat prints a file on the screen. You just used it to read README.txt.\n\nThe cat is hiding in bag.txt: 100 lines, and every one looks like a\nflag. Only the line number in README.txt is real. Counting 100 lines by\nhand is how mistakes happen.\n\nAlmost every Linux command can explain itself: type its name, a space,\nthen --help. Ask cat for its help and look for an option that numbers\nthe lines. You will use --help in every mission after this one.\n\nUseful command: cat\nWhen you have the flag: submit CQ{...}     Stuck? hint 1\n",
+"2": "Mission 2: Now you see me\n\n  cd ~/mission2\n\nThere is a flag in this folder, but plain ls will not show it.\n\nOn Linux, a file whose name starts with a dot is hidden. Watch out: one\nhidden file is a decoy.\n\nUseful commands: ls, cat\nWhen you have the flag: submit CQ{...}     Stuck? hint 2\n",
+"3": "Mission 3: Needle in the tree\n\n  cd ~/mission3\n  cat README.txt\n\nThe archive folder holds about 80 files in 20 folders. Exactly one of\nthem has the file ending named in README.txt, and it holds the flag.\n\nOpening folders one by one is too slow. Let the computer search.\n\nUseful commands: find, cat\nWhen you have the flag: submit CQ{...}     Stuck? hint 3\n",
+"4": "Mission 4: Search party\n\n  cd ~/mission4\n  cat README.txt\n\naccess.log has 12,000 lines. One intruder logged in exactly once.\n\nTheir token on that line is the flag. Scrolling would take all day.\n\nUseful commands: grep, head, wc\nWhen you have the flag: submit CQ{...}     Stuck? hint 4\n",
+"5": "Mission 5: Decoder ring\n\n  cd ~/mission5\n  cat message.b64\n\nIt looks like gibberish, but it is not encrypted. It is encoded with\nbase64: a way of writing any data using only letters, digits, +, / and\n=.\n\nThere is no secret key. Anyone can decode it.\n\nUseful command: base64\nWhen you have the flag: submit CQ{...}     Stuck? hint 5\n"
+};
+  const MISSION_OVERVIEW = "Your missions:\n  1  Let the cat out of the bag\n  2  Now you see me\n  3  Needle in the tree\n  4  Search party\n  5  Decoder ring\n\nRead one with: mission 1   (up to 5)\n";
   const HINTS = {
-    1: "Mission 1: most commands explain themselves if you add --help after the name.",
+    1: "Mission 1: the command to look up is cat.    Read: cat --help",
     2: "Mission 2: the command to look up is ls.     Read: ls --help",
     3: "Mission 3: the command to look up is find.   Read: find --help",
     4: "Mission 4: the command to look up is grep.   Read: grep --help",
@@ -332,8 +338,14 @@
       return R(s + (nl ? "\n" : ""));
     },
     async cat(args, stdin) {
-      const { items, err } = fileInputs(args.filter((a) => a !== "-n"), stdin, "cat");
-      return R(items.map(([, d]) => d).join(""), err, err ? 1 : 0);
+      const { o, rest } = opts(args);
+      const { items, err } = fileInputs(rest, stdin, "cat");
+      let out = items.map(([, d]) => d).join("");
+      if (o.n || o.b) {
+        let k = 0;
+        out = joinLines(splitLines(out).map((l) => (o.b && l === "" ? l : String(++k).padStart(6) + "\t" + l)));
+      }
+      return R(out, err, err ? 1 : 0);
     },
     async head(args, stdin) { return headTail(args, stdin, "head"); },
     async tail(args, stdin) { return headTail(args, stdin, "tail"); },
@@ -524,15 +536,7 @@
     async help() {
       return R("Linux Quest lite mode: a simulated shell (this browser blocks WebAssembly,\nso the real Linux computer can't run here).\n\nCommands that work:\n  " + Object.keys(CMDS).filter((c) => c !== "help").sort().join(" ") + "\n\nAlso: pipes |, > and >> redirects, ; and &&, quotes, * wildcards, Tab and the Up arrow.\n");
     },
-    async vault(args) {
-      const a = args[0];
-      if (a === "-h" || a === "--help") return R(VAULT_HELP);
-      if (a === "-s" || a === "--status") return R("The vault is locked.\n");
-      if (a === "-v" || a === "--version") return R("vault 1.0 (Linux Quest)\n");
-      if (a === "-o" || a === "--open") return R("The vault swings open.\nFlag: " + VAULT_FLAG + "\n");
-      if (a === undefined) return R("The vault is locked. It only opens for people who read its instructions.\n", "", 1);
-      return R("vault: unrecognized option '" + a + "'\nTry 'vault --help' for more information.\n", "", 1);
-    },
+    async mission(args) { return R(MISSION_TEXT[args[0]] || MISSION_OVERVIEW); },
     async hint(args) { return R((HINTS[args[0]] || "Usage: hint 1   (or 2, 3, 4, 5)") + "\n"); },
     async submit(args) {
       if (!args[0]) return R("Usage: submit CQ{...}\n", "", 1);
@@ -734,7 +738,7 @@
       return runScript(r.node.data);
     }
     if (args.includes("--help") && HELP[name]) return R("", HELP[name], 1);
-    if (args.includes("--help") && CMDS[name] && name !== "vault") return R("", "Usage: " + name + " ... (short help in lite mode)\n", 0);
+    if (args.includes("--help") && CMDS[name]) return R("", "Usage: " + name + " ... (short help in lite mode)\n", 0);
     if (name === "man") return R("", "man: not available here. Try: " + (args[0] || "COMMAND") + " --help\n", 1);
     const fn = CMDS[name];
     if (fn) return fn(args, stdin);
@@ -880,12 +884,16 @@
     window.addEventListener("resize", () => fit(container));
     term.onData((d) => { onData(d); });
     write("\x1b[33mLinux Quest lite mode.\x1b[0m This browser blocks WebAssembly, so the real Linux\n" +
-      "computer can't run here. This is a simulated shell with the commands the\nmissions use. Type \x1b[1mhelp\x1b[0m to see them.\n\n");
+      "computer can't run here. This is a simulated shell with the commands the\nmissions use. Type \x1b[1mhelp\x1b[0m to see them.\n" +
+      "Read your first mission with \x1b[1mmission 1\x1b[0m, or in the panel on the right.\n\n");
     term.write(prompt());
     term.focus();
     window.questLite = { runLine };
     return { seconds: (performance.now() - t0) / 1000 };
   }
 
-  window.LinuxQuestLite = { start };
+  // Type a command into the terminal as if the student had (used by the page's run buttons).
+  async function typeLine(cmd) { if (!term || busy) return; buf = ""; pos = 0; redraw(); await onData(cmd); await onData("\r"); term.focus(); }
+
+  window.LinuxQuestLite = { start, typeLine };
 })();

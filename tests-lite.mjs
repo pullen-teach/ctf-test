@@ -14,11 +14,12 @@ const cmds = ["whoami", "pwd", "ls", "ls -a ~", "ls -a /home", "cd / ; ls ; cd ~
   "find /etc -name \"p*\"", "find /etc -type d", "grep player /etc/passwd", "grep -r PS1 /etc", "ls /bin | wc -l", "ls /bin | grep sh | wc -l",
   "ls /root", "ls -l /etc/passwd", "echo 'echo hi' > hi.sh", "./hi.sh", "chmod +x hi.sh", "./hi.sh", "echo hello | base64", "echo aGVsbG8K | base64 -d",
   "echo hello | sha256sum", "echo Hello | sha256sum", "LS", "ls /nope", "cd /etc; pwd; cd ~", "hint 2", "echo \"$(whoami) leveled up\"", "uname", "cd /root", "cat /etc/quest/1",
-  "echo hacked > /etc/quest/1", "submit CQ{fake-12345678}", "cat ~/mission2/notes.txt", "vault --help", "hint 1", "base64 --help", "vi", "frobnicate"];
+  "echo hacked > /etc/quest/1", "submit CQ{fake-12345678}", "cat ~/mission2/notes.txt", "cat --help", "cat -n ~/mission1/README.txt", "hint 1", "base64 --help", "vi", "frobnicate"];
 for (const c of cmds) console.log("$ " + c + "\n" + (await run(c)).trimEnd());
 // Solve the missions, and submit by typing into the terminal (tests the keyboard path).
-const f0 = (await run("vault --open")).match(/CQ\{[^}]+\}/)[0];
-console.log("vault no args:", (await run("vault")).trim(), "| bogus:", (await run("vault --x")).split("\n")[0]);
+const ln = (await run("cat ~/mission1/README.txt")).match(/line (\d+)/)[1];
+const f0 = (await run("cat -n ~/mission1/bag.txt")).split("\n").find((l) => l.startsWith(ln.padStart(6) + "\t")).match(/CQ\{[^}]+\}/)[0];
+console.log("line", ln, "decoy rejected:", (await run("submit " + (await run("head -1 ~/mission1/bag.txt")).match(/CQ\{[^}]+\}/)[0])).trim());
 const ls1 = await run("ls -a ~/mission2");
 const real = ls1.replace(/\x1b\[[0-9;]*m/g, "").split(/\s+/).find((n) => n.startsWith(".") && n.length > 2 && !n.startsWith(".old"));
 const f1 = (await run("cat ~/mission2/" + real)).match(/CQ\{[^}]+\}/)[0];
@@ -36,7 +37,7 @@ await page.keyboard.type("cd miss"); await page.keyboard.press("Tab"); await pag
 await page.keyboard.type("pwd"); await page.keyboard.press("Enter"); await page.keyboard.press("ArrowUp"); await page.keyboard.press("Enter");
 await page.waitForTimeout(400);
 console.log("status after submits:", await page.textContent("#status"));
-console.log("green cards:", await page.evaluate(() => document.querySelectorAll(".missions li.done").length));
+console.log("green cards:", await page.evaluate(() => window.quest.done.size));
 console.log("screen tail:\n" + (await page.evaluate(() => document.querySelector(".xterm-rows").innerText)).trimEnd().split("\n").slice(-12).join("\n"));
 await page.screenshot({ path: "lite.png" });
 console.log("page errors:", errs);

@@ -16,8 +16,8 @@ await page.screenshot({ path: "v86-ready.png" });
 // Solve every mission by typing into the guest's serial console, like a student.
 const send = (s) => page.evaluate((s) => window.quest.emulator.serial0_send(s), s);
 const cmds = [
-  'cd ~/mission1 && cat README.txt && vault; vault --help',
-  'submit "$(vault --open | grep -o "CQ{[^}]*}")"',
+  'cd ~/mission1 && cat README.txt && cat --help; cat -n bag.txt | tail -3',
+  'submit "$(sed -n "$(grep -o "line [0-9][0-9]*" README.txt | cut -c6-)p" bag.txt | grep -o "CQ{[^}]*}")"',
   'cd ~/mission2 && ls -a',
   'submit "$(cat .[!.]* | grep -o "CQ{[^}]*}")"',
   'cd ~/mission3 && cat README.txt',
@@ -39,7 +39,7 @@ for (const c of cmds) {
 }
 await page.waitForFunction(() => window.quest.done.size === 5, null, { timeout: 90000 }).catch(() => {});
 console.log("missions done:", await page.evaluate(() => [...window.quest.done].join(",")), "status:", await page.textContent("#status"));
-await send("clear; whoami; cat /etc/quest/1 | cut -c1-12; ls /root; grep -c CQ /bin/vault; hint 1\n");
+await send("clear; whoami; cat /etc/quest/1 | cut -c1-12; ls /root; hint 1\n");
 await page.waitForTimeout(3000);
 await page.screenshot({ path: "v86-done.png" });
 console.log(logs.filter(l => /error/i.test(l)).slice(0, 5).join("\n"));

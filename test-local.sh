@@ -18,10 +18,11 @@ neg() {
 last() { grep -o 'CQ{[^}]*}' | tail -1; }
 for n in 1 2 3 4 5; do neg $n; done
 as 'submit CQ{wrong-00000000}' >/dev/null; neg 1
-out=$(as 'vault'); case "$out" in *locked*) echo "  PASS  vault stays locked without an option"; pass=$((pass+1));; *) echo "  FAIL  vault opened with no option"; fail=$((fail+1));; esac
-as 'vault --help' | grep -q -- '--open' && { echo "  PASS  vault --help documents --open"; pass=$((pass+1)); } || { echo "  FAIL  vault --help"; fail=$((fail+1)); }
-grep -q 'CQ{' /usr/local/bin/vault && { echo "  FAIL  flag readable in the vault script"; fail=$((fail+1)); } || { echo "  PASS  flag is not plain text in the vault script"; pass=$((pass+1)); }
-f=$(as 'vault --open' | last);                                                         as "submit '$f'" >/dev/null; check 1
+as 'cat --help' | grep -q -- '-n' && { echo "  PASS  cat --help documents -n"; pass=$((pass+1)); } || { echo "  FAIL  cat --help"; fail=$((fail+1)); }
+[ "$(grep -c 'CQ{' /home/player/mission1/bag.txt)" -eq 100 ] && { echo "  PASS  bag.txt has 100 flag-like lines"; pass=$((pass+1)); } || { echo "  FAIL  bag.txt line count"; fail=$((fail+1)); }
+n=$(as 'cat ~/mission1/README.txt' | grep -o 'line [0-9][0-9]*' | cut -c6-)
+d=$(as 'head -1 ~/mission1/bag.txt' | last);                                          as "submit '$d'" >/dev/null; neg 1
+f=$(as "cd ~/mission1 && cat -n bag.txt" | awk -v n="$n" '$1 == n' | last);            as "submit '$f'" >/dev/null; check 1
 f=$(as 'cd ~/mission2 && for x in .[!.]*; do cat "$x"; done' | last);              as "submit '$f'" >/dev/null; check 2
 ext=$(as 'cat ~/mission3/README.txt' | grep -o 'in \.[a-z]*' | cut -c5-)
 f=$(as "cd ~/mission3 && cat \"\$(find archive -name '*.$ext')\"" | last);            as "submit '$f'" >/dev/null; check 3

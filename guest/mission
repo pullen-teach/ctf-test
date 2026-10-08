@@ -1,0 +1,94 @@
+#!/bin/sh
+# mission [N]  prints a mission brief, the same text as the panel on the page.
+case "$1" in
+  1) cat <<'EOF'
+Mission 1: Let the cat out of the bag
+
+  cd ~/mission1
+  cat README.txt
+
+cat prints a file on the screen. You just used it to read README.txt.
+
+The cat is hiding in bag.txt: 100 lines, and every one looks like a
+flag. Only the line number in README.txt is real. Counting 100 lines by
+hand is how mistakes happen.
+
+Almost every Linux command can explain itself: type its name, a space,
+then --help. Ask cat for its help and look for an option that numbers
+the lines. You will use --help in every mission after this one.
+
+Useful command: cat
+When you have the flag: submit CQ{...}     Stuck? hint 1
+EOF
+  ;;
+  2) cat <<'EOF'
+Mission 2: Now you see me
+
+  cd ~/mission2
+
+There is a flag in this folder, but plain ls will not show it.
+
+On Linux, a file whose name starts with a dot is hidden. Watch out: one
+hidden file is a decoy.
+
+Useful commands: ls, cat
+When you have the flag: submit CQ{...}     Stuck? hint 2
+EOF
+  ;;
+  3) cat <<'EOF'
+Mission 3: Needle in the tree
+
+  cd ~/mission3
+  cat README.txt
+
+The archive folder holds about 80 files in 20 folders. Exactly one of
+them has the file ending named in README.txt, and it holds the flag.
+
+Opening folders one by one is too slow. Let the computer search.
+
+Useful commands: find, cat
+When you have the flag: submit CQ{...}     Stuck? hint 3
+EOF
+  ;;
+  4) cat <<'EOF'
+Mission 4: Search party
+
+  cd ~/mission4
+  cat README.txt
+
+access.log has 12,000 lines. One intruder logged in exactly once.
+
+Their token on that line is the flag. Scrolling would take all day.
+
+Useful commands: grep, head, wc
+When you have the flag: submit CQ{...}     Stuck? hint 4
+EOF
+  ;;
+  5) cat <<'EOF'
+Mission 5: Decoder ring
+
+  cd ~/mission5
+  cat message.b64
+
+It looks like gibberish, but it is not encrypted. It is encoded with
+base64: a way of writing any data using only letters, digits, +, / and
+=.
+
+There is no secret key. Anyone can decode it.
+
+Useful command: base64
+When you have the flag: submit CQ{...}     Stuck? hint 5
+EOF
+  ;;
+  *) cat <<'EOF'
+Your missions:
+  1  Let the cat out of the bag
+  2  Now you see me
+  3  Needle in the tree
+  4  Search party
+  5  Decoder ring
+
+Read one with: mission 1   (up to 5)
+EOF
+  ;;
+esac

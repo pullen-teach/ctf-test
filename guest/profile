@@ -2,3 +2,4 @@ export PS1='\[\e[1;32m\]\u\[\e[0m\]@quest:\[\e[1;34m\]\w\[\e[0m\]\$ '
 export PATH=/bin:/sbin
 alias ls='ls --color=auto'
 cd ~
+echo "Read your first mission with: mission 1   (or in the panel on the right)"

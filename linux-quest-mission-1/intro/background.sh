@@ -12,38 +12,14 @@ keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
 pick() { printf '%s\n' "$@" | shuf -n1; }
 rnd()  { head -c 32 /dev/urandom | base64 | tr -dc 'a-z0-9' | cut -c1-"$1"; }
 
-# ---- step 1: ask for help (vault --help, then vault --open) ----
-F1=$(flag help); keep 1 "$F1"
+# ---- step 1: let the cat out of the bag (cat --help shows -n) ----
+F1=$(flag cat); keep 1 "$F1"
 mkdir -p "$H/mission1"
-printf 'A program called vault guards this mission'"'"'s flag.\nType vault to meet it. It will not open for just anyone.\n' > "$H/mission1/README.txt"
-SECRET=$(printf 'Flag: %s\n' "$F1" | base64 -w0 | rev)
-cat > /usr/local/bin/vault <<'VAULT'
-#!/bin/sh
-# vault: guards the Mission 1 flag. The way to open it is in its own help.
-SECRET='__SECRET__'
-case "$1" in
-  -h|--help)
-    cat <<'HELP'
-Usage: vault [OPTION]
-
-Guards a secret until someone asks it the right way.
-
-Options:
-  -s, --status    show whether the vault is locked
-  -o, --open      open the vault and show what is inside
-  -v, --version   show the version number
-  -h, --help      show this help and exit
-HELP
-    ;;
-  -s|--status) echo "The vault is locked." ;;
-  -v|--version) echo "vault 1.0 (Linux Quest)" ;;
-  -o|--open) echo "The vault swings open."; printf '%s' "$SECRET" | rev | base64 -d ;;
-  "") echo "The vault is locked. It only opens for people who read its instructions."; exit 1 ;;
-  *) echo "vault: unrecognized option '$1'"; echo "Try 'vault --help' for more information."; exit 1 ;;
-esac
-VAULT
-sed -i "s|__SECRET__|$SECRET|" /usr/local/bin/vault
-chmod 755 /usr/local/bin/vault
+line=$(shuf -i 30-95 -n1)
+printf 'The cat is hiding in bag.txt.\nEvery line in the bag looks like a flag, but only line %s is real.\n' "$line" > "$H/mission1/README.txt"
+for i in $(seq 1 100); do
+  if [ "$i" -eq "$line" ]; then echo "meow $F1"; else echo "meow CQ{cat-$(head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n')}"; fi
+done > "$H/mission1/bag.txt"
 
 # ---- step 2: hidden file (ls -a) ----
 F2=$(flag hidden); keep 2 "$F2"
@@ -54,7 +30,7 @@ printf 'You found the hidden file.\nFlag: %s\n' "$F2" > "$H/mission2/.$(pick tre
 
 # ---- step 3: find by name ----
 F3=$(flag finder); keep 3 "$F3"
-ext=$(pick key vault gem)
+ext=$(pick key gem relic)
 for a in alpha bravo charlie delta echo; do
   for b in 1 2 3 4; do
     d="$H/mission3/archive/$a/$(pick box bin shelf drawer)-$(rnd 4)"; mkdir -p "$d"

@@ -6,7 +6,7 @@ chosen branch updates the scenarios.
 
 ## linux-quest-mission-1
 
-Five steps: ask a command for help (`vault --help`), hidden files (ls -a), find
+Five steps: read files with cat and its --help (`cat -n`), hidden files (ls -a), find
 by name, grep a log, base64 decode. Steps name useful commands and hint at
 `--help`; they never give the answer.
 

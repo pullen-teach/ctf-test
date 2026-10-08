@@ -1,18 +1,20 @@
-# Mission 1: Ask for help
+# Mission 1: Let the cat out of the bag
 
 ```
 cd ~/mission1
 cat README.txt
 ```{{exec}}
 
-A program called `vault` guards this flag. Nobody is going to tell you how to open it.
+`cat` prints a file on the screen. You just used it to read `README.txt`.
 
-The good news: almost every Linux command can **explain itself**. Find out how to ask
-`vault` for its instructions, read them carefully, and use what you learn.
+The cat is hiding in `bag.txt`: 100 lines, and every one looks like a flag. Only the line
+number in `README.txt` is real. Counting 100 lines by hand is how mistakes happen.
 
-This is the most useful skill in this whole quest. You will use it in every mission after this one.
+Almost every Linux command can **explain itself**: type its name, a space, then `--help`.
+Ask `cat` for its help and look for an option that numbers the lines. You will use `--help`
+in every mission after this one.
 
-**Useful command:** `vault`
+**Useful command:** `cat`
 
 When you have the flag, record it with `submit` and press **CHECK**.
 
@@ -20,7 +22,11 @@ When you have the flag, record it with `submit` and press **CHECK**.
 
 <details><summary>Hint</summary>
 
-Most commands print their instructions when you add `--help` after the command's name.
-Then read the list of options: one of them does what you need.
+Read the help for `cat` and look for the option that **numbers** the lines. Options go
+between the command and the file name. For the full manual, try `man cat`.
+
+```
+cat --help
+```
 
 </details>

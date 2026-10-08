@@ -30,6 +30,7 @@
     meter.style.width = "60%";
     const tag = document.querySelector(".tag");
     window.quest = { emulator: null, done, lite: true };
+    window.questGuide.setRunner((cmd) => window.LinuxQuestLite.typeLine(cmd));
     window.LinuxQuestLite.start(document.getElementById("terminal"), { onMission: markDone })
       .then(() => {
         meter.style.width = "100%";
@@ -112,11 +113,17 @@
   function markDone(n) {
     if (done.has(n)) return;
     done.add(n);
-    document.querySelector('.missions li[data-n="' + n + '"]')?.classList.add("done");
+    window.questGuide.done(n);
     document.querySelector('.step[data-n="' + n + '"]')?.classList.add("done");
     setStatus(done.size === TOTAL ? "All " + TOTAL + " flags captured" : done.size + " of " + TOTAL + " flags captured");
     if (done.size === TOTAL) document.body.classList.add("won");
   }
+
+  // The panel's run buttons type straight into the guest's console.
+  window.questGuide.setRunner((cmd) => {
+    emulator.serial0_send(cmd + "\n");
+    document.querySelector("#terminal textarea")?.focus();
+  });
 
   // For automated tests and mentors poking at the console.
   window.quest = { emulator, done };
