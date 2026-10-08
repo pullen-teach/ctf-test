@@ -17,15 +17,15 @@ await page.screenshot({ path: "v86-ready.png" });
 const send = (s) => page.evaluate((s) => window.quest.emulator.serial0_send(s), s);
 const cmds = [
   'cd ~/mission1 && cat README.txt && cat --help; cat -n bag.txt | tail -3',
-  'submit "$(sed -n "$(grep -o "line [0-9][0-9]*" README.txt | cut -c6-)p" bag.txt | grep -o "CQ{[^}]*}")"',
-  'cd ~/mission2 && ls -a',
-  'submit "$(cat .[!.]* | grep -o "CQ{[^}]*}")"',
+  'submit "$(sed -n "$(grep -o "line [0-9][0-9]*" README.txt | cut -c6-)p" bag.txt | grep -o "CYBA{[^}]*}")"',
+  'cd ~/mission2/town && cd $(grep -o "into the [a-z]*" note.txt | cut -d" " -f3) && cat note.txt && cd .. && cd $(cat */note.txt | grep -o "try the [a-z]*" | cut -d" " -f3) && cd $(grep -o "the [a-z]*" note.txt | head -2 | cut -d" " -f2 | tr "\\n" "/") && pwd && ls -a',
+  'submit "$(cat .[!.]* | grep -o "CYBA{[^}]*}")"',
   'cd ~/mission3 && cat README.txt',
-  'submit "$(cat $(find archive -name "*.$(grep -o "in \\.[a-z]*" README.txt | cut -c5-)") | grep -o "CQ{[^}]*}")"',
+  'submit "$(cat $(find archive -name "*.$(grep -o "in \\.[a-z]*" README.txt | cut -c5-)") | grep -o "CYBA{[^}]*}")"',
   'cd ~/mission4 && grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log',
   'submit "$(grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log | sed "s/.*token=//")"',
   'cd ~/mission5 && base64 -d message.b64',
-  'submit "$(base64 -d message.b64 | grep -o "CQ{[^}]*}")"',
+  'submit "$(base64 -d message.b64 | grep -o "CYBA{[^}]*}")"',
 ];
 for (const c of cmds) {
   const t = Date.now();

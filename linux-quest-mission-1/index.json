@@ -1,6 +1,6 @@
 {
   "title": "Linux Quest: Mission 1",
-  "description": "Five hidden flags on a real Linux server. Read files with cat and learn to ask commands for help, then use ls, find, grep and base64.",
+  "description": "Five hidden flags on a real Linux server. Read files with cat and learn to ask commands for help, then move around with cd and use ls, find, grep and base64.",
   "details": {
     "intro": {
       "text": "intro/text.md",
@@ -14,7 +14,7 @@
         "verify": "step1/verify.sh"
       },
       {
-        "title": "Now you see me",
+        "title": "Make your moves",
         "text": "step2/text.md",
         "verify": "step2/verify.sh"
       },

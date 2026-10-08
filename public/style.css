@@ -64,6 +64,8 @@ a { color: #2459d8; }
 .mission h2 { font-size: 1.3rem; margin: 0; line-height: 1.25; }
 .mission p { margin: 0; }
 .mission p code, .hint code { white-space: nowrap; }
+.moves { display: block; line-height: 1.9; padding: 0.5rem 0.8rem; border-left: 3px solid var(--line); }
+.moves code { display: inline-block; min-width: 5.5rem; }
 .mission .big-win { font-size: 1.1rem; font-weight: 700; color: var(--green); }
 .label { display: block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.4rem; }
 

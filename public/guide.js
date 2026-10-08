@@ -18,14 +18,16 @@
       hint: "Read the help for <code>cat</code> and look for the option that <b>numbers</b> the lines. Options go between the command and the file name.<pre>cat --help</pre>",
     },
     {
-      title: "Now you see me",
-      run: ["cd ~/mission2"],
+      title: "Make your moves",
+      run: ["cd ~/mission2", "cat README.txt"],
       body: [
-        "There is a flag in this folder, but plain <code>ls</code> will not show it.",
-        "On Linux, a file whose name starts with a dot is <b>hidden</b>. Watch out: one hidden file is a decoy.",
+        "Moving around is the first real skill on the command line:",
+        '<span class="moves"><code>pwd</code> where am I?<br><code>ls</code> what is in this folder?<br><code>cd NAME</code> move into a folder<br><code>cd ..</code> go back up one level<br><code>cd ~</code> go home</span>',
+        "A flag is hidden at the end of a trail inside <code>town/</code>. Every folder has a <code>note.txt</code> that tells you where to go next. Some turns are dead ends.",
+        "At the end the flag is there, but <b>hidden</b>: files whose names start with a dot do not show up in plain <code>ls</code>. One hidden file is a decoy.",
       ],
-      useful: ["ls", "cat"],
-      hint: "Read the help for <code>ls</code> and look for an option that also shows names starting with <code>.</code><pre>ls --help</pre>",
+      useful: ["pwd", "ls", "cd", "cat"],
+      hint: "Lost? <code>pwd</code> shows where you are and <code>cd ..</code> goes back up. At the end of the trail, read the help for <code>ls</code> and look for an option that also shows names starting with <code>.</code><pre>ls --help</pre>",
     },
     {
       title: "Needle in the tree",
@@ -93,7 +95,7 @@
       '<div class="card tools"><span class="label">Useful ' + (m.useful.length > 1 ? "commands" : "command") + '</span><div class="chips">' +
         m.useful.map((u) => '<code class="chip">' + u + "</code>").join("") + '</div></div>' +
       '<div class="card submit-card' + (ok ? " is-done" : "") + '"><span class="label">' + (ok ? "Flag captured" : "Found the flag?") + '</span>' +
-        (ok ? "<p>Nice work. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CQ{word-1a2b3c4d}</pre>') + '</div>' +
+        (ok ? "<p>Nice work. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
       '<details class="hint"><summary>Need a hint?</summary><div>' + m.hint + "</div></details>";
     article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
     state.textContent = ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
@@ -114,7 +116,7 @@
     count.textContent = "Quest complete";
     article.innerHTML =
       "<h2>Quest complete</h2><p class=\"big-win\">All " + N + " flags captured</p>" +
-      "<p>You let the cat out of the bag with <code>--help</code>, found hidden files, searched folders and a 12,000-line log, and decoded a message that only looked secret.</p>" +
+      "<p>You let the cat out of the bag with <code>--help</code>, made your moves through a folder trail, searched folders and a 12,000-line log, and decoded a message that only looked secret.</p>" +
       "<p><b>Encoding is not encryption.</b> If no key is needed to undo it, it was never secret.</p>" +
       "<p>Reload the page for a fresh computer with new flags, and see how fast you can do it again.</p>";
     state.textContent = "Reload the page to play again with new flags.";

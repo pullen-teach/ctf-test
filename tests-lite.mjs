@@ -14,22 +14,31 @@ const cmds = ["whoami", "pwd", "ls", "ls -a ~", "ls -a /home", "cd / ; ls ; cd ~
   "find /etc -name \"p*\"", "find /etc -type d", "grep player /etc/passwd", "grep -r PS1 /etc", "ls /bin | wc -l", "ls /bin | grep sh | wc -l",
   "ls /root", "ls -l /etc/passwd", "echo 'echo hi' > hi.sh", "./hi.sh", "chmod +x hi.sh", "./hi.sh", "echo hello | base64", "echo aGVsbG8K | base64 -d",
   "echo hello | sha256sum", "echo Hello | sha256sum", "LS", "ls /nope", "cd /etc; pwd; cd ~", "hint 2", "echo \"$(whoami) leveled up\"", "uname", "cd /root", "cat /etc/quest/1",
-  "echo hacked > /etc/quest/1", "submit CQ{fake-12345678}", "cat ~/mission2/notes.txt", "cat --help", "cat -n ~/mission1/README.txt", "hint 1", "base64 --help", "vi", "frobnicate"];
+  "echo hacked > /etc/quest/1", "submit CYBA{fake-12345678}", "cat ~/mission2/README.txt", "cat --help", "cat -n ~/mission1/README.txt", "hint 1", "base64 --help", "vi", "frobnicate"];
 for (const c of cmds) console.log("$ " + c + "\n" + (await run(c)).trimEnd());
 // Solve the missions, and submit by typing into the terminal (tests the keyboard path).
 const ln = (await run("cat ~/mission1/README.txt")).match(/line (\d+)/)[1];
-const f0 = (await run("cat -n ~/mission1/bag.txt")).split("\n").find((l) => l.startsWith(ln.padStart(6) + "\t")).match(/CQ\{[^}]+\}/)[0];
-console.log("line", ln, "decoy rejected:", (await run("submit " + (await run("head -1 ~/mission1/bag.txt")).match(/CQ\{[^}]+\}/)[0])).trim());
-const ls1 = await run("ls -a ~/mission2");
-const real = ls1.replace(/\x1b\[[0-9;]*m/g, "").split(/\s+/).find((n) => n.startsWith(".") && n.length > 2 && !n.startsWith(".old"));
-const f1 = (await run("cat ~/mission2/" + real)).match(/CQ\{[^}]+\}/)[0];
+const f0 = (await run("cat -n ~/mission1/bag.txt")).split("\n").find((l) => l.startsWith(ln.padStart(6) + "\t")).match(/CYBA\{[^}]+\}/)[0];
+console.log("line", ln, "decoy rejected:", (await run("submit " + (await run("head -1 ~/mission1/bag.txt")).match(/CYBA\{[^}]+\}/)[0])).trim());
+// Walk the trail by reading each note, like a student.
+await run("cd ~/mission2/town");
+const go = async (re) => { const n = (await run("cat note.txt")).match(re); console.log("note:", n[0]); return n; };
+await run("cd " + (await go(/Go into the (\w+)/))[1]);
+const back = (await go(/try the (\w+)/))[1];
+await run("cd .."); await run("cd " + back);
+const two = await go(/Go into the (\w+), then the (\w+)/);
+await run("cd " + two[1] + "/" + two[2]);
+console.log("pwd:", (await run("pwd")).trim(), "| ls:", (await run("ls")).trim(), "| ls -a:", (await run("ls -a")).replace(/\x1b\[[0-9;]*m/g, "").trim().split(/\s+/).join(" "));
+const real = (await run("ls -a")).replace(/\x1b\[[0-9;]*m/g, "").split(/\s+/).find((n) => n.startsWith(".") && n.length > 2 && !n.startsWith(".old"));
+const f1 = (await run("cat " + real)).match(/CYBA\{[^}]+\}/)[0];
+await run("cd ~");
 const ext = (await run("cat ~/mission3/README.txt")).match(/ending in \.(\w+)/)[1];
 const p2 = (await run("cd ~/mission3; find archive -name \"*." + ext + "\"; cd ~")).trim();
-const f2 = (await run("cat ~/mission3/" + p2)).match(/CQ\{[^}]+\}/)[0];
+const f2 = (await run("cat ~/mission3/" + p2)).match(/CYBA\{[^}]+\}/)[0];
 console.log("count files/dirs:", (await run("cd ~/mission3; find archive -type f | wc -l; find archive -type d | wc -l; cd ~")).replace(/\n/g, " "));
 const who = (await run("cat ~/mission4/README.txt")).match(/as:\s+(\S+)/)[1];
-const f3 = (await run("grep " + who + " ~/mission4/access.log")).match(/CQ\{[^}]+\}/)[0];
-const f4 = (await run("base64 -d ~/mission5/message.b64")).match(/CQ\{[^}]+\}/)[0];
+const f3 = (await run("grep " + who + " ~/mission4/access.log")).match(/CYBA\{[^}]+\}/)[0];
+const f4 = (await run("base64 -d ~/mission5/message.b64")).match(/CYBA\{[^}]+\}/)[0];
 await page.click("#terminal");
 for (const f of [f0, f1, f2, f3, f4]) { await page.keyboard.type("submit " + f); await page.keyboard.press("Enter"); await page.waitForTimeout(300); }
 // Tab completion and history through the keyboard.

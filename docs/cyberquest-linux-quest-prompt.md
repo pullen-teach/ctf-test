@@ -67,7 +67,7 @@ equivalent):
 ### 3. Flags and scoring on the server
 
 - **Generation:** each user (or team) gets their own flags from
-  `HMAC(serverSecret, userId + missionId + round)`, formatted `CQ{word-8hex}`. The secret comes from the existing secrets mechanism, never the repo.
+  `HMAC(serverSecret, userId + missionId + round)`, formatted `CYBA{word-8hex}`. The secret comes from the existing secrets mechanism, never the repo.
 - **Checking:** `submit` calls `POST /api/quest/submit`, which uses a constant-time comparison, is rate-limited per user, and records the capture.
 - **Scoreboard:** a scoreboard view (per event or round) for mentors.
 - **Practice mode** may build flags client-side, as today, but `submit` still goes to the server.

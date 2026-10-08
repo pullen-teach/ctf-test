@@ -6,6 +6,7 @@ You learned how to teach yourself a command, then used four tools that security 
 |---|---|
 | `cat` | read files, and `cat -n` numbered the lines |
 | `--help` | made every command explain itself |
+| `pwd`, `cd`, `cd ..` | moved you through a folder trail |
 | `ls -a` | showed hidden files |
 | `find` | searched folders by file name |
 | `grep` | searched 40,000 lines in a second |

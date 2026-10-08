@@ -18,21 +18,31 @@ then --help. Ask cat for its help and look for an option that numbers
 the lines. You will use --help in every mission after this one.
 
 Useful command: cat
-When you have the flag: submit CQ{...}     Stuck? hint 1
+When you have the flag: submit CYBA{...}     Stuck? hint 1
 EOF
   ;;
   2) cat <<'EOF'
-Mission 2: Now you see me
+Mission 2: Make your moves
 
   cd ~/mission2
+  cat README.txt
 
-There is a flag in this folder, but plain ls will not show it.
+Moving around is the first real skill on the command line:
 
-On Linux, a file whose name starts with a dot is hidden. Watch out: one
-hidden file is a decoy.
+  pwd         where am I?
+  ls          what is in this folder?
+  cd NAME     move into a folder
+  cd ..       go back up one level
+  cd ~        go home
 
-Useful commands: ls, cat
-When you have the flag: submit CQ{...}     Stuck? hint 2
+A flag is hidden at the end of a trail inside town/. Every folder has a
+note.txt that tells you where to go next. Some turns are dead ends.
+
+At the end of the trail the flag is there, but hidden: files whose names
+start with a dot do not show up in plain ls. One hidden file is a decoy.
+
+Useful commands: pwd, ls, cd, cat
+When you have the flag: submit CYBA{...}     Stuck? hint 2
 EOF
   ;;
   3) cat <<'EOF'
@@ -47,7 +57,7 @@ them has the file ending named in README.txt, and it holds the flag.
 Opening folders one by one is too slow. Let the computer search.
 
 Useful commands: find, cat
-When you have the flag: submit CQ{...}     Stuck? hint 3
+When you have the flag: submit CYBA{...}     Stuck? hint 3
 EOF
   ;;
   4) cat <<'EOF'
@@ -61,7 +71,7 @@ access.log has 12,000 lines. One intruder logged in exactly once.
 Their token on that line is the flag. Scrolling would take all day.
 
 Useful commands: grep, head, wc
-When you have the flag: submit CQ{...}     Stuck? hint 4
+When you have the flag: submit CYBA{...}     Stuck? hint 4
 EOF
   ;;
   5) cat <<'EOF'
@@ -77,13 +87,13 @@ base64: a way of writing any data using only letters, digits, +, / and
 There is no secret key. Anyone can decode it.
 
 Useful command: base64
-When you have the flag: submit CQ{...}     Stuck? hint 5
+When you have the flag: submit CYBA{...}     Stuck? hint 5
 EOF
   ;;
   *) cat <<'EOF'
 Your missions:
   1  Let the cat out of the bag
-  2  Now you see me
+  2  Make your moves
   3  Needle in the tree
   4  Search party
   5  Decoder ring
