@@ -18,13 +18,3 @@ Scrolling would take all day.
 `grep word file` prints only the lines that contain `word`. The username is in the README.
 
 </details>
-
-<details><summary>Solution</summary>
-
-```
-grep <username> access.log
-```
-
-The flag is the text after `token=`.
-
-</details>

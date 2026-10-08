@@ -16,11 +16,3 @@ There is no secret key. Anyone can decode it.
 When you do not know an option, ask the tool: `base64 --help`
 
 </details>
-
-<details><summary>Solution</summary>
-
-```
-base64 -d message.b64
-```
-
-</details>

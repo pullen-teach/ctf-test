@@ -25,7 +25,8 @@ who=$(as 'cat ~/mission3/README.txt' | head -1 | awk '{print $NF}')
 f=$(as "cd ~/mission3 && grep $who access.log" | sed 's/.*token=//');                 as "submit '$f'" >/dev/null; check 3
 f=$(as 'cd ~/mission4 && base64 -d message.b64' | last);                              as "submit '$f'" >/dev/null; check 4
 echo "  lines in log: $(wc -l < /home/player/mission3/access.log), intruder lines: $(grep -c "$who" /home/player/mission3/access.log)"
-if su - player -c 'cat /root/.quest/1' >/dev/null 2>&1; then echo "  FAIL  player can read answers"; fail=$((fail+1)); else echo "  PASS  player cannot read the answer files"; pass=$((pass+1)); fi
+if grep -rq "CQ{" /root/.quest; then echo "  FAIL  a flag is stored in plain text"; fail=$((fail+1)); else echo "  PASS  only fingerprints are stored"; pass=$((pass+1)); fi
+if su - player -c "cat /root/.quest/1" >/dev/null 2>&1; then echo "  FAIL  player can read answers"; fail=$((fail+1)); else echo "  PASS  player cannot read the answer files"; pass=$((pass+1)); fi
 echo "RESULT: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
 IN

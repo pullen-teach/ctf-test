@@ -18,12 +18,3 @@ When you have the flag, record it with `submit` and press **CHECK**.
 `ls -a` lists **all** files, including hidden ones. One hidden file is a decoy.
 
 </details>
-
-<details><summary>Solution</summary>
-
-```
-ls -a
-cat .<the hidden file that is not the decoy>
-```
-
-</details>

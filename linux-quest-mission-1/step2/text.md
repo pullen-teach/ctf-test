@@ -17,12 +17,3 @@ Opening folders one by one is too slow. Let the computer search.
 `find archive -name "*.txt"` finds every file ending in `.txt`. Change the ending to the one in the README.
 
 </details>
-
-<details><summary>Solution</summary>
-
-```
-find archive -name "*.<ending from README>"
-cat <the path find printed>
-```
-
-</details>
