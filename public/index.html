@@ -39,7 +39,7 @@
     .g-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.9rem; }
     .g-ico { flex: none; width: 3.2rem; height: 3.2rem; border-radius: 12px; display: grid; place-items: center; background: var(--terminal); }
     .g-ico svg { width: 1.8rem; height: 1.8rem; }
-    .g-kicker { font: 700 0.78rem var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .g-kicker { display: block; margin: 0.2rem 0 0.7rem; font: 700 0.78rem var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
     .game h2 { margin: 0; font-size: 1.55rem; line-height: 1.15; }
     .game p { margin: 0 0 1rem; color: var(--muted); }
     .facts { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin: 0 0 1rem; padding: 0; list-style: none; font-size: 0.95rem; }
@@ -73,16 +73,17 @@
     <div class="wrap">
       <p class="prompt"><b>player@quest</b>:~$ ls challenges/ <span class="cursor" aria-hidden="true"></span></p>
       <h1>Pick your challenge.</h1>
-      <p class="lede">Each challenge set is a capture-the-flag competition that runs a real Linux computer right in this browser tab. Ten flags, one clock, easiest first.</p>
+      <p class="lede">Start with the foundation, then pick a category. Each one is a capture-the-flag competition that runs a real Linux computer right in this browser tab. Ten flags, one clock, easiest first.</p>
     </div>
   </section>
 
   <main>
     <div class="games wrap">
       <a class="game linux" href="linux/">
+        <span class="g-kicker">CTF Foundation: Command line</span>
         <div class="g-head">
           <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 9l7 7-7 7" fill="none" stroke="#46d39a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 23h8" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/></svg></span>
-          <div><span class="g-kicker">Challenge set 1</span><h2>Linux CTF</h2></div>
+          <h2>Linux CTF</h2>
         </div>
         <p>Learn the command line, then compete. Move around, search, read hidden files and fix permissions to find every flag.</p>
         <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
@@ -90,9 +91,10 @@
         <span class="go">Start the Linux CTF &rarr;</span>
       </a>
       <a class="game crypto" href="crypto/">
+        <span class="g-kicker">CTF Category: Crypto</span>
         <div class="g-head">
           <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="16" r="5" fill="none" stroke="#f5a623" stroke-width="3"/><path d="M16 16h11M23 16v4M27 16v3" fill="none" stroke="#b49cf0" stroke-width="3" stroke-linecap="round"/></svg></span>
-          <div><span class="g-kicker">Challenge set 2</span><h2>Crypto CTF</h2></div>
+          <h2>Crypto CTF</h2>
         </div>
         <p>Crack the codes, then compete. Decode, brute-force and fingerprint your way from base64 to the Vigen&egrave;re vault.</p>
         <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
@@ -100,9 +102,10 @@
         <span class="go">Start the Crypto CTF &rarr;</span>
       </a>
       <a class="game forensics" href="forensics/">
+        <span class="g-kicker">CTF Category: Forensics</span>
         <div class="g-head">
           <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="14" cy="14" r="7" fill="none" stroke="#46d39a" stroke-width="3"/><path d="M19.5 19.5L26 26" stroke="#2a9fd6" stroke-width="3.4" stroke-linecap="round"/></svg></span>
-          <div><span class="g-kicker">Challenge set 3</span><h2>Forensics CTF</h2></div>
+          <h2>Forensics CTF</h2>
         </div>
         <p>Read the evidence, then compete. File signatures, metadata, hidden data, logs and a packet capture: solve the break-in.</p>
         <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
