@@ -69,11 +69,13 @@ def banner(compact):
         "  " + arrow + " Start:  " + GREEN + "mission 1" + RESET + "   (or use the mission panel)",
         "  " + arrow + " Flags look like " + WHITE + "CYBA{word-1a2b3c4d}" + RESET,
         "  " + arrow + " Check one:  " + GREEN + "submit CYBA{...}" + RESET + "    Stuck?  " + GREEN + "hint 1" + RESET,
+        "  " + arrow + " Instructions:  " + GREEN + "cat README.txt" + RESET + "  (home and each mission folder)",
         "",
     ] if not compact else [
         "  " + arrow + " Start: " + GREEN + "mission 1" + RESET,
         "  " + arrow + " Check: " + GREEN + "submit CYBA{...}" + RESET,
         "  " + arrow + " Stuck? " + GREEN + "hint 1" + RESET,
+        "  " + arrow + " Help:  " + GREEN + "cat README.txt" + RESET,
         "",
     ]
     return "\n".join(out) + "\n"

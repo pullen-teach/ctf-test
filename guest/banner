@@ -19,4 +19,5 @@
   [38;2;245;166;35m▸[0m Start:  [38;2;70;211;154mmission 1[0m   (or use the mission panel)
   [38;2;245;166;35m▸[0m Flags look like [1;97mCYBA{word-1a2b3c4d}[0m
   [38;2;245;166;35m▸[0m Check one:  [38;2;70;211;154msubmit CYBA{...}[0m    Stuck?  [38;2;70;211;154mhint 1[0m
+  [38;2;245;166;35m▸[0m Instructions:  [38;2;70;211;154mcat README.txt[0m  (home and each mission folder)
 

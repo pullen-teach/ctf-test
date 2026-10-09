@@ -1,0 +1,13 @@
+Mission 5: Search party   [Medium, 200 points]
+
+Objective: Search a huge log for the intruder's line.
+
+  cd ~/mission5
+  cat README.txt
+
+access.log has 12,000 lines. One intruder logged in exactly once.
+
+Their token on that line is the flag. Scrolling would take all day.
+
+Useful commands: grep, head, wc
+When you have the flag: submit CYBA{...}     Stuck? hint 5

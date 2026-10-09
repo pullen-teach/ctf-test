@@ -8,6 +8,10 @@ hex()  { head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
 flag() { printf 'CYBA{%s-%s}' "$1" "$(hex)"; }
 pick() { printf '%s\n' "$@" | shuf -n1; }
 rnd()  { head -c 32 /dev/urandom | base64 | tr -dc 'a-z0-9' | cut -c1-"$1"; }
+# README.txt texts, written by guest/make-missions.py
+R=/usr/share/quest
+# clue on top, then the mission brief
+clue() { { printf "$2"; echo; cat "$R/$1.txt"; } > "$H/mission$1/README.txt"; }
 keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
 
 # 1: make your move. Signpost file names (read with ls) lead to a file named after the flag.
@@ -28,12 +32,14 @@ for f in "$M1/start-here--go-into-town" \
          "$E1/$F"; do
   : > "$f"
 done
+cp "$R/home.txt" "$H/README.txt"
+cp "$R/1.txt" "$M1/README.txt"
 
 # 2: let the cat out of the bag. cat --help shows -n, which numbers lines.
 F=$(flag cat); keep 2 "$F"
 mkdir -p "$H/mission2"
 line=$(awk -v s="$(hex | cut -c1-6)" 'BEGIN { srand(("0x" s) + 0); print 30 + int(rand() * 66) }')
-printf 'The cat is hiding in bag.txt.\nEvery line in the bag looks like a flag, but only line %s is real.\n' "$line" > "$H/mission2/README.txt"
+clue 2 "The cat is hiding in bag.txt.\nEvery line in the bag looks like a flag, but only line $line is real.\n"
 awk -v line="$line" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
   srand(("0x" seed) + 0)
   for (i = 1; i <= 100; i++) {
@@ -46,6 +52,7 @@ awk -v line="$line" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
 # 3: hidden file (ls -a)
 F=$(flag hidden); keep 3 "$F"
 mkdir -p "$H/mission3"
+cp "$R/3.txt" "$H/mission3/README.txt"
 echo "Nothing to see here. Or is there? Some files are shy." > "$H/mission3/notes.txt"
 echo "Close, but this hidden file is a decoy." > "$H/mission3/.old-$(rnd 4)"
 printf 'You found the hidden file.\nFlag: %s\n' "$F" > "$H/mission3/.$(pick treasure stash secret-notes backup-codes)"
@@ -65,7 +72,7 @@ BEGIN {
   for (k = 1; k <= nd; k++) for (c = 1; c <= 4; c++) { f = d[k] "/" r(6) "." E[1 + int(rand() * 3)]; print "junk " r(20) > f; close(f) }
   f = d[1 + int(rand() * nd)] "/" r(6) "." ext; print "Flag: " flag > f; close(f)
 }'
-printf 'Somewhere in archive/ is ONE file ending in .%s\nIt holds the flag.\n' "$ext" > "$H/mission4/README.txt"
+clue 4 "Somewhere in archive/ is ONE file ending in .$ext\nIt holds the flag.\n"
 
 # 5: grep a log
 F=$(flag grep); keep 5 "$F"
@@ -82,11 +89,12 @@ awk -v who="$who" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
     else printf "%s user=%s action=%s token=%08x\n", stamp, u[1 + int(rand() * 10)], a[1 + int(rand() * 5)], int(rand() * 2147483647)
   }
 }' > "$H/mission5/access.log"
-printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n' "$who" > "$H/mission5/README.txt"
+clue 5 "An intruder logged in ONCE as:  $who\nTheir token is the flag.\n"
 
 # 6: base64
 F=$(flag decoded); keep 6 "$F"
 mkdir -p "$H/mission6"
+cp "$R/6.txt" "$H/mission6/README.txt"
 printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F" | base64 > "$H/mission6/message.b64"
 
 chmod 755 "$Q"; chmod 644 "$Q"/*

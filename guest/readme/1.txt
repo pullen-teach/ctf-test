@@ -1,0 +1,23 @@
+Mission 1: Make your move   [Easy, 100 points]
+
+Objective: Navigate the file system using basic Linux commands to find the flag.
+
+  cd ~/mission1
+  ls
+
+Moving around is the first real skill on the command line:
+
+  pwd         where am I?
+  ls          what is in this folder?
+  cd NAME     move into a folder
+  cd ..       go back up one level
+  cd ~        go home
+
+A flag is waiting at the end of a trail that starts in ~/mission1.
+Nothing on this trail needs opening: the file names are the signposts.
+Use ls to read them and cd to follow them. Some turns are dead ends.
+
+At the end of the trail, ls shows you the flag itself.
+
+Useful commands: pwd, ls, cd
+When you have the flag: submit CYBA{...}     Stuck? hint 1

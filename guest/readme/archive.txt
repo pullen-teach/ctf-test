@@ -1,0 +1,3 @@
+Mission 4: the archive
+Opening these folders one by one is slow. Let find search the whole tree for you.
+The full brief is in ~/mission4/README.txt

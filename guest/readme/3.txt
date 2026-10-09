@@ -1,0 +1,14 @@
+Mission 3: Now you see me   [Easy, 100 points]
+
+Objective: Reveal the hidden files and find the real flag.
+
+  cd ~/mission3
+  ls
+
+There is a flag in this folder, but plain ls will not show it.
+
+On Linux, a file whose name starts with a dot is hidden. Watch out: one
+hidden file is a decoy.
+
+Useful commands: ls, cat
+When you have the flag: submit CYBA{...}     Stuck? hint 3

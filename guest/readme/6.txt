@@ -1,0 +1,15 @@
+Mission 6: Decoder ring   [Hard, 400 points]
+
+Objective: Decode a base64 message to reveal the flag.
+
+  cd ~/mission6
+  cat message.b64
+
+It looks like gibberish, but it is not encrypted. It is encoded with
+base64: a way of writing any data using only letters, digits, +, / and
+=.
+
+There is no secret key. Anyone can decode it.
+
+Useful command: base64
+When you have the flag: submit CYBA{...}     Stuck? hint 6

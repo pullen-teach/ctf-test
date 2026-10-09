@@ -1,0 +1,24 @@
+CyberQuest Linux CTF
+====================
+
+This file explains the game. Each mission folder has its own README.txt
+with that mission's instructions. Read one with:  cat README.txt
+
+How to play
+  1. Go to a mission:    cd ~/mission1
+  2. Look around:        ls
+  3. Read its brief:     cat README.txt     (or type: mission 1)
+  4. Find the flag. It looks like CYBA{word-1a2b3c4d}
+  5. Check it:           submit CYBA{...}
+  6. Stuck?              hint 1
+
+Missions
+  1  Make your move               Easy       100 pts
+  2  Let the cat out of the bag   Easy       100 pts
+  3  Now you see me               Easy       100 pts
+  4  Needle in the tree           Medium     200 pts
+  5  Search party                 Medium     200 pts
+  6  Decoder ring                 Hard       400 pts
+                                            1100 pts
+
+Flags change every time the page loads.

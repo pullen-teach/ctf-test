@@ -1,0 +1,7 @@
+Mission 1: the trail
+You are on the trail. Every other file name in this folder is a signpost.
+  pwd         where am I?
+  ls          read the signposts
+  cd NAME     follow one into a folder
+  cd ..       go back up one level
+The full brief is in ~/mission1/README.txt

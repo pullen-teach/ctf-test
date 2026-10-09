@@ -44,6 +44,42 @@
   termBox.addEventListener("keydown", (e) => { if (!e.ctrlKey && !e.metaKey && !e.altKey) startClock(); }, true);
   termBox.addEventListener("paste", startClock, true);
 
+  // xterm.js turns Ctrl+V into ^V, so the browser never pastes. Hand Ctrl+V (and
+  // Ctrl+Shift+V) back to the browser: its paste event reaches the terminal as typed
+  // text. Ctrl+C copies when text is selected, otherwise it stays the usual ^C.
+  window.questClipboardKeys = (term) => {
+    if (!term || !term.attachCustomKeyEventHandler) return;
+    term.attachCustomKeyEventHandler((e) => {
+      if (e.type !== "keydown" || !(e.ctrlKey || e.metaKey) || e.altKey) return true;
+      const k = e.key.toLowerCase();
+      if (k === "v") return false;
+      if (k === "c" && term.hasSelection()) {
+        const t = term.getSelection();
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).catch(() => {});
+        e.preventDefault();
+        return false;
+      }
+      return true;
+    });
+    // Mouse, like a Linux terminal: highlighting copies, middle-click pastes what you
+    // highlighted, right-click pastes (or copies, when text is highlighted).
+    let primary = "";
+    const toClipboard = (t) => { if (t && navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).catch(() => {}); };
+    const paste = (t) => { if (!t) return; startClock(); term.paste(t); term.focus(); };
+    term.onSelectionChange(() => { const t = term.getSelection(); if (t) { primary = t; toClipboard(t); } });
+    const box = term.element;
+    if (!box) return;
+    box.addEventListener("mousedown", (e) => { if (e.button === 1) { e.preventDefault(); paste(primary); } }, true);
+    ["mouseup", "auxclick"].forEach((ev) => box.addEventListener(ev, (e) => { if (e.button === 1) e.preventDefault(); }, true));
+    box.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      if (term.hasSelection()) { toClipboard(term.getSelection()); term.clearSelection(); return; }
+      if (navigator.clipboard && navigator.clipboard.readText && window.isSecureContext)
+        navigator.clipboard.readText().then((t) => paste(t || primary), () => paste(primary));
+      else paste(primary);
+    });
+  };
+
   function setStatus(text) {
     statusEl.textContent = text;
   }
@@ -102,7 +138,23 @@
     }
   });
 
+  // v86 makes an 80x25 terminal. Give it as many rows as the panel can show, so
+  // the screen is used top to bottom and the scrollbar matches the content.
+  function fitRows() {
+    const term = emulator.serial_adapter && emulator.serial_adapter.term;
+    const row = document.querySelector("#terminal .xterm-rows > div");
+    const box = document.getElementById("terminal");
+    if (!term || !row || !box) return;
+    const h = row.getBoundingClientRect().height;
+    if (!h) return;
+    const rows = Math.max(12, Math.floor((box.clientHeight - 2) / h));
+    if (rows !== term.rows) term.resize(term.cols, rows);
+  }
+  window.addEventListener("resize", fitRows);
+
   emulator.add_listener("emulator-ready", () => {
+    window.questClipboardKeys(emulator.serial_adapter && emulator.serial_adapter.term);
+    fitRows();
     meter.style.width = "70%";
     bootText.textContent = "Booting Linux…";
     setStatus("Booting Linux…");
@@ -130,7 +182,7 @@
       bootEl.classList.add("gone");
       setStatus("Ready in " + seconds() + " s");
       window.questReadySeconds = Number(seconds());
-      emulator.serial0_send("\n");
+      fitRows();
       setTimeout(() => {
         const term = document.querySelector("#terminal textarea");
         if (term) term.focus();
