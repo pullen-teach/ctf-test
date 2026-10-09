@@ -130,6 +130,20 @@ WARMUP = dict(title="Warm-up", level="Warm-up", points=50,
                     "Submit it for **50 bonus points**, or skip the warm-up. The competition clock starts when you begin Mission 1."],
               hint="The flag is on the last line of `orientation.txt` in your home folder. Type `cat orientation.txt`, press Enter, then copy the flag into `submit`.",
               short="the flag is at the bottom of ~/orientation.txt.  Read it: cat orientation.txt")
+# Warm-up 2: speed drills (optional, untimed, bonus). Mission number 11 inside the game.
+SPEED = N + 1
+WARMUP2 = dict(title="Speed drills", level="Warm-up", points=50,
+               objective="Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.",
+               run=["cd ~/speed", "cat README.txt"],
+               ref=[("Tab", "finish a file or command name for you"), ("up arrow", "bring back your last command"), ("Ctrl+C", "stop a running command"),
+                    ("highlight, then Ctrl+V", "copy and paste in the terminal"), ("history", "list the commands you have typed"), ("clear", "clear the screen (or Ctrl+L)")],
+               body=["Three drills, three pieces of the flag. Each drill needs one keyboard skill, and each piece is 4 characters.",
+                     "**Drill 1, Tab:** `cd tab`, type `cat dri` and press **Tab**. The long file name finishes itself.",
+                     "**Drill 2, up arrow:** run `again` 5 times within 15 seconds. After the first one, press **up arrow** then Enter.",
+                     "**Drill 3, Ctrl+C:** run `runaway`. It never stops by itself. Hold **Ctrl** and press **C**.",
+                     "Put the pieces together in order: `submit CYBA{speed-PIECE1PIECE2PIECE3}`. Copy each piece with the mouse and paste it with Ctrl+V or a right-click."],
+               hint="Drill 1: in ~/speed/tab type `cat dri`, then press Tab. Drill 2: type `again` and Enter, then press the up arrow and Enter four more times, quickly. Drill 3: type `runaway`, then hold Ctrl and press C. The flag is `CYBA{speed-` followed by the three pieces in order, then `}`.",
+               short="cd ~/speed; cat README.txt  (Tab, up arrow, Ctrl+C)")
 # CyberQuest scoring: points come from the difficulty level.
 POINTS = {"Easy": 100, "Medium": 200, "Hard": 400, "Very Hard": 800}
 for _m in MISSIONS: _m["points"] = POINTS[_m["level"]]
@@ -196,8 +210,18 @@ def brief_warmup():
     out += ["When you have the flag: submit CYBA{...}     Stuck? hint 0"]
     return "\n".join(out) + "\n"
 
+def brief_warmup2():
+    m = WARMUP2
+    out = ["Warm-up 2: Speed drills   [optional, %d bonus points, untimed]" % m["points"], "", "Objective: " + m["objective"], ""]
+    out += ["  " + c for c in m["run"]] + [""]
+    for b in m["body"]:
+        out += textwrap.wrap(plain(b), 72) + [""]
+    out += ["When you have the flag: submit CYBA{...}     Stuck? hint %d  (free)" % SPEED]
+    return "\n".join(out) + "\n"
+
 def overview():
-    lines = ["Your missions:", "   0  %-28s %-9s %4d pts  (bonus, untimed)" % ("Warm-up (optional)", "Bonus", WARMUP["points"])] + ["  %2d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
+    lines = ["Your missions:", "   0  %-28s %-9s %4d pts  (bonus, untimed)" % ("Warm-up (optional)", "Bonus", WARMUP["points"]),
+             "  %2d  %-28s %-9s %4d pts  (bonus, untimed)" % (SPEED, "Speed drills (optional)", "Bonus", WARMUP2["points"])] + ["  %2d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
     lines += ["  %s %4d pts" % (" " * 42, TOTAL_POINTS)]
     return "\n".join(lines + ["", "Read one with: mission 1   (up to %d)" % N]) + "\n"
 
@@ -224,7 +248,8 @@ def readme_home(kc=False):
                       "with that mission's instructions. Read one with:  cat README.txt", "", "How to play"] + steps +
                      ["", "Missions"] + rows + ["  %s %4d pts" % (" " * 42, TOTAL_POINTS), "",
                       "Flags change every time the %s." % ("scenario starts" if kc else "page loads"), "",
-                      "New to CTFs? Warm up first (optional, %d bonus points):  cat orientation.txt" % WARMUP["points"], ""])
+                      "New to CTFs? Warm up first (optional, %d bonus points):  cat orientation.txt" % WARMUP["points"],
+                      "Then build speed (optional, %d more):                   cd ~/speed" % WARMUP2["points"], ""])
 
 def orientation(kc=False):
     check = "     then press CHECK" if kc else ""
@@ -272,7 +297,8 @@ def orientation(kc=False):
     lines += [
         "Warm-up: Mission 0  (optional, %d bonus points%s)" % (WARMUP["points"], "" if kc else ", untimed"),
         "  You just read this file with cat. Now practice step 3: submit the",
-        "  flag below. Or skip it and go to Mission 1.", "",
+        "  flag below. Or skip it and go to Mission 1.",
+        "  Then try Warm-up 2, speed drills (another %d bonus points):  cd ~/speed" % WARMUP2["points"], "",
         "Warm-up flag:"]
     return "\n".join(lines) + "\n"
 
@@ -284,7 +310,7 @@ def hint_file(i):
     return "\n".join(out) + "\n"
 
 def readmes(loglines, kc=False):
-    r = {"home": readme_home(kc), "orientation": orientation(kc)}
+    r = {"home": readme_home(kc), "orientation": orientation(kc), "speed": brief_warmup2()}
 
     r.update({str(i + 1): readme(i, loglines, kc) for i in range(N)})
     return r
@@ -295,6 +321,7 @@ def write_guest():
     sh = ["#!/bin/sh", "# mission [N]  prints a mission brief, the same text as the panel on the page.",
           "# Generated by guest/make-missions.py: edit that file, not this one.", 'case "$1" in']
     sh += ["  0) cat <<'EOF'", brief_warmup() + "EOF", "  ;;"]
+    sh += ["  %d|speed) cat <<'EOF'" % SPEED, brief_warmup2() + "EOF", "  ;;"]
     for i in range(N):
         sh += ["  %d) cat <<'EOF'" % (i + 1), brief(i, WEB_LOG) + "EOF", "  ;;"]
     sh += ["  *) cat <<'EOF'", overview() + "EOF", "  ;;", "esac", ""]
@@ -305,7 +332,8 @@ def write_guest():
          "# charged once: the page keeps the score when it sees the [quest] line. The warm-up hint is free.",
          "# Generated by guest/make-missions.py: edit that file, not this one.",
          'case "$1" in',
-         "  0) echo %s; exit 0 ;;" % sq("Mission 0: " + WARMUP["hint"])]
+         "  0) echo %s; exit 0 ;;" % sq("Mission 0: " + WARMUP["hint"]),
+         "  %d|speed) echo %s; exit 0 ;;" % (SPEED, sq("Speed drills: " + WARMUP2["hint"]))]
     for i, m in enumerate(MISSIONS):
         h += ["  %d) pts=%d; cost=%d; total=%d" % (i + 1, m["points"], hint_cost(m), len(m["hints"]))]
         h += ["     h%d=%s" % (k + 1, sq(t)) for k, t in enumerate(m["hints"])]
@@ -325,7 +353,7 @@ def write_guest():
           'echo "Hint $((have + 1)) of $total costs $cost points (5% of $pts), charged once."',
           'echo "To see it, type:  hint $1 --show"', ""]
     open(os.path.join(HERE, "hint"), "w").write("\n".join(h))
-    pts = " ".join(str(m["points"]) for m in [WARMUP] + MISSIONS)
+    pts = " ".join(str(m["points"]) for m in [WARMUP] + MISSIONS + [WARMUP2])
     sub = ["#!/bin/sh", "# submit <flag>  checks your flag against every mission and shows its points.",
            "# Generated by guest/make-missions.py: edit that file, not this one.",
            'if [ -z "$1" ]; then echo "Usage: submit CYBA{...}"; exit 1; fi',
@@ -354,8 +382,10 @@ def write_lite():
     p = os.path.join(ROOT, "public", "lite.js")
     texts = {str(i + 1): brief(i, WEB_LOG) for i in range(N)}
     texts["0"] = brief_warmup()
+    texts[str(SPEED)] = texts["speed"] = brief_warmup2()
     hints = {i + 1: [plain(t) for t in m["hints"]] for i, m in enumerate(MISSIONS)}
     hints[0] = "Mission 0: " + plain(WARMUP["hint"])
+    hints[SPEED] = "Speed drills: " + plain(WARMUP2["hint"])
     block = ("  // Mission briefs and hints. Generated by guest/make-missions.py.\n"
              "  const MISSION_TEXT = " + json.dumps(texts, indent=0) + ";\n"
              "  const MISSION_OVERVIEW = " + json.dumps(overview()) + ";\n"
@@ -363,7 +393,7 @@ def write_lite():
              "  const MISSION_COUNT = " + str(N) + ";\n"
              "  const README_TEXT = " + json.dumps(readmes(WEB_LOG), indent=0) + ";\n"
              "  const HINT_COST = " + json.dumps({i + 1: hint_cost(m) for i, m in enumerate(MISSIONS)}) + ";\n"
-             "  const MISSION_POINTS = " + json.dumps(dict([(0, WARMUP["points"])] + [(i + 1, m["points"]) for i, m in enumerate(MISSIONS)])) + ";\n"
+             "  const MISSION_POINTS = " + json.dumps(dict([(0, WARMUP["points"])] + [(i + 1, m["points"]) for i, m in enumerate(MISSIONS)] + [(SPEED, WARMUP2["points"])])) + ";\n"
              "  // End of generated briefs.\n")
     s = open(p).read()
     if "// Mission briefs and hints. Generated" in s:
@@ -383,9 +413,13 @@ def write_panel():
     w = WARMUP
     warm = dict(title=w["title"], level=w["level"], points=w["points"], objective=w["objective"], run=w["run"],
                 ref=[list(r) for r in w["ref"]], notes=[html(b) for b in w["body"]], hints=[html(w["hint"])], hintCost=0)
+    w2 = WARMUP2
+    warm2 = dict(title=w2["title"], level=w2["level"], points=w2["points"], objective=w2["objective"], run=w2["run"],
+                 ref=[list(r) for r in w2["ref"]], notes=[html(b) for b in w2["body"]], hints=[html(w2["hint"])], hintCost=0, id=SPEED)
     block = ("  // Generated by guest/make-missions.py: edit that file, not this one.\n"
              "  const MISSIONS = " + json.dumps(out, indent=2).replace("\n", "\n  ") + ";\n"
-             "  const WARMUP = " + json.dumps(warm) + ";\n")
+             "  const WARMUP = " + json.dumps(warm) + ";\n"
+             "  const WARMUP2 = " + json.dumps(warm2) + ";\n")
     p = os.path.join(ROOT, "public", "guide.js")
     s = open(p).read()
     a = s.index("  // Generated by guest/make-missions.py") if "// Generated by guest/make-missions.py" in s else s.index("  const MISSIONS = [")

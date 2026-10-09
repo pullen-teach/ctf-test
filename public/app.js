@@ -200,7 +200,7 @@
   });
 
   function markDone(n) {
-    if (n === 0) { window.questGuide.done(0, 0); return; }   // warm-up: bonus points, not one of the TOTAL flags
+    if (n === 0 || n > TOTAL) { window.questGuide.done(n, 0); return; }   // warm-ups: bonus points, not among the TOTAL flags
     if (done.has(n)) return;
     done.add(n);
     if (done.size === TOTAL) stopClock();

@@ -22,6 +22,33 @@ clock starts when you begin Mission 1.
 When you have the flag: submit CYBA{...}     Stuck? hint 0
 EOF
   ;;
+  11|speed) cat <<'EOF'
+Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]
+
+Objective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.
+
+  cd ~/speed
+  cat README.txt
+
+Three drills, three pieces of the flag. Each drill needs one keyboard
+skill, and each piece is 4 characters.
+
+Drill 1, Tab: cd tab, type cat dri and press Tab. The long file name
+finishes itself.
+
+Drill 2, up arrow: run again 5 times within 15 seconds. After the first
+one, press up arrow then Enter.
+
+Drill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and
+press C.
+
+Put the pieces together in order: submit CYBA{speed-PIECE1PIECE2PIECE3}.
+Copy each piece with the mouse and paste it with Ctrl+V or a right-
+click.
+
+When you have the flag: submit CYBA{...}     Stuck? hint 11  (free)
+EOF
+  ;;
   1) cat <<'EOF'
 Mission 1: Make your move   [Easy, 100 points]
 
@@ -233,6 +260,7 @@ EOF
   *) cat <<'EOF'
 Your missions:
    0  Warm-up (optional)           Bonus       50 pts  (bonus, untimed)
+  11  Speed drills (optional)      Bonus       50 pts  (bonus, untimed)
    1  Make your move               Easy       100 pts
    2  Let the cat out of the bag   Easy       100 pts
    3  Now you see me               Easy       100 pts

@@ -358,12 +358,16 @@
     }
   ];
   const WARMUP = {"title": "Warm-up", "level": "Warm-up", "points": 50, "objective": "Read the CTF orientation in the terminal with cat.", "run": ["cat orientation.txt"], "ref": [["cat FILE", "print a file on the screen"], ["clear", "clear the screen"]], "notes": ["Get comfortable before the clock starts. Your <b>home folder</b> holds <code>orientation.txt</code>: how a CTF works, what a flag looks like, scoring and the rules.", "<code>cat</code> prints a file on the screen. Click the terminal, type <code>cat orientation.txt</code> and press Enter. The warm-up flag is at the bottom.", "Submit it for <b>50 bonus points</b>, or skip the warm-up. The competition clock starts when you begin Mission 1."], "hints": ["The flag is on the last line of <code>orientation.txt</code> in your home folder. Type <code>cat orientation.txt</code>, press Enter, then copy the flag into <code>submit</code>."], "hintCost": 0};
+  const WARMUP2 = {"title": "Speed drills", "level": "Warm-up", "points": 50, "objective": "Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.", "run": ["cd ~/speed", "cat README.txt"], "ref": [["Tab", "finish a file or command name for you"], ["up arrow", "bring back your last command"], ["Ctrl+C", "stop a running command"], ["highlight, then Ctrl+V", "copy and paste in the terminal"], ["history", "list the commands you have typed"], ["clear", "clear the screen (or Ctrl+L)"]], "notes": ["Three drills, three pieces of the flag. Each drill needs one keyboard skill, and each piece is 4 characters.", "<b>Drill 1, Tab:</b> <code>cd tab</code>, type <code>cat dri</code> and press <b>Tab</b>. The long file name finishes itself.", "<b>Drill 2, up arrow:</b> run <code>again</code> 5 times within 15 seconds. After the first one, press <b>up arrow</b> then Enter.", "<b>Drill 3, Ctrl+C:</b> run <code>runaway</code>. It never stops by itself. Hold <b>Ctrl</b> and press <b>C</b>.", "Put the pieces together in order: <code>submit CYBA{speed-PIECE1PIECE2PIECE3}</code>. Copy each piece with the mouse and paste it with Ctrl+V or a right-click."], "hints": ["Drill 1: in ~/speed/tab type <code>cat dri</code>, then press Tab. Drill 2: type <code>again</code> and Enter, then press the up arrow and Enter four more times, quickly. Drill 3: type <code>runaway</code>, then hold Ctrl and press C. The flag is <code>CYBA{speed-</code> followed by the three pieces in order, then <code>}</code>."], "hintCost": 0, "id": 11};
 
   const N = MISSIONS.length;
   const el = (id) => document.getElementById(id);
   const done = new Set();
-  // Mission 0, the warm-up: optional, untimed, bonus points. current === -1 shows it.
-  let warm = false;
+  // Two optional, untimed warm-ups worth bonus points: current === -1 shows Warm-up 1 (orientation),
+  // current === -2 shows Warm-up 2 (speed drills). Order in the stepper: W1, W2, then Mission 1.
+  let warm = false, warm2 = false;
+  const WARMS = { "-1": WARMUP, "-2": WARMUP2 };
+  const warmDone = (c) => (c === -1 ? warm : warm2);
   // Hints cost 5% of the mission's points, charged once per mission, from the panel or the terminal.
   const hintsUsed = {};   // mission number -> how many of its hints have been bought
   const hintCost = (n) => (hintsUsed[n] || 0) * MISSIONS[n - 1].hintCost;
@@ -378,8 +382,8 @@
     const before = Object.values(capturedAt).filter((t) => t < capturedAt[n]);
     return fmt(capturedAt[n] - (before.length ? Math.max(...before) : 0));
   };
-  const MAX = MISSIONS.reduce((t, m) => t + m.points, 0) + WARMUP.points;
-  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0) + (warm ? WARMUP.points : 0) - hintTotal();
+  const MAX = MISSIONS.reduce((t, m) => t + m.points, 0) + WARMUP.points + WARMUP2.points;
+  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0) + (warm ? WARMUP.points : 0) + (warm2 ? WARMUP2.points : 0) - hintTotal();
   const scoreEl = el("score"), scorePts = el("score-pts");
   const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const TROPHY = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd54a"/><stop offset="1" stop-color="#f5a300"/></linearGradient></defs><path fill="url(#g)" d="M17 5h30v5h11v8c0 8-6 14-14 15a15 15 0 0 1-9 8.6V48h9v6H20v-6h9v-6.4A15 15 0 0 1 20 33C12 32 6 26 6 18v-8h11zm-5 11v2c0 4 2.5 7.5 6.5 8.6A30 30 0 0 1 17 16zm40 0h-5a30 30 0 0 1-1.5 10.6C54.5 25.5 52 22 52 18z"/><rect x="18" y="54" width="28" height="5" rx="1.5" fill="#d98a00"/><path fill="#fff6c9" d="M32 12l3 6.1 6.7 1-4.9 4.7 1.2 6.7L32 27.3l-6 3.2 1.2-6.7-4.9-4.7 6.7-1z"/></svg>';
@@ -396,11 +400,11 @@
   // The stepper: a check in a green circle for each captured mission, a ring for the current one.
   function paintSteps(cur) {
     const r = reachable();
-    const w = dots.querySelector(".warm-btn");
-    if (w) {
-      w.className = "step-btn warm-btn" + (warm ? " ok" : "") + (cur === -1 ? " here" : "");
-      w.querySelector(".step-dot").innerHTML = warm ? CHECK : "0";
-    }
+    dots.querySelectorAll(".warm-btn").forEach((w) => {
+      const c = Number(w.dataset.c), ok = warmDone(c);
+      w.className = "step-btn warm-btn" + (ok ? " ok" : "") + (cur === c ? " here" : "");
+      w.querySelector(".step-dot").innerHTML = ok ? CHECK : "W" + -c;
+    });
     dots.querySelectorAll(".step-btn:not(.warm-btn)").forEach((d, i) => {
       const ok = done.has(i + 1);
       d.className = "step-btn" + (ok ? " ok" : "") + (i === cur ? " here" : "");
@@ -455,15 +459,15 @@
   }
 
   function render() {
-    const isWarm = current === -1;
-    const m = isWarm ? WARMUP : MISSIONS[current];
-    const n = current + 1;
-    const ok = isWarm ? warm : done.has(n);
-    count.textContent = isWarm ? "Mission 0 · optional warm-up" : "Mission " + n + " of " + N;
+    const isWarm = current < 0;
+    const m = isWarm ? WARMS[current] : MISSIONS[current];
+    const n = isWarm ? (current === -1 ? 0 : WARMUP2.id) : current + 1;
+    const ok = isWarm ? warmDone(current) : done.has(n);
+    count.textContent = isWarm ? "Warm-up " + -current + " of 2 · optional, untimed" : "Mission " + n + " of " + N;
     const rows = m.run.map((c) =>
       '<div class="cmd-row"><code class="cmd"><span class="run-prompt" aria-hidden="true">$</span>' + esc(c) + "</code>" +
       '<button class="mini copy" type="button" data-cmd="' + esc(c) + '" aria-label="Copy ' + esc(c) + '">' + ICON.copy + "<span>Copy</span></button></div>").join("");
-    const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], [isWarm ? "hint 0" : "cat hint.txt", "a nudge if you are stuck"]]);
+    const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], [isWarm ? "hint " + n : "hint " + n, isWarm ? "a free nudge" : "a nudge (costs 5%)"]]);
     article.innerHTML =
       '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + lvlClass(m.level) + '">' + m.level + '</span>' +
         '<span class="pts-pill">' + ICON.pts + (isWarm ? "+" + m.points + " bonus" : m.points + " pts") + "</span>" +
@@ -491,9 +495,11 @@ hintHtml(m, n, isWarm);
     state.textContent = isWarm ? (ok ? "Bonus captured. Ready when you are." : "Optional. The clock waits until Mission 1.")
       : ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
     state.className = ok ? "m-state ok" : "m-state";
-    prev.disabled = isWarm;
+    prev.disabled = current === -1;
     next.disabled = !ok && !isWarm;
-    next.innerHTML = isWarm ? (ok ? "Start Mission 1 &rarr;" : "Skip warm-up &rarr;") : current === N - 1 ? "Finish &rarr;" : "Next mission &rarr;";
+    next.innerHTML = current === -1 ? (ok ? "Next: speed drills &rarr;" : "Skip to speed drills &rarr;")
+      : current === -2 ? (ok ? "Start Mission 1 &rarr;" : "Skip warm-ups &rarr;")
+      : current === N - 1 ? "Finish &rarr;" : "Next mission &rarr;";
     paintSteps(current);
     body.scrollTop = 0;
   }
@@ -547,8 +553,9 @@ hintHtml(m, n, isWarm);
         "<div><h2>Quest Complete</h2><p>Great job! You captured all " + N + " flags and completed the Linux CTF in <b>" + total + "</b>.</p></div></div>" +
       '<div class="card sc"><h3><span class="h-ico">' + ICON.chart + "</span>Mission Scorecard</h3><table class=\"times\">" +
         '<tr class="head"><td></td><td>#</td><td>Mission</td><td class="num">Points</td><td class="num">Took</td><td class="num">Time</td></tr>' +
-        '<tr><td class="ck">' + (warm ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">0</td><td>Warm-up <span class="dim">(bonus)</span></td><td class="num">' +
-          (warm ? "+" + WARMUP.points + " pts" : '<span class="dim">skipped</span>') + '</td><td class="num dim"></td><td class="num"></td></tr>' +
+        [[warm, "W1", "Warm-up: orientation", WARMUP], [warm2, "W2", "Warm-up: speed drills", WARMUP2]].map(([ok, k, t, w]) =>
+          '<tr><td class="ck">' + (ok ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + k + "</td><td>" + t + ' <span class="dim">(bonus)</span></td><td class="num">' +
+          (ok ? "+" + w.points + " pts" : '<span class="dim">skipped</span>') + '</td><td class="num dim"></td><td class="num"></td></tr>').join("") +
         MISSIONS.map((m, i) => '<tr><td class="ck">' + (done.has(i + 1) ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + (i + 1) + "</td><td>" + m.title + '</td><td class="num">' + (done.has(i + 1) ? m.points : 0) + " pts" + (hintCost(i + 1) ? '<span class="hint-cost">−' + hintCost(i + 1) + (hintsUsed[i + 1] > 1 ? " hints" : " hint") + "</span>" : "") + '</td><td class="num dim">' + took(i + 1) + '</td><td class="num">' + clockAt(i + 1) + "</td></tr>").join("") +
         '<tr class="total"><td></td><td></td><td>Total</td><td class="num">' + score() + ' pts</td><td class="num"></td><td class="num">' + total + "</td></tr></table>" +
         '<p class="small"><b>Took</b>: time since your previous flag. <b>Time</b>: the clock when you submitted.</p></div>' +
@@ -562,34 +569,43 @@ hintHtml(m, n, isWarm);
     if (boardBtn) boardBtn.hidden = false;
     el("guide-foot").classList.add("finished");
     current = N;
-    paintSteps(-2);
+    paintSteps(-9);
     body.scrollTop = 0;
   }
 
   function unfinish() { next.classList.remove("replay"); prev.hidden = false; if (boardBtn) boardBtn.hidden = true; el("guide-foot").classList.remove("finished"); }
-  prev.addEventListener("click", () => { if (current > -1) { current = Math.min(current, N) - 1; unfinish(); render(); } });
+  prev.addEventListener("click", () => {
+    if (current === -1) return;
+    current = current === -2 ? -1 : current === 0 ? -2 : Math.min(current, N) - 1; unfinish(); render();
+  });
   next.addEventListener("click", () => {
     if (current === N) { location.reload(); return; }
-    if (current === -1) { current = 0; render(); return; }   // skip or leave the warm-up: the clock can start now
+    if (current === -1) { current = -2; render(); return; }  // on to Warm-up 2
+    if (current === -2) { current = 0; render(); return; }   // skip or leave the warm-ups: the clock can start now
     if (current === N - 1) { if (done.size === N) finish(); return; }
     if (done.has(current + 1)) { current++; render(); }
   });
 
   if (el("score-max")) el("score-max").textContent = MAX;
   showScore(false);
-  dots.innerHTML = '<button type="button" class="step-btn warm-btn" title="Mission 0: Warm-up (optional, +' + WARMUP.points + ' bonus, untimed)"><span class="step-dot">0</span><span class="step-num">0</span></button><span class="step-bar warm-bar" aria-hidden="true"></span>' + MISSIONS.map((m, i) => (i ? '<span class="step-bar" aria-hidden="true"></span>' : "") +
+  dots.innerHTML = '<button type="button" class="step-btn warm-btn" data-c="-1" title="Warm-up 1: orientation (optional, +' + WARMUP.points + ' bonus, untimed)"><span class="step-dot">W1</span><span class="step-num">W1</span></button><span class="step-bar warm-bar" aria-hidden="true"></span>' +
+    '<button type="button" class="step-btn warm-btn" data-c="-2" title="Warm-up 2: speed drills (optional, +' + WARMUP2.points + ' bonus, untimed)"><span class="step-dot">W2</span><span class="step-num">W2</span></button><span class="step-bar warm-bar" aria-hidden="true"></span>' + MISSIONS.map((m, i) => (i ? '<span class="step-bar" aria-hidden="true"></span>' : "") +
     '<button type="button" class="step-btn" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ', ' + m.points + ' pts)"><span class="step-dot">' + (i + 1) + '</span><span class="step-num">' + (i + 1) + "</span></button>").join("");
   dots.querySelectorAll(".step-btn:not(.warm-btn)").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; unfinish(); render(); } }));
-  dots.querySelector(".warm-btn").addEventListener("click", () => { current = -1; unfinish(); render(); });
+  dots.querySelectorAll(".warm-btn").forEach((w) => w.addEventListener("click", () => { current = Number(w.dataset.c); unfinish(); render(); }));
   render();
 
   window.questGuide = {
     done(n, at) {
-      if (n === 0) { const fresh = !warm; warm = true; showScore(fresh); if (current === -1) render(); else paintSteps(current); return; }
+      if (n === 0 || n === WARMUP2.id) {
+        const fresh = n === 0 ? !warm : !warm2;
+        if (n === 0) warm = true; else warm2 = true;
+        showScore(fresh); if (current < 0) render(); else paintSteps(current); return;
+      }
       const fresh = !done.has(n); done.add(n); if (typeof at === "number" && !(n in capturedAt)) capturedAt[n] = at; showScore(fresh); if (current < N) render(); },
     setRunner(fn) { runner = fn; },
     current: () => current + 1,
-    warmupOver: () => warm || current !== -1,
+    warmupOver: () => current >= 0 || (warm && warm2),
     // A hint was bought (k = which tier). Charged once: buying a tier you already have is free.
     hintUsed(n, k) {
       if (!(n >= 1 && n <= N)) return;

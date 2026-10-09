@@ -45,5 +45,6 @@ The clock
 Warm-up: Mission 0  (optional, 50 bonus points, untimed)
   You just read this file with cat. Now practice step 3: submit the
   flag below. Or skip it and go to Mission 1.
+  Then try Warm-up 2, speed drills (another 50 bonus points):  cd ~/speed
 
 Warm-up flag:

@@ -7,6 +7,11 @@ case "$1" in
   0) echo 'Mission 0: The flag is on the last line of orientation.txt in your
 home folder. Type cat orientation.txt, press Enter, then copy the
 flag into submit.'; exit 0 ;;
+  11|speed) echo 'Speed drills: Drill 1: in ~/speed/tab type cat dri, then press
+Tab. Drill 2: type again and Enter, then press the up arrow and
+Enter four more times, quickly. Drill 3: type runaway, then hold
+Ctrl and press C. The flag is CYBA{speed- followed by the three
+pieces in order, then }.'; exit 0 ;;
   1) pts=100; cost=5; total=1
      h1='Lost? pwd shows where you are and cd .. goes back up one level.
 Run ls in every folder: the names tell you which folder to cd into

@@ -36,6 +36,33 @@ cp "$R/home.txt" "$H/README.txt"
 # 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
 F=$(flag warmup); keep 0 "$F"
 { cat "$R/orientation.txt"; echo "  $F"; } > "$H/orientation.txt"
+
+# 11: warm-up 2, speed drills (optional, untimed). Three 4-character pieces, one per drill:
+# Tab completes a long file name, the up arrow repeats "again", Ctrl+C stops "runaway".
+p1=$(hex | cut -c1-4); p2=$(hex | cut -c1-4); p3=$(hex | cut -c1-4)
+keep 11 "CYBA{speed-$p1$p2$p3}"
+S="$H/speed"; mkdir -p "$S/tab"
+cp "$R/speed.txt" "$S/README.txt"
+printf 'Piece 1: %s\nTab finished the name for you. Try it on commands too: type  his  then press Tab.\n' "$p1" > "$S/tab/drill-1-tab-completion-saves-your-fingers-$(hex).txt"
+cat > /bin/again <<AGAIN
+#!/bin/sh
+# again: run me 5 times within 15 seconds. The up arrow brings back your last command.
+f=/tmp/.again; now=\$(date +%s); set -- \$(cat "\$f" 2>/dev/null); n=\${1:-0}; start=\${2:-0}
+if [ \$((now - start)) -gt 15 ]; then n=0; start=\$now; fi
+n=\$((n + 1)); echo "\$n \$start" > "\$f"
+if [ \$n -ge 5 ]; then rm -f "\$f"; echo "Run 5 of 5 in \$((now - start)) seconds. Fast fingers!"; echo "Piece 2: $p2"; exit 0; fi
+echo "Run \$n of 5. Press the up arrow, then Enter. (5 runs within 15 seconds)"
+AGAIN
+cat > /bin/runaway <<RUNAWAY
+#!/bin/sh
+# runaway: prints forever until you press Ctrl+C.
+trap 'echo; echo "Stopped! Ctrl+C interrupts whatever is running."; echo "Piece 3: $p3"; exit 0' INT
+# (sleep returns at once in this tiny kernel, so wait for the uptime clock to tick instead)
+tick() { read u _ < /proc/uptime; t=\${u%.*}; while read u _ < /proc/uptime && [ "\${u%.*}" = "\$t" ]; do :; done; }
+i=0
+while true; do i=\$((i + 1)); echo "Still running (\$i)... press Ctrl+C to stop me"; tick; done
+RUNAWAY
+chmod 755 /bin/again /bin/runaway
 cp "$R/1.txt" "$M1/README.txt"
 
 # 2: let the cat out of the bag. cat --help shows -n, which numbers lines.

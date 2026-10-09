@@ -112,6 +112,9 @@
   // ------------------------------------------------------- build the world
   // Mirrors guest/build-missions: random flags, only SHA-256 kept in /etc/quest.
   const FLAGHASH = {};
+  // Speed drills: this run's three pieces, the "again" counter and the Ctrl+C hook.
+  const SPEED = { p: [], runs: 0, start: 0 };
+  let interrupt = null;
   async function buildWorld() {
     for (const d of ["bin", "sbin", "etc", "proc", "sys", "dev", "tmp", "home"]) ROOT.kids[d] = mkdir(0o755, "root");
     ROOT.kids.tmp.mode = 0o777;
@@ -146,6 +149,13 @@
     // 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
     const FW = flag("warmup"); await keep(0, FW);
     put(H + "/orientation.txt", mkfile(README_TEXT.orientation + "  " + FW + "\n", 0o644, USER));
+    // 11: warm-up 2, speed drills (optional, untimed): Tab, the up arrow, Ctrl+C, copy and paste.
+    SPEED.p = [hex(2), hex(2), hex(2)];
+    await keep(11, "CYBA{speed-" + SPEED.p.join("") + "}");
+    for (const b of ["again", "runaway"]) ROOT.kids.bin.kids[b] = mkfile("", 0o755, "root");
+    put(H + "/speed", mkdir(0o755, USER));
+    put(H + "/speed/README.txt", mkfile(README_TEXT.speed, 0o644, USER));
+    put(H + "/speed/tab/drill-1-tab-completion-saves-your-fingers-" + hex(4) + ".txt", mkfile("Piece 1: " + SPEED.p[0] + "\nTab finished the name for you. Try it on commands too: type  his  then press Tab.\n", 0o644, USER));
     readme(M1, "1");
 
     // 2: let the cat out of the bag. cat --help shows -n, which numbers lines.
@@ -267,9 +277,11 @@
 "8": "Mission 8: Decoder ring   [Hard, 400 points]\n\nObjective: Decode a base64 message to reveal the flag.\n\n  cd ~/mission6\n  cat message.b64\n\nIt looks like gibberish, but it is not encrypted. It is encoded with\nbase64: a way of writing any data using only letters, digits, +, / and\n=.\n\nThere is no secret key. Anyone can decode it.\n\nUseful command: base64\nWhen you have the flag: submit CYBA{...}\nStuck? hint 8   (2 hints, 20 points each: 5% of this mission)\n",
 "9": "Mission 9: Layer cake   [Hard, 400 points]\n\nObjective: Peel back every layer of encoding to reveal the flag.\n\n  cd ~/mission9\n  cat cake.b64\n\nYou decoded base64 in the last mission. This message was encoded, then\nthe result was encoded again, and again. Nobody wrote down how many\nlayers there are.\n\nCopying each result into the next command works, but it is slow. A pipe\n(|) can feed one base64 -d straight into the next. Keep adding layers\nuntil you see the flag.\n\nUseful command: base64\nWhen you have the flag: submit CYBA{...}\nStuck? hint 9   (3 hints, 20 points each: 5% of this mission)\n",
 "10": "Mission 10: Endgame   [Very Hard, 800 points]\n\nObjective: Recover three hidden pieces and put the final flag together.\n\n  cd ~/mission10\n  cat README.txt\n\nThe final mission uses everything you have learned. The flag was split\ninto three pieces, and each one is hidden a different way. README.txt\ntells you where each piece is.\n\nPut the pieces together in order, joined with dashes:\nCYBA{piece1-piece2-piece3}.\n\nThere are no new commands here. find, grep, cut, base64, chmod and pipes\nare all you need.\n\nUseful commands: find, grep, cut, base64, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 10   (4 hints, 40 points each: 5% of this mission)\n",
-"0": "Mission 0: Warm-up   [optional, 50 bonus points, untimed]\n\nObjective: Read the CTF orientation in the terminal with cat.\n\n  cat orientation.txt\n\nGet comfortable before the clock starts. Your home folder holds\norientation.txt: how a CTF works, what a flag looks like, scoring and\nthe rules.\n\ncat prints a file on the screen. Click the terminal, type cat\norientation.txt and press Enter. The warm-up flag is at the bottom.\n\nSubmit it for 50 bonus points, or skip the warm-up. The competition\nclock starts when you begin Mission 1.\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 0\n"
+"0": "Mission 0: Warm-up   [optional, 50 bonus points, untimed]\n\nObjective: Read the CTF orientation in the terminal with cat.\n\n  cat orientation.txt\n\nGet comfortable before the clock starts. Your home folder holds\norientation.txt: how a CTF works, what a flag looks like, scoring and\nthe rules.\n\ncat prints a file on the screen. Click the terminal, type cat\norientation.txt and press Enter. The warm-up flag is at the bottom.\n\nSubmit it for 50 bonus points, or skip the warm-up. The competition\nclock starts when you begin Mission 1.\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 0\n",
+"11": "Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]\n\nObjective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.\n\n  cd ~/speed\n  cat README.txt\n\nThree drills, three pieces of the flag. Each drill needs one keyboard\nskill, and each piece is 4 characters.\n\nDrill 1, Tab: cd tab, type cat dri and press Tab. The long file name\nfinishes itself.\n\nDrill 2, up arrow: run again 5 times within 15 seconds. After the first\none, press up arrow then Enter.\n\nDrill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and\npress C.\n\nPut the pieces together in order: submit CYBA{speed-PIECE1PIECE2PIECE3}.\nCopy each piece with the mouse and paste it with Ctrl+V or a right-\nclick.\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 11  (free)\n",
+"speed": "Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]\n\nObjective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.\n\n  cd ~/speed\n  cat README.txt\n\nThree drills, three pieces of the flag. Each drill needs one keyboard\nskill, and each piece is 4 characters.\n\nDrill 1, Tab: cd tab, type cat dri and press Tab. The long file name\nfinishes itself.\n\nDrill 2, up arrow: run again 5 times within 15 seconds. After the first\none, press up arrow then Enter.\n\nDrill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and\npress C.\n\nPut the pieces together in order: submit CYBA{speed-PIECE1PIECE2PIECE3}.\nCopy each piece with the mouse and paste it with Ctrl+V or a right-\nclick.\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 11  (free)\n"
 };
-  const MISSION_OVERVIEW = "Your missions:\n   0  Warm-up (optional)           Bonus       50 pts  (bonus, untimed)\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Decoder ring                 Hard       400 pts\n   9  Layer cake                   Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nRead one with: mission 1   (up to 10)\n";
+  const MISSION_OVERVIEW = "Your missions:\n   0  Warm-up (optional)           Bonus       50 pts  (bonus, untimed)\n  11  Speed drills (optional)      Bonus       50 pts  (bonus, untimed)\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Decoder ring                 Hard       400 pts\n   9  Layer cake                   Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nRead one with: mission 1   (up to 10)\n";
   const HINTS = {
 "1": [
 "Lost? pwd shows where you are and cd .. goes back up one level. Run ls in every folder: the names tell you which folder to cd into next."
@@ -311,12 +323,14 @@
 "Piece 3: unlock.sh is locked, just like Mission 7: chmod +x unlock.sh, then ./unlock.sh.",
 "Join the three 6-character values with dashes, in order: CYBA{piece1-piece2-piece3}. Leave out the words \"piece 1:\"."
 ],
-"0": "Mission 0: The flag is on the last line of orientation.txt in your home folder. Type cat orientation.txt, press Enter, then copy the flag into submit."
+"0": "Mission 0: The flag is on the last line of orientation.txt in your home folder. Type cat orientation.txt, press Enter, then copy the flag into submit.",
+"11": "Speed drills: Drill 1: in ~/speed/tab type cat dri, then press Tab. Drill 2: type again and Enter, then press the up arrow and Enter four more times, quickly. Drill 3: type runaway, then hold Ctrl and press C. The flag is CYBA{speed- followed by the three pieces in order, then }."
 };
   const MISSION_COUNT = 10;
   const README_TEXT = {
-"home": "CyberQuest Linux CTF\n====================\n\nThis file explains the game. Each mission folder has its own README.txt\nwith that mission's instructions. Read one with:  cat README.txt\n\nHow to play\n  1. Go to a mission:    cd ~/mission1\n  2. Look around:        ls\n  3. Read its brief:     cat README.txt     (or type: mission 1)\n  4. Find the flag. It looks like CYBA{word-1a2b3c4d}\n  5. Check it:           submit CYBA{...}\n  6. Stuck?              hint 1   (costs 5% of the mission's points)\n\nMissions\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Decoder ring                 Hard       400 pts\n   9  Layer cake                   Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nFlags change every time the page loads.\n\nNew to CTFs? Warm up first (optional, 50 bonus points):  cat orientation.txt\n",
-"orientation": "CTF Orientation\n===============\n\nWhat is a CTF?\n  Capture The Flag is a cybersecurity competition. Each mission hides a\n  flag: a secret piece of text. Find it, submit it, and score points.\n\n1. Read a mission's instructions\n  Every mission has its own folder with a README.txt inside:\n    cd ~/mission1          go into the mission's folder\n    cat README.txt         read its instructions\n    cd ~                   come back home\n  Or, from anywhere:  mission 1      (mission alone lists them all)\n\n2. Find the flag\n  A flag looks like this:  CYBA{word-1a2b3c4d}\n  It always starts with CYBA{ and ends with }.\n\n3. Submit the flag\n  Type submit, a space, then the whole flag:\n    submit CYBA{word-1a2b3c4d}\n  Copy it exactly: highlight it with the mouse, then paste with Ctrl+V\n  or a right-click. Do not leave off the CYBA{ or the }.\n\n  What the replies mean:\n    Correct! +100 points                 you captured it\n    Incorrect flag. Keep hunting!        right shape, wrong flag\n    That doesn't look like a flag.       copy the whole thing, CYBA{ to }\n\n4. Stuck?\n  Read the command's built-in help first:  ls --help\n  Then ask for a nudge:  hint 1\n  A hint costs 5% of that mission's points, charged once. hint 1 tells\n  you the price first; hint 1 --show reveals it.\n\nScoring\n  Easy 100    Medium 200    Hard 400    Very Hard 800\n  The most points wins. On a tie, the faster time wins.\n  Hints cost 5% of the mission's points.\n\nThe clock\n  The clock starts when you begin Mission 1 and counts up. It stops\n  when you capture the last flag.\n\nWarm-up: Mission 0  (optional, 50 bonus points, untimed)\n  You just read this file with cat. Now practice step 3: submit the\n  flag below. Or skip it and go to Mission 1.\n\nWarm-up flag:\n",
+"home": "CyberQuest Linux CTF\n====================\n\nThis file explains the game. Each mission folder has its own README.txt\nwith that mission's instructions. Read one with:  cat README.txt\n\nHow to play\n  1. Go to a mission:    cd ~/mission1\n  2. Look around:        ls\n  3. Read its brief:     cat README.txt     (or type: mission 1)\n  4. Find the flag. It looks like CYBA{word-1a2b3c4d}\n  5. Check it:           submit CYBA{...}\n  6. Stuck?              hint 1   (costs 5% of the mission's points)\n\nMissions\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Decoder ring                 Hard       400 pts\n   9  Layer cake                   Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nFlags change every time the page loads.\n\nNew to CTFs? Warm up first (optional, 50 bonus points):  cat orientation.txt\nThen build speed (optional, 50 more):                   cd ~/speed\n",
+"orientation": "CTF Orientation\n===============\n\nWhat is a CTF?\n  Capture The Flag is a cybersecurity competition. Each mission hides a\n  flag: a secret piece of text. Find it, submit it, and score points.\n\n1. Read a mission's instructions\n  Every mission has its own folder with a README.txt inside:\n    cd ~/mission1          go into the mission's folder\n    cat README.txt         read its instructions\n    cd ~                   come back home\n  Or, from anywhere:  mission 1      (mission alone lists them all)\n\n2. Find the flag\n  A flag looks like this:  CYBA{word-1a2b3c4d}\n  It always starts with CYBA{ and ends with }.\n\n3. Submit the flag\n  Type submit, a space, then the whole flag:\n    submit CYBA{word-1a2b3c4d}\n  Copy it exactly: highlight it with the mouse, then paste with Ctrl+V\n  or a right-click. Do not leave off the CYBA{ or the }.\n\n  What the replies mean:\n    Correct! +100 points                 you captured it\n    Incorrect flag. Keep hunting!        right shape, wrong flag\n    That doesn't look like a flag.       copy the whole thing, CYBA{ to }\n\n4. Stuck?\n  Read the command's built-in help first:  ls --help\n  Then ask for a nudge:  hint 1\n  A hint costs 5% of that mission's points, charged once. hint 1 tells\n  you the price first; hint 1 --show reveals it.\n\nScoring\n  Easy 100    Medium 200    Hard 400    Very Hard 800\n  The most points wins. On a tie, the faster time wins.\n  Hints cost 5% of the mission's points.\n\nThe clock\n  The clock starts when you begin Mission 1 and counts up. It stops\n  when you capture the last flag.\n\nWarm-up: Mission 0  (optional, 50 bonus points, untimed)\n  You just read this file with cat. Now practice step 3: submit the\n  flag below. Or skip it and go to Mission 1.\n  Then try Warm-up 2, speed drills (another 50 bonus points):  cd ~/speed\n\nWarm-up flag:\n",
+"speed": "Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]\n\nObjective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.\n\n  cd ~/speed\n  cat README.txt\n\nThree drills, three pieces of the flag. Each drill needs one keyboard\nskill, and each piece is 4 characters.\n\nDrill 1, Tab: cd tab, type cat dri and press Tab. The long file name\nfinishes itself.\n\nDrill 2, up arrow: run again 5 times within 15 seconds. After the first\none, press up arrow then Enter.\n\nDrill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and\npress C.\n\nPut the pieces together in order: submit CYBA{speed-PIECE1PIECE2PIECE3}.\nCopy each piece with the mouse and paste it with Ctrl+V or a right-\nclick.\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 11  (free)\n",
 "1": "Mission 1: Make your move   [Easy, 100 points]\n\nObjective: Navigate the file system using basic Linux commands to find the flag.\n\n  cd ~/mission1\n  ls\n\nMoving around is the first real skill on the command line:\n\n  pwd         where am I?\n  ls          what is in this folder?\n  cd NAME     move into a folder\n  cd ..       go back up one level\n  cd ~        go home\n\nA flag is waiting at the end of a trail that starts in ~/mission1.\nNothing on this trail needs opening: the file names are the signposts.\nUse ls to read them and cd to follow them. Some turns are dead ends.\n\nAt the end of the trail, ls shows you the flag itself.\n\nUseful commands: pwd, ls, cd\nWhen you have the flag: submit CYBA{...}\nStuck? hint 1   (1 hint, 5 points each: 5% of this mission)\n",
 "2": "Mission 2: Let the cat out of the bag   [Easy, 100 points]\n\nObjective: Read files with cat, and use --help to number the lines.\n\n  cd ~/mission2\n  cat README.txt\n\ncat prints a file on the screen. You just used it to read README.txt.\n\nThe cat is hiding in bag.txt: 100 lines, and every one looks like a\nflag. Only the line number in README.txt is real. Counting 100 lines by\nhand is how mistakes happen.\n\nAlmost every Linux command can explain itself: type its name, a space,\nthen --help. Ask cat for its help and look for an option that numbers\nthe lines. You will use --help in every mission after this one.\n\nUseful command: cat\nWhen you have the flag: submit CYBA{...}\nStuck? hint 2   (1 hint, 5 points each: 5% of this mission)\n",
 "3": "Mission 3: Now you see me   [Easy, 100 points]\n\nObjective: Reveal the hidden files and find the real flag.\n\n  cd ~/mission3\n  ls\n\nThere is a flag in this folder, but plain ls will not show it.\n\nOn Linux, a file whose name starts with a dot is hidden. Watch out: one\nhidden file is a decoy.\n\nUseful commands: ls, cat\nWhen you have the flag: submit CYBA{...}\nStuck? hint 3   (1 hint, 5 points each: 5% of this mission)\n",
@@ -329,7 +343,7 @@
 "10": "Mission 10: Endgame   [Very Hard, 800 points]\n\nObjective: Recover three hidden pieces and put the final flag together.\n\n  cd ~/mission10\n  cat README.txt\n\nThe final mission uses everything you have learned. The flag was split\ninto three pieces, and each one is hidden a different way. README.txt\ntells you where each piece is.\n\nPut the pieces together in order, joined with dashes:\nCYBA{piece1-piece2-piece3}.\n\nThere are no new commands here. find, grep, cut, base64, chmod and pipes\nare all you need.\n\nUseful commands: find, grep, cut, base64, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 10   (4 hints, 40 points each: 5% of this mission)\n"
 };
   const HINT_COST = {"1": 5, "2": 5, "3": 5, "4": 10, "5": 10, "6": 10, "7": 10, "8": 20, "9": 20, "10": 40};
-  const MISSION_POINTS = {"0": 50, "1": 100, "2": 100, "3": 100, "4": 200, "5": 200, "6": 200, "7": 200, "8": 400, "9": 400, "10": 800};
+  const MISSION_POINTS = {"0": 50, "1": 100, "2": 100, "3": 100, "4": 200, "5": 200, "6": 200, "7": 200, "8": 400, "9": 400, "10": 800, "11": 50};
   // End of generated briefs.
 
   // Real BusyBox --help text, so --help reads the same as in the full Linux.
@@ -677,6 +691,7 @@
     // Each costs 5% of the mission's points, charged once (the page keeps the score). Warm-up hint is free.
     async hint(args) {
       if (args[0] === "0") return R(HINTS[0] + "\n");
+      if (args[0] === "11" || args[0] === "speed") return R(HINTS[11] + "\n");
       const n = Number(args[0]), list = HINTS[args[0]];
       if (!list) return R("Usage: hint 1   (up to " + MISSION_COUNT + ")\n", "", 1);
       const have = hintsSeen[n] || 0, line = (k) => "Hint " + k + " of " + list.length + ": " + list[k - 1] + "\n";
@@ -690,10 +705,28 @@
       if (have >= list.length) return R(out + "That is every hint for mission " + n + ".\n");
       return R(out + "Hint " + (have + 1) + " of " + list.length + " costs " + HINT_COST[n] + " points (5% of " + MISSION_POINTS[n] + "), charged once.\nTo see it, type:  hint " + n + " --show\n");
     },
+    async again() {
+      const now = Date.now();
+      if (now - SPEED.start > 15000) { SPEED.runs = 0; SPEED.start = now; }
+      SPEED.runs++;
+      if (SPEED.runs >= 5) { const t = Math.round((now - SPEED.start) / 1000); SPEED.runs = 0; SPEED.start = 0; return R("Run 5 of 5 in " + t + " seconds. Fast fingers!\nPiece 2: " + SPEED.p[1] + "\n"); }
+      return R("Run " + SPEED.runs + " of 5. Press the up arrow, then Enter. (5 runs within 15 seconds)\n");
+    },
+    // runaway: prints until Ctrl+C. Lite mode has no processes, so the terminal's Ctrl+C calls interrupt().
+    async runaway() {
+      if (!term) return R("Still running (1)... press Ctrl+C to stop me\n");
+      let i = 0;
+      const tick = () => write("Still running (" + ++i + ")... press Ctrl+C to stop me\n");
+      tick();
+      const timer = setInterval(tick, 1000);
+      await new Promise((resolve) => { interrupt = resolve; });
+      clearInterval(timer); interrupt = null;
+      return R("^C\nStopped! Ctrl+C interrupts whatever is running.\nPiece 3: " + SPEED.p[2] + "\n");
+    },
     async submit(args) {
       if (!args[0]) return R("Usage: submit CYBA{...}\n", "", 1);
       const h = await sha256hex(args[0]);
-      for (let n = 0; n <= MISSION_COUNT; n++) if (FLAGHASH[n] === h) { onMission(n); return R("Correct! +" + MISSION_POINTS[n] + " points   [quest] mission " + n + " complete\n"); }
+      for (const n of Object.keys(FLAGHASH).map(Number)) if (FLAGHASH[n] === h) { onMission(n); return R("Correct! +" + MISSION_POINTS[n] + " points   [quest] mission " + n + " complete\n"); }
       return R((/^CYBA\{.+\}$/.test(args[0]) ? "Incorrect flag. Keep hunting!" : "That doesn't look like a flag. Copy the whole thing, CYBA{ to }.") + "\n", "", 1);
     },
   };
@@ -971,7 +1004,7 @@
   }
 
   async function onData(data) {
-    if (busy) return;
+    if (busy) { if (data === "\x03" && interrupt) interrupt(); return; }
     // Pasted text can hold several lines: run them one after another.
     if (data.length > 1 && /[\r\n]/.test(data) && !data.startsWith("\x1b")) {
       const parts = data.split(/\r\n|\r|\n/);

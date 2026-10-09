@@ -28,3 +28,4 @@ Missions
 Flags change every time the page loads.
 
 New to CTFs? Warm up first (optional, 50 bonus points):  cat orientation.txt
+Then build speed (optional, 50 more):                   cd ~/speed

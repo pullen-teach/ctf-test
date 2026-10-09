@@ -4,7 +4,7 @@
 if [ -z "$1" ]; then echo "Usage: submit CYBA{...}"; exit 1; fi
 h=$(printf '%s' "$1" | sha256sum | cut -d' ' -f1)
 n=-1
-for p in 50 100 100 100 200 200 200 200 400 400 800; do
+for p in 50 100 100 100 200 200 200 200 400 400 800 50; do
   n=$((n + 1))
   if [ "$h" = "$(cat /etc/quest/$n)" ]; then
     echo "Correct! +$p points   [quest] mission $n complete"
