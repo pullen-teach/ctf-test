@@ -1,0 +1,16 @@
+Mission 8: Persistence   [Hard, 400 points]
+
+Objective: Find the scheduled task the intruder left behind, and decode what it carries.
+
+  cd ~/mission8
+  ls cron
+
+Intruders want to come back. One trick is persistence: a scheduled task
+(a cron job) that runs their script again and again.
+
+cron/ holds a copy of each user's crontab. Each line is a schedule and a
+command. One command doesn't belong.
+
+Useful commands: cat, ls -a, base64
+When you have the flag: submit CYBA{...}
+Stuck? hint 8   (3 hints, 20 points each: 5% of this mission)

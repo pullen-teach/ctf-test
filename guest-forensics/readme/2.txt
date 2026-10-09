@@ -1,0 +1,17 @@
+Mission 2: Say cheese   [Easy, 100 points]
+
+Objective: Read the hidden metadata fields inside a photo.
+
+  cd ~/mission2
+  filetype photo.jpg
+
+Photos carry metadata: hidden fields such as the camera, the software,
+the time it was taken, the author and comments. Viewers don't show them,
+but they are in the file.
+
+Tools like exiftool list metadata neatly. Here, strings can pull the
+readable fields out of the picture's bytes.
+
+Useful commands: strings, grep
+When you have the flag: submit CYBA{...}
+Stuck? hint 2   (1 hint, 5 points each: 5% of this mission)

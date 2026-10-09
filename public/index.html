@@ -28,13 +28,14 @@
     h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.1; margin: 0 0 0.8rem; letter-spacing: -0.01em; }
     .lede { font-size: 1.15rem; color: #b8c4d9; max-width: 40rem; margin: 0; }
 
-    .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin-top: -4.5rem; padding: 0 1rem; }
+    .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.25rem; margin-top: -4.5rem; padding: 0 1rem; }
     .game { position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; text-decoration: none; box-shadow: 0 10px 30px rgba(18, 33, 58, 0.12); transition: transform 0.15s, box-shadow 0.15s; overflow: hidden; }
     .game::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--accent); }
     .game:hover, .game:focus-visible { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(18, 33, 58, 0.18); }
     .game:focus-visible { outline: 3px solid var(--accent-solid); outline-offset: 3px; }
     .linux { --accent: linear-gradient(90deg, #17875a, #2a9fd6, #2459d8); --accent-solid: #17875a; }
     .crypto { --accent: linear-gradient(90deg, #f5a623, #d1416b, #7448d4); --accent-solid: #7448d4; }
+    .forensics { --accent: linear-gradient(90deg, #46d39a, #0f9488, #2a9fd6); --accent-solid: #0f9488; }
     .g-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.9rem; }
     .g-ico { flex: none; width: 3.2rem; height: 3.2rem; border-radius: 12px; display: grid; place-items: center; background: var(--terminal); }
     .g-ico svg { width: 1.8rem; height: 1.8rem; }
@@ -56,7 +57,7 @@
     .how div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.2rem; }
     .how h3 { margin: 0 0 0.25rem; font-size: 1rem; }
     .how p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-    .how code { font: 600 0.9em var(--mono); background: #eef2f8; padding: 0 0.3rem; border-radius: 4px; }
+    .how code { white-space: nowrap; font: 600 0.9em var(--mono); background: #eef2f8; padding: 0 0.3rem; border-radius: 4px; }
     footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 0 1rem 2rem; }
     footer a { color: #2459d8; }
     @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } .game { transition: none; } }
@@ -98,10 +99,19 @@
         <ul class="chips" aria-label="Skills"><li>base64</li><li>xxd</li><li>tr</li><li>caesar</li><li>xor</li><li>sha256sum</li><li>vigenere</li></ul>
         <span class="go">Start the Crypto CTF &rarr;</span>
       </a>
+      <a class="game forensics" href="forensics/">
+        <div class="g-head">
+          <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="14" cy="14" r="7" fill="none" stroke="#46d39a" stroke-width="3"/><path d="M19.5 19.5L26 26" stroke="#2a9fd6" stroke-width="3.4" stroke-linecap="round"/></svg></span>
+          <div><span class="g-kicker">Challenge set 3</span><h2>Forensics CTF</h2></div>
+        </div>
+        <p>Read the evidence, then compete. File signatures, metadata, hidden data, logs and a packet capture: solve the break-in.</p>
+        <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
+        <ul class="chips" aria-label="Skills"><li>ls -l</li><li>strings</li><li>xxd</li><li>tar</li><li>zcat</li><li>sha256sum -c</li><li>uniq -c</li></ul>
+        <span class="go">Start the Forensics CTF &rarr;</span>
+      </a>
     </div>
 
     <div class="soon">
-      <div><b>Coming soon: Forensics CTF.</b> Investigate a break-in from logs, files and archives.</div>
       <div><b>Coming soon: Web CTF.</b> Find the flaws in a deliberately broken website.</div>
     </div>
 

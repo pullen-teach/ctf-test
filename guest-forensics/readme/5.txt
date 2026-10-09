@@ -1,0 +1,16 @@
+Mission 5: Log detective   [Medium, 200 points]
+
+Objective: Find the IP address behind the break-in, then its one successful login.
+
+  cd ~/mission5
+  head auth.log
+
+auth.log records every login attempt to a server. Someone guessed
+passwords over and over, then got in.
+
+Count the Failed attempts per IP address. The busiest IP is the
+attacker. Its Accepted line holds the flag.
+
+Useful commands: grep, cut, sort, uniq
+When you have the flag: submit CYBA{...}
+Stuck? hint 5   (2 hints, 10 points each: 5% of this mission)

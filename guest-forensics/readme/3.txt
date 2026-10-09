@@ -1,0 +1,17 @@
+Mission 3: Wrong label   [Easy, 100 points]
+
+Objective: Find the photo that isn't a photo, and open it.
+
+  cd ~/mission3
+  ls photos
+
+A file's extension, like .jpg, is only a label: anyone can rename a
+file. The first bytes of a file, its magic number, say what it really
+is.
+
+One of these photos is something else. filetype reads the first bytes
+for you.
+
+Useful commands: filetype, zcat
+When you have the flag: submit CYBA{...}
+Stuck? hint 3   (1 hint, 5 points each: 5% of this mission)

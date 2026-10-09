@@ -1,0 +1,17 @@
+Mission 4: Russian dolls   [Medium, 200 points]
+
+Objective: Unpack archives nested inside archives.
+
+  cd ~/mission4
+  ls -l
+
+Evidence often arrives packed: an archive (tar) bundles files together
+and gzip squeezes them smaller. Sometimes there are layers inside
+layers.
+
+The inner layers have no helpful extensions. Unpack one layer, ask
+filetype what you got, and repeat.
+
+Useful commands: tar, filetype, zcat
+When you have the flag: submit CYBA{...}
+Stuck? hint 4   (2 hints, 10 points each: 5% of this mission)

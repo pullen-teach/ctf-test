@@ -1,0 +1,16 @@
+Mission 7: Tampered   [Medium, 200 points]
+
+Objective: Find the program that doesn't match its known-good fingerprint.
+
+  cd ~/mission7
+  head -3 manifest.sha256
+
+manifest.sha256 lists the SHA-256 fingerprint of every program in bin/,
+taken when the server was clean.
+
+Change one byte of a file and its fingerprint changes completely. Every
+program has a flag inside; only the tampered one has the real flag.
+
+Useful commands: sha256sum -c, grep, strings
+When you have the flag: submit CYBA{...}
+Stuck? hint 7   (2 hints, 10 points each: 5% of this mission)

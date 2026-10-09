@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CyberQuest Forensics CTF</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1726'/%3E%3Cpath d='M8 10l7 6-7 6' fill='none' stroke='%2346d39a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M17 22h7' stroke='%23f5a623' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../xterm/xterm.css">
+  <link rel="stylesheet" href="../style.css?v=20261009d">
+</head>
+<body>
+  <header class="bar">
+    <strong class="brand">CyberQuest</strong>
+    <span class="tag">Forensics CTF</span>
+    <div class="track" id="track" aria-label="Missions completed">
+      <span class="step" data-n="1"></span><span class="step" data-n="2"></span><span class="step" data-n="3"></span><span class="step" data-n="4"></span><span class="step" data-n="5"></span><span class="step" data-n="6"></span><span class="step" data-n="7"></span><span class="step" data-n="8"></span><span class="step" data-n="9"></span><span class="step" data-n="10"></span>
+    </div>
+    <a class="switch" href="../">&larr; All CTFs</a>
+    <span class="status" id="status" role="status">Loading Linux…</span>
+  </header>
+
+  <main class="layout">
+    <section class="terminal-wrap" aria-label="Terminal">
+      <div id="terminal"></div>
+      <div class="boot" id="boot">
+        <div class="boot-card">
+          <pre class="boot-prompt">player@quest:~$ <span class="cursor">▍</span></pre>
+          <p id="boot-text">Starting a real Linux computer inside this browser tab…</p>
+          <div class="meter"><div id="meter-fill"></div></div>
+          <p class="boot-small">Nothing is installed. Everything runs on this device.</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side guide" aria-label="Your mission">
+      <div class="guide-head">
+        <div class="stats">
+          <div class="stat" id="score" title="Your score">
+            <span class="stat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#f5a623" d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v3H8v-3h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1 1.7V7zm10 0v2.7A2 2 0 0 0 18 8V7h-1z"/></svg></span>
+            <span class="stat-txt"><b><span id="score-pts">0</span><span class="of"> / <span id="score-max">0</span></span></b><small>Total Points</small></span>
+          </div>
+          <div class="stat clock" id="clock" title="Competition clock: starts when you start typing in the terminal, stops when every flag is captured">
+            <span class="stat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#2459d8" stroke-width="2.2"/><path d="M12 7v5l3.5 2" fill="none" stroke="#2459d8" stroke-width="2.2" stroke-linecap="round"/></svg><span class="clock-dot" aria-hidden="true"></span></span>
+            <span class="stat-txt"><b id="clock-time">00:00</b><small id="clock-label">Starts at Mission 1</small></span>
+          </div>
+          <div class="stat flags" id="flags-stat">
+            <span class="stat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#17875a" d="M5 3h2v18H5zM8 4h11l-2.5 4L19 12H8z"/></svg></span>
+            <span class="stat-txt"><b id="flags-count">0<span class="of"> / 10</span></b><small id="flags-label">Flags Captured</small></span>
+          </div>
+        </div>
+        <nav id="m-dots" class="stepper" aria-label="Missions"></nav>
+      </div>
+      <div class="guide-body">
+        <span id="m-count" class="m-count">Mission 1 of 10</span>
+        <article id="mission" class="mission" aria-live="polite"></article>
+        <details class="how card fold">
+          <summary><span class="c-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#7448d4" d="M7.5 6h9a5.5 5.5 0 0 1 5.4 6.6l-.9 4.6a2.6 2.6 0 0 1-4.5 1.2L14.4 16H9.6l-2.1 2.4A2.6 2.6 0 0 1 3 17.2l-.9-4.6A5.5 5.5 0 0 1 7.5 6z"/><path d="M7.5 9.5v4M5.5 11.5h4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.6" cy="10.4" r="1.2" fill="#fff"/><circle cx="17.8" cy="12.6" r="1.2" fill="#fff"/></svg></span>How to play<span class="chev" aria-hidden="true"></span></summary>
+          <ol>
+            <li>Every forensics tool explains itself: <code>strings --help</code>, <code>filetype --help</code>, <code>tar --help</code>.</li>
+            <li>Click the terminal and type the commands. <b>Copy</b> puts a command on your clipboard to paste.</li>
+            <li>Paste with <code>Ctrl+V</code> or a right-click. Highlighting text copies it; middle-click pastes it.</li>
+            <li>Prefer the terminal? Your home folder and each mission folder have a <code>README.txt</code>: <code>cat README.txt</code> (or <code>mission 1</code>).</li>
+            <li>A flag looks like <code>CYBA{word-1a2b3c4d}</code>. Check it: <code>submit CYBA{...}</code></li>
+            <li>Stuck? <code>hint 1</code> (up to 10). A hint costs 5% of that mission's points, charged once.</li>
+          </ol>
+          <p class="small">Flags change every time this page loads.</p>
+        </details>
+        <p class="credit">Runs on <a href="https://github.com/copy/v86">v86</a>, Linux and BusyBox. <a href="../NOTICE.txt">Licenses and source</a>.</p>
+      </div>
+      <div class="guide-foot" id="guide-foot">
+        <p id="m-state" class="m-state"></p>
+        <div class="foot-btns">
+          <button id="prev" class="btn ghost" type="button">&larr; Back</button>
+          <button id="board" class="btn ghost board" type="button" hidden><span class="b-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M7 3h10v5a5 5 0 0 1-10 0zM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6"/></svg></span>View Leaderboard</button>
+          <button id="next" class="btn" type="button" disabled>Next mission &rarr;</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>window.QUEST_CONFIG = { base: "../", initrd: "forensics.cpio.gz" };</script>
+  <script src="../xterm/xterm.js"></script>
+  <script src="../v86/libv86.js"></script>
+  <script src="lite.js?v=20261009d"></script>
+  <script src="guide.js?v=20261009d"></script>
+  <script src="../app.js?v=20261009d"></script>
+</body>
+</html>

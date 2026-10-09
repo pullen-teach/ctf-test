@@ -1,0 +1,16 @@
+Mission 10: Case closed   [Very Hard, 800 points]
+
+Objective: Trace the break-in from the log to the stolen file, then open it.
+
+  cd ~/mission10
+  cat README.txt
+
+The final case uses everything. First find which account was broken
+into, like Mission 5.
+
+Then search that user's folder under homes/ for a file whose label lies,
+like Mission 3. Unpack it and decode what's inside.
+
+Useful commands: grep, cut, sort, uniq, filetype, zcat, base64
+When you have the flag: submit CYBA{...}
+Stuck? hint 10   (4 hints, 40 points each: 5% of this mission)

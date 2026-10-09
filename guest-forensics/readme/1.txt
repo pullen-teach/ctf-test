@@ -1,0 +1,16 @@
+Mission 1: Case file   [Easy, 100 points]
+
+Objective: Find the evidence file that changed at the minute of the break-in.
+
+  cd ~/mission1
+  cat README.txt
+
+Every file remembers when it was last changed: its modification time.
+Investigators use it to build a timeline.
+
+README.txt gives this game's break-in time. Ten files in evidence/ hold
+flags, but only the file changed at that minute has the real one.
+
+Useful commands: ls -l, grep
+When you have the flag: submit CYBA{...}
+Stuck? hint 1   (1 hint, 5 points each: 5% of this mission)

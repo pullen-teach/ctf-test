@@ -1,0 +1,18 @@
+Mission 9: Leaked in pieces   [Hard, 400 points]
+
+Objective: Rebuild data that left the network in small pieces, from a packet capture.
+
+  cd ~/mission9
+  head -5 capture.txt
+
+capture.txt is a packet capture, listed the way Wireshark shows it: one
+line per packet, with its time, source and destination addresses,
+protocol and a summary.
+
+One host kept requesting /pixel.gif with extra values: a seq number and
+a chunk of hex data. Put the chunks in seq order, join them and decode
+the hex.
+
+Useful commands: grep, cut, sort, tr, xxd
+When you have the flag: submit CYBA{...}
+Stuck? hint 9   (3 hints, 20 points each: 5% of this mission)

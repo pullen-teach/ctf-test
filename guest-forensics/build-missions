@@ -1,0 +1,165 @@
+#!/bin/sh
+# Builds the ten Forensics CTF missions. Flags are random on every boot. Only SHA-256
+# hashes of the flags are kept (/etc/quest), so there is no answer file to read.
+# Every piece of "evidence" here is made up: documentation IP addresses
+# (192.0.2.x, 198.51.100.x, 203.0.113.x), invented users, and scripts that do nothing.
+H=/home/player
+Q=/etc/quest
+R=/usr/share/quest
+mkdir -p "$Q"
+hex()  { head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+flag() { printf 'CYBA{%s-%s}' "$1" "$(hex)"; }
+pick() { printf '%s\n' "$@" | shuf -n1; }
+num()  { awk -v s="$(hex | cut -c1-6)" -v n="$1" 'BEGIN { srand(("0x" s) + 0); print 1 + int(rand() * n) }'; }
+keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
+# room N [clue]: the mission folder and its README.txt (this run's clue on top, then the brief)
+room() { mkdir -p "$H/mission$1"; { [ -n "$2" ] && { printf "$2"; echo; }; cat "$R/$1.txt"; } > "$H/mission$1/README.txt"; }
+# noise N: N random bytes with no printable characters, so strings finds only what we plant
+noise() { head -c "$1" /dev/urandom | tr -d '\t\n\r -~'; }
+jpeg() { printf '\377\330\377\340\000\020JFIF\000'; noise "$1"; printf '\377\331'; }
+day=$(date -d "@$(( $(date +%s) - 86400 ))" +%Y-%m-%d)
+
+# authlog ATTACKER_IP ATTACKER_USER ATTACKER_TICKET FAILS: an sshd log, one line per login attempt
+authlog() {
+  awk -v s="$(hex)" -v day="$day" -v aip="$1" -v auser="$2" -v aticket="$3" -v af="$4" '
+  function t(sec) { return sprintf("%sT%02d:%02d:%02d", day, int(sec / 3600), int(sec % 3600 / 60), sec % 60) }
+  function tok() { return sprintf("CYBA{session-%08x}", int(rand() * 4294967295)) }
+  BEGIN {
+    srand(("0x" substr(s, 1, 7)) + 0)
+    n = split("192.0.2.10 192.0.2.24 198.51.100.7 198.51.100.42 203.0.113.5 203.0.113.88", ip, " ")
+    m = split("mia noah liam ava zoe eli", us, " ")
+    split("admin root test guest oracle", bad, " ")
+    start = 2 * 3600 + int(rand() * 1800)
+    for (i = 0; i < af; i++) printf "%s sshd: Failed password for %s from %s\n", t(start + i * 37 + int(rand() * 30)), bad[1 + int(rand() * 5)], aip
+    printf "%s sshd: Accepted password for %s from %s ticket=%s\n", t(start + af * 37 + 60), auser, aip, aticket
+    for (k = 1; k <= n; k++) {
+      f = 1 + int(rand() * 8)
+      for (i = 0; i < f; i++) printf "%s sshd: Failed password for %s from %s\n", t(7 * 3600 + int(rand() * 43200)), us[1 + int(rand() * m)], ip[k]
+    }
+    for (j = 1; j <= m; j++) for (i = 0; i < 2; i++)
+      printf "%s sshd: Accepted password for %s from %s ticket=%s\n", t(7 * 3600 + int(rand() * 43200)), us[j], ip[1 + int(rand() * n)], tok()
+  }' | sort
+}
+INTRUDERS="203.0.113.66 198.51.100.201 192.0.2.150 203.0.113.250 198.51.100.99"
+
+cp "$R/home.txt" "$H/README.txt"
+# 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
+F=$(flag warmup); keep 0 "$F"
+{ cat "$R/orientation.txt"; echo "  $F"; } > "$H/orientation.txt"
+
+# 1: the file changed at the minute of the break-in
+hh=$(printf '%02d' $(( $(num 4) + 1 ))); mm=$(printf '%02d' $(( $(num 60) - 1 )))
+F=$(flag case); keep 1 "$F"
+room 1 "The break-in happened at $hh:$mm last night.\nOne file in evidence/ was changed at exactly that minute. Its flag is the real one.\n"
+mkdir -p "$H/mission1/evidence"
+real=$(pick notes.txt budget.csv backup.log todo.txt contacts.csv report.txt memo.txt schedule.txt inventory.csv minutes.txt)
+now=$(date +%s)
+for f in notes.txt budget.csv backup.log todo.txt contacts.csv report.txt memo.txt schedule.txt inventory.csv minutes.txt; do
+  p="$H/mission1/evidence/$f"
+  if [ "$f" = "$real" ]; then
+    date -s "$day $hh:$mm:00" >/dev/null 2>&1; printf 'Last edited during the break-in.\nFlag: %s\n' "$F" > "$p"
+  else
+    date -s "$day $(printf '%02d:%02d' $(( $(num 11) + 7 )) $(( $(num 60) - 1 ))):00" >/dev/null 2>&1
+    printf 'Routine office file.\nFlag: %s\n' "$(flag case)" > "$p"
+  fi
+done
+date -s "$(date -d "@$(( now + 1 ))" '+%Y-%m-%d %H:%M:%S')" >/dev/null 2>&1
+
+# 2: hidden fields in a photo's metadata (a JPEG comment segment)
+F=$(flag meta); keep 2 "$F"; room 2
+{ printf '\377\330\377\340\000\020JFIF\000\001\001\000\000\001\000\001\000\000\377\376\000\200'
+  printf 'Camera: QuestCam X100\000Software: PhotoFix 2.1\000Taken: %s 02:41\000Author: night-shift\000Comment: %s\000' "$day" "$F"
+  noise 2500; printf '\377\331'; } > "$H/mission2/photo.jpg"
+
+# 3: one "photo" is really a gzip file
+F=$(flag label); keep 3 "$F"; room 3
+mkdir -p "$H/mission3/photos"
+odd=$(num 8)
+for i in 1 2 3 4 5 6 7 8; do
+  p="$H/mission3/photos/IMG_10$((40 + i)).jpg"
+  if [ "$i" = "$odd" ]; then printf 'This was never a photo.\nFlag: %s\n' "$F" | gzip -c > "$p"
+  else jpeg $(( 900 + i * 37 )) > "$p"; fi
+done
+
+# 4: archives nested inside archives, with no helpful file extensions
+F=$(flag dolls); keep 4 "$F"; room 4
+t=$(mktemp -d)
+printf 'You reached the smallest doll.\nFlag: %s\n' "$F" | gzip -c > "$t/inner"
+tar -cf "$t/box" -C "$t" inner
+tar -czf "$H/mission4/evidence.tar.gz" -C "$t" box
+rm -rf "$t"
+
+# 5: the IP with the most failed logins, and its one successful login
+aip=$(pick $INTRUDERS)
+F=$(flag log); keep 5 "$F"; room 5
+authlog "$aip" "$(pick mia noah liam ava zoe eli)" "$F" $(( 30 + $(num 15) )) > "$H/mission5/auth.log"
+
+# 6: base64 text hidden after the end of a JPEG
+F=$(flag tail); keep 6 "$F"; room 6
+{ jpeg 3000; printf '\n'; printf 'Hidden after the picture.\nFlag: %s\n' "$F" | base64 -w 0; printf '\n'; } > "$H/mission6/cat.jpg"
+
+# 7: one program no longer matches its known-good fingerprint
+F=$(flag tamper); keep 7 "$F"; room 7
+mkdir -p "$H/mission7/bin"
+tools="backup cleanup diskcheck logrotate netstat2 printer-setup report scheduler updater viewer"
+for b in $tools; do
+  { printf '\177ELF\002\001\001\000'; noise 400; printf '%s version 2.4.1\000build %s\000' "$b" "$(flag build)"; noise 300; } > "$H/mission7/bin/$b"
+done
+(cd "$H/mission7" && for b in $tools; do sha256sum "bin/$b"; done > manifest.sha256)
+bad=$(pick $tools)
+{ printf '\177ELF\002\001\001\000'; noise 400; printf '%s version 2.4.1\000build %s\000' "$bad" "$F"; noise 300; } > "$H/mission7/bin/$bad"
+
+# 8: a scheduled task that runs a hidden script (the script itself does nothing)
+F=$(flag cron); keep 8 "$F"; room 8
+c="$H/mission8/cron"; mkdir -p "$c" "$H/mission8/var/.cache"
+printf '# m h dom mon dow command\n0 2 * * * /usr/local/bin/backup.sh\n30 3 * * 0 /usr/sbin/logrotate /etc/logrotate.conf\n' > "$c/root"
+printf '# m h dom mon dow command\n*/15 * * * * /usr/local/bin/cache-clean\n' > "$c/www-data"
+printf '# m h dom mon dow command\n0 9 * * 1-5 /home/mia/bin/send-report\n' > "$c/mia"
+printf '# m h dom mon dow command\n15 12 * * * /home/noah/bin/sync-photos\n' > "$c/noah"
+printf '# m h dom mon dow command\n0 0 1 * * /usr/local/bin/invoice-run\n' > "$c/billing"
+who=$(pick root www-data mia noah billing)
+printf '*/10 * * * * /home/player/mission8/var/.cache/.sys-update.sh\n' >> "$c/$who"
+{ printf '#!/bin/sh\n# sys-update: "keeps the system up to date"\n# Evidence copy: the incident team disabled this script. It does nothing now.\n'
+  printf 'PAYLOAD="%s"\n' "$(printf 'Persistence found.\nFlag: %s\n' "$F" | base64 -w 0)"
+  printf 'exit 0\n'; } > "$H/mission8/var/.cache/.sys-update.sh"
+
+# 9: data that left the server in small pieces, in a packet capture (Wireshark-style listing)
+xip=$(pick $INTRUDERS)
+F=$(flag pieces); keep 9 "$F"; room 9
+chunks=$(printf 'Reassembled.\nFlag: %s\n' "$F" | od -An -tx1 | tr -d ' \n' | fold -w 8 | tr '\n' ' ')
+{ echo "  No.       Time Source           Destination      Protocol Length Info"
+awk -v s="$(hex)" -v xip="$xip" -v chunks="$chunks" '
+  function row(t, src, dst, proto, len, info) { printf "%10.6f %-16s %-16s %-8s %6d %s\n", t, src, dst, proto, len, info }
+  BEGIN {
+    srand(("0x" substr(s, 1, 7)) + 0)
+    n = split("192.0.2.10 192.0.2.24 198.51.100.7 198.51.100.42 203.0.113.5 203.0.113.88", ip, " ")
+    p = split("/ /about /contact /img/logo.png /css/site.css /js/app.js /pixel.gif?page=home /news /login", path, " ")
+    d = split("www.example.com cdn.example.net mail.example.org updates.example.com", dom, " ")
+    for (i = 0; i < 240; i++) {
+      t = rand() * 600; h = ip[1 + int(rand() * n)]; k = int(rand() * 3)
+      if (k == 0) row(t, h, "192.0.2.80", "HTTP", 300 + int(rand() * 200), "GET " path[1 + int(rand() * p)] " HTTP/1.1")
+      else if (k == 1) row(t, h, "192.0.2.53", "DNS", 70 + int(rand() * 20), sprintf("Standard query 0x%04x A %s", int(rand() * 65535), dom[1 + int(rand() * d)]))
+      else row(t, "192.0.2.80", h, "TCP", 66, sprintf("443 -> %d [ACK] Seq=1 Ack=1 Win=502", 49152 + int(rand() * 16000)))
+    }
+    c = split(chunks, ch, " ")
+    for (i = 1; i <= c; i++) row(200 + rand() * 300, xip, "192.0.2.80", "HTTP", 412, sprintf("GET /pixel.gif?seq=%02d&d=%s HTTP/1.1", i, ch[i]))
+  }' | sort -n | awk '{ printf "%5d %s\n", NR, $0 }'
+} > "$H/mission9/capture.txt"
+
+# 10: case closed. Whose account? Which file? What is inside it?
+cip=$(pick $INTRUDERS); cuser=$(pick mia noah liam ava zoe eli)
+F=$(flag closed); keep 10 "$F"
+room 10 "One account was broken into last night. auth.log shows how.\nThe stolen evidence is hidden in that user's folder under homes/.\n"
+authlog "$cip" "$cuser" "CYBA{session-$(hex)}" $(( 30 + $(num 15) )) > "$H/mission10/auth.log"
+for u in mia noah liam ava zoe eli; do
+  d="$H/mission10/homes/$u"; mkdir -p "$d"
+  printf 'Meeting notes for %s.\n' "$u" > "$d/notes.txt"
+  jpeg 700 > "$d/photo.jpg"
+  printf '%%PDF-1.4\n%% report for %s\n' "$u" > "$d/report.pdf"
+  printf 'quarter,total\nQ1,100\nQ2,120\n' > "$d/budget.csv"
+done
+hide=$(pick notes.txt photo.jpg report.pdf budget.csv)
+printf 'Case closed.\nFlag: %s\n' "$F" | base64 | gzip -c > "$H/mission10/homes/$cuser/$hide"
+
+chmod 755 "$Q"; chmod 644 "$Q"/*
+chown -R 1000:1000 "$H"

@@ -1,0 +1,17 @@
+Mission 6: Hidden tail   [Medium, 200 points]
+
+Objective: Find the message hidden after the end of a picture (steganography).
+
+  cd ~/mission6
+  filetype cat.jpg
+
+cat.jpg opens as a normal picture. But picture viewers stop at the
+image's end marker, and anything stored after it stays invisible.
+
+Hiding data inside another file is called steganography. Here somebody
+appended a message to the end of the picture, then encoded it. Look at
+the readable text near the end.
+
+Useful commands: strings, tail, base64
+When you have the flag: submit CYBA{...}
+Stuck? hint 6   (2 hints, 10 points each: 5% of this mission)
