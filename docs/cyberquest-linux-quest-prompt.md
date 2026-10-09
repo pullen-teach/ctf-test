@@ -80,7 +80,7 @@ equivalent):
   - uses a constant-time comparison;
   - is rate-limited per user;
   - records the capture with its clock time.
-- **Wrong flags:** the reply is `Not a flag. Copy the whole thing, CYBA{ to }.`
+- **Wrong flags:** a well-formed but wrong flag gets `Incorrect flag. Keep hunting!`; anything not shaped like `CYBA{...}` gets `That doesn't look like a flag. Copy the whole thing, CYBA{ to }.`
 - **Points and the scoreboard:** see *Scoring and scoreboard* below.
 - **Practice mode** may build flags client-side, but `submit` still goes to the server.
 

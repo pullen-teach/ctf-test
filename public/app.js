@@ -28,6 +28,7 @@
     if (clockStart !== null) return;
     clockStart = performance.now();
     clockEl.classList.add("running");
+    const lab = document.getElementById("clock-label"); if (lab) lab.textContent = "Elapsed Time";
     clockTimer = setInterval(tick, 250);
   }
   function stopClock() {
@@ -35,6 +36,7 @@
     clockStop = performance.now();
     clearInterval(clockTimer); tick();
     clockEl.classList.remove("running"); clockEl.classList.add("stopped");
+    const lab = document.getElementById("clock-label"); if (lab) lab.textContent = "Final Time";
     clockEl.title = "Finished in " + fmt(elapsed());
   }
   window.questClock = { elapsed, fmt, text: () => fmt(elapsed()), start: () => startClock() };

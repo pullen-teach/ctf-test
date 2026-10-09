@@ -136,10 +136,29 @@
   const MAX = MISSIONS.reduce((t, m) => t + m.points, 0);
   const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0);
   const scoreEl = el("score"), scorePts = el("score-pts");
+  const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const TROPHY = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd54a"/><stop offset="1" stop-color="#f5a300"/></linearGradient></defs><path fill="url(#g)" d="M17 5h30v5h11v8c0 8-6 14-14 15a15 15 0 0 1-9 8.6V48h9v6H20v-6h9v-6.4A15 15 0 0 1 20 33C12 32 6 26 6 18v-8h11zm-5 11v2c0 4 2.5 7.5 6.5 8.6A30 30 0 0 1 17 16zm40 0h-5a30 30 0 0 1-1.5 10.6C54.5 25.5 52 22 52 18z"/><rect x="18" y="54" width="28" height="5" rx="1.5" fill="#d98a00"/><path fill="#fff6c9" d="M32 12l3 6.1 6.7 1-4.9 4.7 1.2 6.7L32 27.3l-6 3.2 1.2-6.7-4.9-4.7 6.7-1z"/></svg>';
+  const ICON = {"chart": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"13\" width=\"4.5\" height=\"8\" rx=\"1\" fill=\"#2459d8\"/><rect x=\"9.75\" y=\"8\" width=\"4.5\" height=\"13\" rx=\"1\" fill=\"#2459d8\"/><rect x=\"16.5\" y=\"3\" width=\"4.5\" height=\"18\" rx=\"1\" fill=\"#2a9fd6\"/></svg>", "bulb": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"#f5b301\" d=\"M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z\"/><rect x=\"9\" y=\"19\" width=\"6\" height=\"2.6\" rx=\"1.2\" fill=\"#c98a00\"/></svg>", "replay": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 12a8 8 0 1 1-2.34-5.66\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/><path d=\"M20 4v5h-5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>", "cup": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" d=\"M7 3h10v5a5 5 0 0 1-10 0zM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6\"/></svg>"};
   function showScore(bump) {
     if (!scorePts) return;
     scorePts.textContent = score();
     if (bump) { scoreEl.classList.remove("bump"); void scoreEl.offsetWidth; scoreEl.classList.add("bump"); }
+    const fc = el("flags-count"), fs = el("flags-stat"), fl = el("flags-label");
+    if (fc) fc.innerHTML = done.size === N ? "All " + N + " flags" : done.size + '<span class="of"> / ' + N + "</span>";
+    if (fl) fl.textContent = done.size === N ? "Captured!" : "Flags Captured";
+    if (fs) fs.classList.toggle("all", done.size === N);
+  }
+  // The stepper: a check in a green circle for each captured mission, a ring for the current one.
+  function paintSteps(cur) {
+    const r = reachable();
+    dots.querySelectorAll(".step-btn").forEach((d, i) => {
+      const ok = done.has(i + 1);
+      d.className = "step-btn" + (ok ? " ok" : "") + (i === cur ? " here" : "");
+      d.querySelector(".step-dot").innerHTML = ok ? CHECK : String(i + 1);
+      d.disabled = !(i <= r || done.size === N);
+      d.setAttribute("aria-current", i === cur ? "step" : "false");
+    });
+    dots.querySelectorAll(".step-bar").forEach((b, i) => b.classList.toggle("ok", done.has(i + 1) && done.has(i + 2)));
   }
   let current = 0;
   let runner = null;
@@ -180,45 +199,86 @@
     prev.disabled = current === 0;
     next.disabled = !ok;
     next.innerHTML = current === N - 1 ? "Finish &rarr;" : "Next mission &rarr;";
-    const r = reachable();
-    dots.querySelectorAll("button").forEach((d, i) => {
-      d.className = (i === current ? "here " : "") + (done.has(i + 1) ? "ok" : "");
-      d.disabled = i > r;
-      d.setAttribute("aria-current", i === current ? "step" : "false");
-    });
+    paintSteps(current);
     body.scrollTop = 0;
   }
 
+  // ---- leaderboard: finished runs saved in this browser (best score, then fastest) ----
+  const BOARD_KEY = "cq-linux-ctf-runs";
+  const loadRuns = () => { try { return JSON.parse(localStorage.getItem(BOARD_KEY) || "[]"); } catch (e) { return []; } };
+  let thisRun = null;
+  function saveRun() {
+    if (thisRun) return;
+    thisRun = { score: score(), ms: window.questClock ? window.questClock.elapsed() : 0, when: Date.now() };
+    try { localStorage.setItem(BOARD_KEY, JSON.stringify(loadRuns().concat([thisRun]).slice(-50))); } catch (e) { /* storage blocked: the board just shows this run */ }
+  }
+  function boardHtml() {
+    let runs = loadRuns();
+    if (thisRun && !runs.some((r) => r.when === thisRun.when)) runs.push(thisRun);
+    runs.sort((x, y) => y.score - x.score || x.ms - y.ms);
+    const rows = runs.slice(0, 8).map((r, i) => '<tr' + (thisRun && r.when === thisRun.when ? ' class="me"' : "") + '><td class="rk">' + (i + 1) + "</td><td>" +
+      new Date(r.when).toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + new Date(r.when).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) +
+      (thisRun && r.when === thisRun.when ? ' <span class="you">this run</span>' : "") + '</td><td class="num">' + r.score + ' pts</td><td class="num">' + fmt(r.ms) + "</td></tr>").join("");
+    return '<div class="card board-card" id="board-card"><h3><span class="h-ico">' + ICON.cup.replace('stroke="currentColor"', 'stroke="#f5a623"') + "</span>Leaderboard</h3>" +
+      '<table class="times"><tr class="head"><td>#</td><td>Run</td><td class="num">Points</td><td class="num">Time</td></tr>' + rows + "</table>" +
+      '<p class="small">Best runs on this computer. Replay to add another. A class-wide leaderboard comes with CyberQuest.</p></div>';
+  }
+  const boardBtn = el("board");
+  if (boardBtn) boardBtn.addEventListener("click", () => {
+    const old = el("board-card");
+    if (old) { old.remove(); return; }
+    article.insertAdjacentHTML("beforeend", boardHtml());
+    el("board-card").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  const LEARNED = [
+    "Practiced basic Linux navigation with <code>pwd</code>, <code>cd</code> and <code>ls</code>.",
+    "Read files with <code>cat</code> and made commands explain themselves with <code>--help</code>.",
+    "Found hidden files with <code>ls -a</code> and searched a folder tree with <code>find</code>.",
+    "Searched a 12,000-line log with <code>grep</code>.",
+    "Decoded a base64 message, and learned that encoding is not encryption.",
+  ];
+
   function finish() {
-    count.textContent = "Quest complete";
+    const total = window.questClock ? window.questClock.text() : "";
+    saveRun();
+    count.textContent = "";
     article.innerHTML =
-      "<h2>Quest complete</h2><p class=\"big-win\">" + score() + " / " + MAX + " points in " + (window.questClock ? window.questClock.text() : "") + "</p>" +
-      "<div class=\"card\"><span class=\"label\">Your scorecard</span><table class=\"times\">" +
-      "<tr class=\"head\"><td>Mission</td><td class=\"num\">Points</td><td class=\"num\">Took</td><td class=\"num\">Clock</td></tr>" +
-      MISSIONS.map((m, i) => "<tr><td>" + (i + 1) + ". " + m.title + "</td><td class=\"num\">" + m.points + "</td><td class=\"num\">" + took(i + 1) + "</td><td class=\"num\">" + clockAt(i + 1) + "</td></tr>").join("") +
-      "<tr class=\"total\"><td>Total</td><td class=\"num\">" + score() + "</td><td class=\"num\"></td><td class=\"num\">" + (window.questClock ? window.questClock.text() : "") + "</td></tr></table>" +
-      "<p class=\"small\"><b>Took</b> is the time since your previous flag. <b>Clock</b> is the running time when you submitted.</p></div>" +
-      "<p>You moved around with <code>cd</code> and <code>ls</code>, let the cat out of the bag with <code>--help</code>, found hidden files, searched a folder tree and a 12,000-line log, and decoded a message that only looked secret.</p>" +
-      "<p><b>Encoding is not encryption.</b> If no key is needed to undo it, it was never secret.</p>" +
-      "<p>Reload the page for a fresh computer with new flags, and see if you can beat your time.</p>";
-    state.textContent = "Reload the page to play again with new flags.";
+      '<div class="complete"><span class="confetti" aria-hidden="true">' + "<i></i>".repeat(12) + "</span>" +
+        '<span class="trophy">' + TROPHY + "</span>" +
+        "<div><h2>Quest Complete</h2><p>Great job! You captured all " + N + " flags and completed the Linux CTF in <b>" + total + "</b>.</p></div></div>" +
+      '<div class="card sc"><h3><span class="h-ico">' + ICON.chart + "</span>Mission Scorecard</h3><table class=\"times\">" +
+        '<tr class="head"><td></td><td>#</td><td>Mission</td><td class="num">Points</td><td class="num">Took</td><td class="num">Time</td></tr>' +
+        MISSIONS.map((m, i) => '<tr><td class="ck">' + (done.has(i + 1) ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + (i + 1) + "</td><td>" + m.title + '</td><td class="num">' + m.points + ' pts</td><td class="num dim">' + took(i + 1) + '</td><td class="num">' + clockAt(i + 1) + "</td></tr>").join("") +
+        '<tr class="total"><td></td><td></td><td>Total</td><td class="num">' + score() + ' pts</td><td class="num"></td><td class="num">' + total + "</td></tr></table>" +
+        '<p class="small"><b>Took</b>: time since your previous flag. <b>Time</b>: the clock when you submitted.</p></div>' +
+      '<div class="card learned"><h3><span class="h-ico">' + ICON.bulb + "</span>What you learned</h3><ul>" + LEARNED.map((t) => '<li><span class="tick blue">' + CHECK + "</span><span>" + t + "</span></li>").join("") + "</ul></div>";
+    state.textContent = "";
     state.className = "m-state ok";
-    next.disabled = true;
-    prev.disabled = false;
-    dots.querySelectorAll("button").forEach((d) => { d.className = "ok"; d.disabled = false; });
+    next.disabled = false;
+    next.innerHTML = '<span class="b-ico">' + ICON.replay + "</span>Replay Quest";
+    next.classList.add("replay");
+    prev.hidden = true;
+    if (boardBtn) boardBtn.hidden = false;
+    el("guide-foot").classList.add("finished");
     current = N;
+    paintSteps(-1);
+    body.scrollTop = 0;
   }
 
-  prev.addEventListener("click", () => { if (current > 0) { current = Math.min(current, N) - 1; render(); } });
+  function unfinish() { next.classList.remove("replay"); prev.hidden = false; if (boardBtn) boardBtn.hidden = true; el("guide-foot").classList.remove("finished"); }
+  prev.addEventListener("click", () => { if (current > 0) { current = Math.min(current, N) - 1; unfinish(); render(); } });
   next.addEventListener("click", () => {
+    if (current === N) { location.reload(); return; }
     if (current === N - 1) { if (done.size === N) finish(); return; }
     if (done.has(current + 1)) { current++; render(); }
   });
 
   if (el("score-max")) el("score-max").textContent = MAX;
   showScore(false);
-  dots.innerHTML = MISSIONS.map((m, i) => '<button type="button" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ', ' + m.points + ' pts)">' + (i + 1) + "</button>").join("");
-  dots.querySelectorAll("button").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; render(); } }));
+  dots.innerHTML = MISSIONS.map((m, i) => (i ? '<span class="step-bar" aria-hidden="true"></span>' : "") +
+    '<button type="button" class="step-btn" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ', ' + m.points + ' pts)"><span class="step-dot">' + (i + 1) + '</span><span class="step-num">' + (i + 1) + "</span></button>").join("");
+  dots.querySelectorAll(".step-btn").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; unfinish(); render(); } }));
   render();
 
   window.questGuide = {
