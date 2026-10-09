@@ -133,17 +133,18 @@ WARMUP = dict(title="Warm-up", level="Warm-up", points=50,
 # Warm-up 2: speed drills (optional, untimed, bonus). Mission number 11 inside the game.
 SPEED = N + 1
 WARMUP2 = dict(title="Speed drills", level="Warm-up", points=50,
-               objective="Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.",
+               objective="Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and Linux-style copy and paste.",
                run=["cd ~/speed", "cat README.txt"],
                ref=[("Tab", "finish a file or command name for you"), ("up arrow", "bring back your last command"), ("Ctrl+C", "stop a running command"),
-                    ("highlight, then Ctrl+V", "copy and paste in the terminal"), ("history", "list the commands you have typed"), ("clear", "clear the screen (or Ctrl+L)")],
-               body=["Three drills, three pieces of the flag. Each drill needs one keyboard skill, and each piece is 4 characters.",
+                    ("select, then middle-click", "copy and paste, the Linux way (right-click also pastes)"), ("history", "list the commands you have typed"), ("clear", "clear the screen (or Ctrl+L)")],
+               body=["Four drills, four pieces of the flag. Each drill needs one terminal skill, and each piece is 4 characters.",
                      "**Drill 1, Tab:** `cd tab`, type `cat dri` and press **Tab**. The long file name finishes itself.",
                      "**Drill 2, up arrow:** run `again` 5 times within 15 seconds. After the first one, press **up arrow** then Enter.",
                      "**Drill 3, Ctrl+C:** run `runaway`. It never stops by itself. Hold **Ctrl** and press **C**.",
-                     "Put the pieces together in order: `submit CYBA{speed-PIECE1PIECE2PIECE3}`. Copy each piece with the mouse and paste it with Ctrl+V or a right-click."],
-               hint="Drill 1: in ~/speed/tab type `cat dri`, then press Tab. Drill 2: type `again` and Enter, then press the up arrow and Enter four more times, quickly. Drill 3: type `runaway`, then hold Ctrl and press C. The flag is `CYBA{speed-` followed by the three pieces in order, then `}`.",
-               short="cd ~/speed; cat README.txt  (Tab, up arrow, Ctrl+C)")
+                     "**Drill 4, copy and paste:** `cd ~/speed/paste`, then `cat code.txt`. **Highlight** the long code with the mouse or trackpad (that copies it), type `pasteit ` and a space, then **middle-click** to paste it (**right-click** also pastes) and press Enter. No Ctrl+C or Ctrl+V needed: in a Linux terminal, selecting is copying and the middle button pastes.",
+                     "Put the pieces together in order: `submit CYBA{speed-PIECE1PIECE2PIECE3PIECE4}`. Paste each piece the same way: highlight it, then middle-click (or right-click)."],
+               hint="Drill 1: in ~/speed/tab type `cat dri`, then press Tab. Drill 2: type `again` and Enter, then press the up arrow and Enter four more times, quickly. Drill 3: type `runaway`, then hold Ctrl and press C. Drill 4: in ~/speed/paste run `cat code.txt`, highlight the CODE with the mouse, type `pasteit ` then middle-click (or right-click) to paste it. The flag is `CYBA{speed-` followed by the four pieces in order, then `}`.",
+               short="cd ~/speed; cat README.txt  (Tab, up arrow, Ctrl+C, mouse paste)")
 # CyberQuest scoring: points come from the difficulty level.
 POINTS = {"Easy": 100, "Medium": 200, "Hard": 400, "Very Hard": 800}
 for _m in MISSIONS: _m["points"] = POINTS[_m["level"]]

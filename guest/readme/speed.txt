@@ -1,11 +1,11 @@
 Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]
 
-Objective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and copy and paste.
+Objective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and Linux-style copy and paste.
 
   cd ~/speed
   cat README.txt
 
-Three drills, three pieces of the flag. Each drill needs one keyboard
+Four drills, four pieces of the flag. Each drill needs one terminal
 skill, and each piece is 4 characters.
 
 Drill 1, Tab: cd tab, type cat dri and press Tab. The long file name
@@ -17,8 +17,14 @@ one, press up arrow then Enter.
 Drill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and
 press C.
 
-Put the pieces together in order: submit CYBA{speed-PIECE1PIECE2PIECE3}.
-Copy each piece with the mouse and paste it with Ctrl+V or a right-
-click.
+Drill 4, copy and paste: cd ~/speed/paste, then cat code.txt. Highlight
+the long code with the mouse or trackpad (that copies it), type pasteit
+and a space, then middle-click to paste it (right-click also pastes) and
+press Enter. No Ctrl+C or Ctrl+V needed: in a Linux terminal, selecting
+is copying and the middle button pastes.
+
+Put the pieces together in order: submit CYBA{speed-
+PIECE1PIECE2PIECE3PIECE4}. Paste each piece the same way: highlight it,
+then middle-click (or right-click).
 
 When you have the flag: submit CYBA{...}     Stuck? hint 11  (free)

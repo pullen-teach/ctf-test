@@ -37,13 +37,16 @@ cp "$R/home.txt" "$H/README.txt"
 F=$(flag warmup); keep 0 "$F"
 { cat "$R/orientation.txt"; echo "  $F"; } > "$H/orientation.txt"
 
-# 11: warm-up 2, speed drills (optional, untimed). Three 4-character pieces, one per drill:
-# Tab completes a long file name, the up arrow repeats "again", Ctrl+C stops "runaway".
-p1=$(hex | cut -c1-4); p2=$(hex | cut -c1-4); p3=$(hex | cut -c1-4)
-keep 11 "CYBA{speed-$p1$p2$p3}"
-S="$H/speed"; mkdir -p "$S/tab"
+# 11: warm-up 2, speed drills (optional, untimed). Four 4-character pieces, one per drill:
+# Tab completes a long file name, the up arrow repeats "again", Ctrl+C stops "runaway",
+# and the mouse copies a code into "pasteit".
+p1=$(hex | cut -c1-4); p2=$(hex | cut -c1-4); p3=$(hex | cut -c1-4); p4=$(hex | cut -c1-4)
+code=$(hex)$(hex | cut -c1-4)
+keep 11 "CYBA{speed-$p1$p2$p3$p4}"
+S="$H/speed"; mkdir -p "$S/tab" "$S/paste"
 cp "$R/speed.txt" "$S/README.txt"
 printf 'Piece 1: %s\nTab finished the name for you. Try it on commands too: type  his  then press Tab.\n' "$p1" > "$S/tab/drill-1-tab-completion-saves-your-fingers-$(hex).txt"
+printf 'Drill 4: copy and paste, the Linux way.\nSelect the code below with the mouse (or trackpad) to copy it. Then type  pasteit  and a space, paste the code (middle-click, or right-click), and press Enter.\nCODE: %s\n' "$code" > "$S/paste/code.txt"
 cat > /bin/again <<AGAIN
 #!/bin/sh
 # again: run me 5 times within 15 seconds. The up arrow brings back your last command.
@@ -62,7 +65,15 @@ tick() { read u _ < /proc/uptime; t=\${u%.*}; while read u _ < /proc/uptime && [
 i=0
 while true; do i=\$((i + 1)); echo "Still running (\$i)... press Ctrl+C to stop me"; tick; done
 RUNAWAY
-chmod 755 /bin/again /bin/runaway
+cat > /bin/pasteit <<PASTEIT
+#!/bin/sh
+# pasteit CODE: the copy-and-paste drill. Highlight the long CODE with the mouse and
+# paste it (middle-click, or right-click) rather than typing it.
+if [ -z "\$1" ]; then echo "pasteit: select the CODE with the mouse, then type  pasteit  and paste it" >&2; exit 1; fi
+if [ "\$1" = "$code" ]; then echo "Nice paste! Select, then middle-click (or right-click) beats typing."; echo "Piece 4: $p4"; exit 0; fi
+echo "pasteit: that is not the code. Highlight the whole CODE and paste the exact value." >&2; exit 1
+PASTEIT
+chmod 755 /bin/again /bin/runaway /bin/pasteit
 cp "$R/1.txt" "$M1/README.txt"
 
 # 2: let the cat out of the bag. cat --help shows -n, which numbers lines.

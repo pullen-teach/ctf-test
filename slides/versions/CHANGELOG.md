@@ -9,3 +9,4 @@
 | v3 | CyberQuest-Linux-CTF-v3.pptx | v2 with all on-slide animations removed; the fade transition between slides is kept |
 | v4 | CyberQuest-Linux-CTF-v4.pptx | v3 relabelled "CTF Foundation: Command line": the title slide line and every footer. The Linux CTF is the foundation for all seven CYBERQUEST categories |
 | v5 | CyberQuest-Linux-CTF-v5.pptx | v4 plus Warm-up 2 (speed drills: Tab, up arrow, Ctrl+C, copy and paste) as slide 41; the first warm-up renamed "Warm-up 1: the orientation"; points now out of 2,800 |
+| v6 | CyberQuest-Linux-CTF-v6.pptx | v5 plus the copy/paste drill on the speed-drills slide: four drills now (Tab, up arrow, Ctrl+C, mouse select + middle-click paste), terminal example and notes updated |

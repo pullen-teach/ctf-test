@@ -10,8 +10,10 @@ flag into submit.'; exit 0 ;;
   11|speed) echo 'Speed drills: Drill 1: in ~/speed/tab type cat dri, then press
 Tab. Drill 2: type again and Enter, then press the up arrow and
 Enter four more times, quickly. Drill 3: type runaway, then hold
-Ctrl and press C. The flag is CYBA{speed- followed by the three
-pieces in order, then }.'; exit 0 ;;
+Ctrl and press C. Drill 4: in ~/speed/paste run cat code.txt,
+highlight the CODE with the mouse, type pasteit  then middle-click
+(or right-click) to paste it. The flag is CYBA{speed- followed by
+the four pieces in order, then }.'; exit 0 ;;
   1) pts=100; cost=5; total=1
      h1='Lost? pwd shows where you are and cd .. goes back up one level.
 Run ls in every folder: the names tell you which folder to cd into
