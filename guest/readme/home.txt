@@ -13,12 +13,16 @@ How to play
   6. Stuck?              hint 1
 
 Missions
-  1  Make your move               Easy       100 pts
-  2  Let the cat out of the bag   Easy       100 pts
-  3  Now you see me               Easy       100 pts
-  4  Needle in the tree           Medium     200 pts
-  5  Search party                 Medium     200 pts
-  6  Decoder ring                 Hard       400 pts
-                                            1100 pts
+   1  Make your move               Easy       100 pts
+   2  Let the cat out of the bag   Easy       100 pts
+   3  Now you see me               Easy       100 pts
+   4  Needle in the tree           Medium     200 pts
+   5  Search party                 Medium     200 pts
+   6  Odd one out                  Medium     200 pts
+   7  Permission denied            Medium     200 pts
+   8  Decoder ring                 Hard       400 pts
+   9  Layer cake                   Hard       400 pts
+  10  Endgame                      Very Hard  800 pts
+                                             2700 pts
 
 Flags change every time the page loads.

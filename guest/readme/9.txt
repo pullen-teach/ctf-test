@@ -1,0 +1,17 @@
+Mission 9: Layer cake   [Hard, 400 points]
+
+Objective: Peel back every layer of encoding to reveal the flag.
+
+  cd ~/mission9
+  cat cake.b64
+
+You decoded base64 in the last mission. This message was encoded, then
+the result was encoded again, and again. Nobody wrote down how many
+layers there are.
+
+Copying each result into the next command works, but it is slow. A pipe
+(|) can feed one base64 -d straight into the next. Keep adding layers
+until you see the flag.
+
+Useful command: base64
+When you have the flag: submit CYBA{...}     Stuck? hint 9

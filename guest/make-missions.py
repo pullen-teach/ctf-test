@@ -62,6 +62,28 @@ MISSIONS = [
          useful=["grep", "head", "wc"],
          hint="Read the help for `grep` and look at the **Usage** line at the top: it shows what goes first and what goes second.",
          hint_cmd="grep --help", short="the command to look up is grep.    Read: grep --help"),
+    dict(title="Odd one out", objective="Use a pipe to find the only code that appears once.",
+         ref=[("sort FILE", "sort the lines of a file"), ("uniq --help", "list everything uniq can do"),
+              ("A | B", "send the output of A into B"), ("wc -l FILE", "count the lines in a file")],
+         level="Medium", run=["cd ~/mission7", "head codes.txt"],
+         body=["`codes.txt` holds about 900 flags. Every fake one appears **at least twice**. The real flag appears **exactly once**.",
+               "Reading 900 lines is no fun. Chain two commands with a **pipe** (`|`): the first one sorts the lines so the "
+               "copies sit next to each other, the second one finds the line that has no twin."],
+         useful=["sort", "uniq"],
+         hint="`uniq` only compares lines that sit **next to each other**, so `sort` the file first and pipe it into `uniq`. "
+              "Then read the help for `uniq` and look for the option that prints only the **unique** lines.",
+         hint_cmd="uniq --help", short="sort first, then look up uniq.     Read: uniq --help"),
+    dict(title="Permission denied", objective="Unlock a script with chmod and run it.",
+         ref=[("ls -l", "show files with their permissions"), ("chmod --help", "list everything chmod can do"),
+              ("./FILE", "run a script in this folder")],
+         level="Medium", run=["cd ~/mission8", "ls -l"],
+         body=["The flag is behind a locked door: `unlock.sh`. It is a **script**, a file full of commands that runs when you type `./unlock.sh`.",
+               "Try it, and Linux will refuse. `ls -l` shows why: the letters at the start of each line are the file's "
+               "**permissions**. `r` means read, `w` means write and `x` means execute (run). This script has no `x`.",
+               "You own the file, so you are allowed to change its permissions."],
+         useful=["ls", "chmod"],
+         hint="Read the help for `chmod`. You want to **add** (`+`) the e**x**ecute permission (`x`) to `unlock.sh`, then run `./unlock.sh` again.",
+         hint_cmd="chmod --help", short="the command to look up is chmod.   Read: chmod --help"),
     dict(title="Decoder ring", objective='Decode a base64 message to reveal the flag.', ref=[("cat FILE", "print a file on the screen"), ("base64 --help", "list everything base64 can do")],
          level="Hard", run=["cd ~/mission6", "cat message.b64"],
          body=["It looks like gibberish, but it is not encrypted. It is **encoded** with base64: a way of writing any data "
@@ -70,6 +92,31 @@ MISSIONS = [
          useful=["base64"],
          hint="Read the help for `base64` and look for the option that turns base64 back into normal text.",
          hint_cmd="base64 --help", short="the command to look up is base64.  Read: base64 --help"),
+    dict(title="Layer cake", objective="Peel back every layer of encoding to reveal the flag.",
+         ref=[("base64 -d FILE", "decode a base64 file"), ("A | base64 -d", "decode the output of A"),
+              ("cat FILE", "print a file on the screen")],
+         level="Hard", run=["cd ~/mission9", "cat cake.b64"],
+         body=["You decoded base64 in the last mission. This message was encoded, then the result was encoded **again**, and again. "
+               "Nobody wrote down how many layers there are.",
+               "Copying each result into the next command works, but it is slow. A pipe (`|`) can feed one `base64 -d` "
+               "straight into the next. Keep adding layers until you see the flag."],
+         useful=["base64"],
+         hint="Start with `base64 -d cake.b64`. Still gibberish? Add `| base64 -d` to the end and run it again. Repeat until it says **Flag**.",
+         hint_cmd=None, short="decode, then pipe into another decode: base64 -d cake.b64 | base64 -d | ..."),
+    dict(title="Endgame", objective="Recover three hidden pieces and put the final flag together.",
+         ref=[("find DIR -name PATTERN", "search a folder tree by name"), ("grep TEXT FILE", "show the lines that contain TEXT"),
+              ("cut --help", "pull one field out of a line"), ("base64 -d", "decode base64"),
+              ("chmod +x FILE", "make a file runnable")],
+         level="Very Hard", run=["cd ~/mission10", "cat README.txt"],
+         body=["The final mission uses **everything** you have learned. The flag was split into three pieces, and each one "
+               "is hidden a different way. `README.txt` tells you where each piece is.",
+               "Put the pieces together in order, joined with dashes: `CYBA{piece1-piece2-piece3}`.",
+               "There are no new commands here. `find`, `grep`, `cut`, `base64`, `chmod` and pipes are all you need."],
+         useful=["find", "grep", "cut", "base64", "chmod"],
+         hint="Take one piece at a time. **Piece 1:** hidden file names start with a dot, so search `vault` for names that match `.*`. "
+              "**Piece 2:** `grep` the intruder's name, then decode their token (`cut` can pull the token out of the line). "
+              "**Piece 3:** you have opened a locked script before.",
+         hint_cmd=None, short="one piece at a time: find (1), grep + cut + base64 (2), chmod (3)."),
 ]
 N = len(MISSIONS)
 # CyberQuest scoring: points come from the difficulty level.
@@ -101,8 +148,8 @@ def brief(i, loglines):
     return "\n".join(out) + "\n"
 
 def overview():
-    lines = ["Your missions:"] + ["  %d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
-    lines += ["  %s %4d pts" % (" " * 41, TOTAL_POINTS)]
+    lines = ["Your missions:"] + ["  %2d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
+    lines += ["  %s %4d pts" % (" " * 42, TOTAL_POINTS)]
     return "\n".join(lines + ["", "Read one with: mission 1   (up to %d)" % N]) + "\n"
 
 # ---------------------------------------------------------------- README.txt files
@@ -115,7 +162,7 @@ def readme(i, loglines, kc=False):
     return t
 
 def readme_home(kc=False):
-    rows = ["  %d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
+    rows = ["  %2d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
     steps = ["  1. Go to a mission:    cd ~/mission1",
              "  2. Look around:        ls",
              "  3. Read its brief:     cat README.txt" + ("" if kc else "     (or type: mission 1)"),
@@ -125,7 +172,7 @@ def readme_home(kc=False):
     return "\n".join(["CyberQuest Linux CTF", "====================", "",
                       "This file explains the game. Each mission folder has its own README.txt",
                       "with that mission's instructions. Read one with:  cat README.txt", "", "How to play"] + steps +
-                     ["", "Missions"] + rows + ["  %s %4d pts" % (" " * 41, TOTAL_POINTS), "",
+                     ["", "Missions"] + rows + ["  %s %4d pts" % (" " * 42, TOTAL_POINTS), "",
                       "Flags change every time the %s." % ("scenario starts" if kc else "page loads"), ""])
 
 def readmes(loglines, kc=False):

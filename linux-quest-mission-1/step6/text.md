@@ -1,19 +1,19 @@
-# Mission 6: Decoder ring
+# Mission 6: Odd one out
 
-**Difficulty:** Hard · **400 points**
+**Difficulty:** Medium · **200 points**
 
-**Objective:** Decode a base64 message to reveal the flag.
+**Objective:** Use a pipe to find the only code that appears once.
 
 ```
-cd ~/mission6
-cat message.b64
+cd ~/mission7
+head codes.txt
 ```{{exec}}
 
-It looks like gibberish, but it is not encrypted. It is **encoded** with base64: a way of writing any data using only letters, digits, `+`, `/` and `=`.
+`codes.txt` holds about 900 flags. Every fake one appears **at least twice**. The real flag appears **exactly once**.
 
-There is no secret key. Anyone can decode it.
+Reading 900 lines is no fun. Chain two commands with a **pipe** (`|`): the first one sorts the lines so the copies sit next to each other, the second one finds the line that has no twin.
 
-**Useful command:** `base64`. Use `--help` to discover what they can do.
+**Useful commands:** `sort`, `uniq`. Use `--help` to discover what they can do.
 
 When you have the flag, record it with `submit` and press **CHECK**.
 
@@ -21,12 +21,12 @@ When you have the flag, record it with `submit` and press **CHECK**.
 
 <details><summary>Hint</summary>
 
-Read the help for `base64` and look for the option that turns base64 back into normal text.
+`uniq` only compares lines that sit **next to each other**, so `sort` the file first and pipe it into `uniq`. Then read the help for `uniq` and look for the option that prints only the **unique** lines.
 
 ```
-base64 --help
+uniq --help
 ```
 
-The full manual page has even more: `man base64` (press `q` to quit).
+The full manual page has even more: `man uniq` (press `q` to quit).
 
 </details>

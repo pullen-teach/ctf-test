@@ -1,0 +1,18 @@
+Mission 7: Permission denied   [Medium, 200 points]
+
+Objective: Unlock a script with chmod and run it.
+
+  cd ~/mission8
+  ls -l
+
+The flag is behind a locked door: unlock.sh. It is a script, a file full
+of commands that runs when you type ./unlock.sh.
+
+Try it, and Linux will refuse. ls -l shows why: the letters at the start
+of each line are the file's permissions. r means read, w means write and
+x means execute (run). This script has no x.
+
+You own the file, so you are allowed to change its permissions.
+
+Useful commands: ls, chmod
+When you have the flag: submit CYBA{...}     Stuck? hint 7

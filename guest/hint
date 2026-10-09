@@ -7,6 +7,10 @@ case "$1" in
   3) echo "Mission 3: the command to look up is ls.      Read: ls --help" ;;
   4) echo "Mission 4: the command to look up is find.    Read: find --help" ;;
   5) echo "Mission 5: the command to look up is grep.    Read: grep --help" ;;
-  6) echo "Mission 6: the command to look up is base64.  Read: base64 --help" ;;
-  *) echo "Usage: hint 1   (up to 6)" ;;
+  6) echo "Mission 6: sort first, then look up uniq.     Read: uniq --help" ;;
+  7) echo "Mission 7: the command to look up is chmod.   Read: chmod --help" ;;
+  8) echo "Mission 8: the command to look up is base64.  Read: base64 --help" ;;
+  9) echo "Mission 9: decode, then pipe into another decode: base64 -d cake.b64 | base64 -d | ..." ;;
+  10) echo "Mission 10: one piece at a time: find (1), grep + cut + base64 (2), chmod (3)." ;;
+  *) echo "Usage: hint 1   (up to 10)" ;;
 esac

@@ -58,8 +58,8 @@ def banner(compact):
     logo = art(words, "small" if compact else "ansi_shadow")
     solid = "_/\\|()<>'`,.-" if compact else "█▄▀"
     width = max(len(r) for r in logo) - 4
-    t1, t2 = "SIMULATED CTF COMPETITION", "Linux CTF  ·  6 missions  ·  6 flags"
-    if compact: t2 = "Linux CTF · 6 flags"
+    t1, t2 = "SIMULATED CTF COMPETITION", "Linux CTF  ·  10 missions  ·  10 flags"
+    if compact: t2 = "Linux CTF · 10 flags"
     width = max(width, len(t1), len(t2))
     out = ["  " + DIM + " ".join("WELCOME TO") + RESET]
     out += paint(logo, solid)

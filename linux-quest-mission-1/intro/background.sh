@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs hidden, as root, when the scenario starts. Builds the six missions with fresh
+# Runs hidden, as root, when the scenario starts. Builds the ten missions with fresh
 # random flags every time, so no two students (and no two runs) share answers.
 set -euo pipefail
 Q=/root/.quest            # SHA-256 fingerprints of the flags (never the flags)
@@ -30,13 +30,17 @@ How to play
   5. Check it:           submit CYBA{...}     then press CHECK
 
 Missions
-  1  Make your move               Easy       100 pts
-  2  Let the cat out of the bag   Easy       100 pts
-  3  Now you see me               Easy       100 pts
-  4  Needle in the tree           Medium     200 pts
-  5  Search party                 Medium     200 pts
-  6  Decoder ring                 Hard       400 pts
-                                            1100 pts
+   1  Make your move               Easy       100 pts
+   2  Let the cat out of the bag   Easy       100 pts
+   3  Now you see me               Easy       100 pts
+   4  Needle in the tree           Medium     200 pts
+   5  Search party                 Medium     200 pts
+   6  Odd one out                  Medium     200 pts
+   7  Permission denied            Medium     200 pts
+   8  Decoder ring                 Hard       400 pts
+   9  Layer cake                   Hard       400 pts
+  10  Endgame                      Very Hard  800 pts
+                                             2700 pts
 
 Flags change every time the scenario starts.
 EOF
@@ -140,7 +144,47 @@ When you have the flag: submit CYBA{...}, then press CHECK.
 EOF
     ;;
     6) cat <<'EOF'
-Mission 6: Decoder ring   [Hard, 400 points]
+Mission 6: Odd one out   [Medium, 200 points]
+
+Objective: Use a pipe to find the only code that appears once.
+
+  cd ~/mission7
+  head codes.txt
+
+codes.txt holds about 900 flags. Every fake one appears at least twice.
+The real flag appears exactly once.
+
+Reading 900 lines is no fun. Chain two commands with a pipe (|): the
+first one sorts the lines so the copies sit next to each other, the
+second one finds the line that has no twin.
+
+Useful commands: sort, uniq
+When you have the flag: submit CYBA{...}, then press CHECK.
+EOF
+    ;;
+    7) cat <<'EOF'
+Mission 7: Permission denied   [Medium, 200 points]
+
+Objective: Unlock a script with chmod and run it.
+
+  cd ~/mission8
+  ls -l
+
+The flag is behind a locked door: unlock.sh. It is a script, a file full
+of commands that runs when you type ./unlock.sh.
+
+Try it, and Linux will refuse. ls -l shows why: the letters at the start
+of each line are the file's permissions. r means read, w means write and
+x means execute (run). This script has no x.
+
+You own the file, so you are allowed to change its permissions.
+
+Useful commands: ls, chmod
+When you have the flag: submit CYBA{...}, then press CHECK.
+EOF
+    ;;
+    8) cat <<'EOF'
+Mission 8: Decoder ring   [Hard, 400 points]
 
 Objective: Decode a base64 message to reveal the flag.
 
@@ -154,6 +198,48 @@ base64: a way of writing any data using only letters, digits, +, / and
 There is no secret key. Anyone can decode it.
 
 Useful command: base64
+When you have the flag: submit CYBA{...}, then press CHECK.
+EOF
+    ;;
+    9) cat <<'EOF'
+Mission 9: Layer cake   [Hard, 400 points]
+
+Objective: Peel back every layer of encoding to reveal the flag.
+
+  cd ~/mission9
+  cat cake.b64
+
+You decoded base64 in the last mission. This message was encoded, then
+the result was encoded again, and again. Nobody wrote down how many
+layers there are.
+
+Copying each result into the next command works, but it is slow. A pipe
+(|) can feed one base64 -d straight into the next. Keep adding layers
+until you see the flag.
+
+Useful command: base64
+When you have the flag: submit CYBA{...}, then press CHECK.
+EOF
+    ;;
+    10) cat <<'EOF'
+Mission 10: Endgame   [Very Hard, 800 points]
+
+Objective: Recover three hidden pieces and put the final flag together.
+
+  cd ~/mission10
+  cat README.txt
+
+The final mission uses everything you have learned. The flag was split
+into three pieces, and each one is hidden a different way. README.txt
+tells you where each piece is.
+
+Put the pieces together in order, joined with dashes:
+CYBA{piece1-piece2-piece3}.
+
+There are no new commands here. find, grep, cut, base64, chmod and pipes
+are all you need.
+
+Useful commands: find, grep, cut, base64, chmod
 When you have the flag: submit CYBA{...}, then press CHECK.
 EOF
     ;;
@@ -227,11 +313,74 @@ awk -v who="$who" -v flag="$F5" -v seed="$RANDOM$RANDOM" 'BEGIN {
 }' > "$H/mission5/access.log"
 { printf 'An intruder logged in ONCE as:  %s\nTheir token is the flag.\n\n' "$who"; readme 5; } > "$H/mission5/README.txt"
 
-# ---- step 6: base64 ----
-F6=$(flag decoded); keep 6 "$F6"
-mkdir -p "$H/mission6"
-readme 6 > "$H/mission6/README.txt"
-printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F6" | base64 -w 40 > "$H/mission6/message.b64"
+# ---- step 8: base64 ----
+F6=$(flag decoded); keep 8 "$F6"
+mkdir -p "$H/mission8"
+readme 8 > "$H/mission8/README.txt"
+printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F6" | base64 -w 40 > "$H/mission8/message.b64"
+
+# ---- step 6: odd one out (sort | uniq -u) ----
+F7=$(flag odd); keep 6 "$F7"
+mkdir -p "$H/mission6"; readme 6 > "$H/mission6/README.txt"
+awk -v flag="$F7" -v seed="$RANDOM$RANDOM" 'BEGIN {
+  srand(seed); n = 0
+  for (i = 0; i < 300; i++) {
+    h = ""; for (k = 0; k < 8; k++) h = h substr("0123456789abcdef", 1 + int(rand() * 16), 1)
+    c = 2 + int(rand() * 3); for (j = 0; j < c; j++) L[++n] = "CYBA{odd-" h "}"
+  }
+  L[++n] = flag
+  for (i = n; i > 1; i--) { j = 1 + int(rand() * i); t = L[i]; L[i] = L[j]; L[j] = t }
+  for (i = 1; i <= n; i++) print L[i]
+}' > "$H/mission6/codes.txt"
+
+# ---- step 7: permission denied (ls -l, chmod +x) ----
+F8=$(flag exec); keep 7 "$F8"
+mkdir -p "$H/mission7"; readme 7 > "$H/mission7/README.txt"
+printf 'Access granted.\nFlag: %s\n' "$F8" | base64 > "$H/mission7/.door"
+printf '#!/bin/sh\n# The vault door. It only opens when this file has execute permission.\nbase64 -d ~/mission7/.door\n' > "$H/mission7/unlock.sh"
+chmod 644 "$H/mission7/unlock.sh"
+
+# ---- step 9: layer cake (base64 4 to 6 times) ----
+F9=$(flag layers); keep 9 "$F9"
+mkdir -p "$H/mission9"; readme 9 > "$H/mission9/README.txt"
+cake=$(printf 'Flag: %s\n' "$F9")
+for _ in $(seq 1 $((4 + RANDOM % 3))); do cake=$(printf '%s\n' "$cake" | base64); done
+printf '%s\n' "$cake" > "$H/mission9/cake.b64"
+
+# ---- step 10: endgame (find + grep/cut/base64 + chmod), Very Hard ----
+hex3() { head -c 3 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+p1=$(hex3); p2=$(hex3); p3=$(hex3)
+F10="CYBA{$p1-$p2-$p3}"; keep 10 "$F10"
+M="$H/mission10"; mkdir -p "$M"
+who10=$(pick shadow_byte cipher_cat glitch root_kit null_ptr)
+vdirs=()
+for a in north south east west; do
+  for b in rack shelf crate; do
+    d="$M/vault/$a/$b-$(rnd 3)"; mkdir -p "$d"; vdirs+=("$d")
+    for _ in 1 2 3; do echo "junk $(rnd 16)" > "$d/$(rnd 5).$(pick txt log cfg)"; done
+  done
+done
+mapfile -t hn < <(printf '%s\n' .cache .backup .tmp .notes .stash .keep | shuf)
+for i in 0 1 2; do echo "Nothing here. Keep looking." > "${vdirs[RANDOM % ${#vdirs[@]}]}/${hn[$i]}"; done
+echo "piece 1: $p1" > "${vdirs[RANDOM % ${#vdirs[@]}]}/${hn[3]}"
+tok=$(printf 'piece 2: %s' "$p2" | base64)
+awk -v who="$who10" -v tok="$tok" -v seed="$RANDOM$RANDOM" 'BEGIN {
+  srand(seed); split("alice bob carol dave erin frank grace heidi ivan judy", u, " ")
+  split("LOGIN_OK LOGIN_FAIL SUDO SSH_KEY LOGOUT", a, " ")
+  b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  hit = 500 + int(rand() * 2000)
+  for (i = 0; i < 3000; i++) {
+    t = 20 * 3600 + i * 7
+    stamp = sprintf("%02d:%02d:%02d", int(t / 3600) % 24, int(t / 60) % 60, t % 60)
+    if (i == hit) { printf "%s user=%s action=LOGIN_OK token=%s\n", stamp, who, tok; continue }
+    s = ""; for (k = 0; k < 20; k++) s = s substr(b, 1 + int(rand() * 64), 1)
+    printf "%s user=%s action=%s token=%s\n", stamp, u[1 + int(rand() * 10)], a[1 + int(rand() * 5)], s
+  }
+}' > "$M/auth.log"
+printf 'piece 3: %s\n' "$p3" | base64 | base64 > "$M/.door"
+printf '#!/bin/sh\n# The last door. It only opens when this file has execute permission.\nbase64 -d ~/mission10/.door | base64 -d\n' > "$M/unlock.sh"
+chmod 644 "$M/unlock.sh"
+{ printf 'The flag is CYBA{piece1-piece2-piece3}: three pieces, joined with dashes.\n  Piece 1: in a hidden file somewhere under vault/  (some hidden files are decoys)\n  Piece 2: %s logged in once in auth.log. Their token is base64.\n  Piece 3: whatever unlock.sh prints.\n\n' "$who10"; readme 10; } > "$M/README.txt"
 
 # ---- the submit command ----
 cat > /usr/local/bin/submit <<'SH'

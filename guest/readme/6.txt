@@ -1,15 +1,16 @@
-Mission 6: Decoder ring   [Hard, 400 points]
+Mission 6: Odd one out   [Medium, 200 points]
 
-Objective: Decode a base64 message to reveal the flag.
+Objective: Use a pipe to find the only code that appears once.
 
-  cd ~/mission6
-  cat message.b64
+  cd ~/mission7
+  head codes.txt
 
-It looks like gibberish, but it is not encrypted. It is encoded with
-base64: a way of writing any data using only letters, digits, +, / and
-=.
+codes.txt holds about 900 flags. Every fake one appears at least twice.
+The real flag appears exactly once.
 
-There is no secret key. Anyone can decode it.
+Reading 900 lines is no fun. Chain two commands with a pipe (|): the
+first one sorts the lines so the copies sit next to each other, the
+second one finds the line that has no twin.
 
-Useful command: base64
+Useful commands: sort, uniq
 When you have the flag: submit CYBA{...}     Stuck? hint 6

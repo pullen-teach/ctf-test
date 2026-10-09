@@ -101,7 +101,47 @@ When you have the flag: submit CYBA{...}     Stuck? hint 5
 EOF
   ;;
   6) cat <<'EOF'
-Mission 6: Decoder ring   [Hard, 400 points]
+Mission 6: Odd one out   [Medium, 200 points]
+
+Objective: Use a pipe to find the only code that appears once.
+
+  cd ~/mission7
+  head codes.txt
+
+codes.txt holds about 900 flags. Every fake one appears at least twice.
+The real flag appears exactly once.
+
+Reading 900 lines is no fun. Chain two commands with a pipe (|): the
+first one sorts the lines so the copies sit next to each other, the
+second one finds the line that has no twin.
+
+Useful commands: sort, uniq
+When you have the flag: submit CYBA{...}     Stuck? hint 6
+EOF
+  ;;
+  7) cat <<'EOF'
+Mission 7: Permission denied   [Medium, 200 points]
+
+Objective: Unlock a script with chmod and run it.
+
+  cd ~/mission8
+  ls -l
+
+The flag is behind a locked door: unlock.sh. It is a script, a file full
+of commands that runs when you type ./unlock.sh.
+
+Try it, and Linux will refuse. ls -l shows why: the letters at the start
+of each line are the file's permissions. r means read, w means write and
+x means execute (run). This script has no x.
+
+You own the file, so you are allowed to change its permissions.
+
+Useful commands: ls, chmod
+When you have the flag: submit CYBA{...}     Stuck? hint 7
+EOF
+  ;;
+  8) cat <<'EOF'
+Mission 8: Decoder ring   [Hard, 400 points]
 
 Objective: Decode a base64 message to reveal the flag.
 
@@ -115,20 +155,66 @@ base64: a way of writing any data using only letters, digits, +, / and
 There is no secret key. Anyone can decode it.
 
 Useful command: base64
-When you have the flag: submit CYBA{...}     Stuck? hint 6
+When you have the flag: submit CYBA{...}     Stuck? hint 8
+EOF
+  ;;
+  9) cat <<'EOF'
+Mission 9: Layer cake   [Hard, 400 points]
+
+Objective: Peel back every layer of encoding to reveal the flag.
+
+  cd ~/mission9
+  cat cake.b64
+
+You decoded base64 in the last mission. This message was encoded, then
+the result was encoded again, and again. Nobody wrote down how many
+layers there are.
+
+Copying each result into the next command works, but it is slow. A pipe
+(|) can feed one base64 -d straight into the next. Keep adding layers
+until you see the flag.
+
+Useful command: base64
+When you have the flag: submit CYBA{...}     Stuck? hint 9
+EOF
+  ;;
+  10) cat <<'EOF'
+Mission 10: Endgame   [Very Hard, 800 points]
+
+Objective: Recover three hidden pieces and put the final flag together.
+
+  cd ~/mission10
+  cat README.txt
+
+The final mission uses everything you have learned. The flag was split
+into three pieces, and each one is hidden a different way. README.txt
+tells you where each piece is.
+
+Put the pieces together in order, joined with dashes:
+CYBA{piece1-piece2-piece3}.
+
+There are no new commands here. find, grep, cut, base64, chmod and pipes
+are all you need.
+
+Useful commands: find, grep, cut, base64, chmod
+When you have the flag: submit CYBA{...}     Stuck? hint 10
 EOF
   ;;
   *) cat <<'EOF'
 Your missions:
-  1  Make your move               Easy       100 pts
-  2  Let the cat out of the bag   Easy       100 pts
-  3  Now you see me               Easy       100 pts
-  4  Needle in the tree           Medium     200 pts
-  5  Search party                 Medium     200 pts
-  6  Decoder ring                 Hard       400 pts
-                                            1100 pts
+   1  Make your move               Easy       100 pts
+   2  Let the cat out of the bag   Easy       100 pts
+   3  Now you see me               Easy       100 pts
+   4  Needle in the tree           Medium     200 pts
+   5  Search party                 Medium     200 pts
+   6  Odd one out                  Medium     200 pts
+   7  Permission denied            Medium     200 pts
+   8  Decoder ring                 Hard       400 pts
+   9  Layer cake                   Hard       400 pts
+  10  Endgame                      Very Hard  800 pts
+                                             2700 pts
 
-Read one with: mission 1   (up to 6)
+Read one with: mission 1   (up to 10)
 EOF
   ;;
 esac

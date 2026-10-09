@@ -26,20 +26,29 @@ const cmds = [
   'submit "$(cat $(find archive -name "*.$(grep -o "in \\.[a-z]*" README.txt | cut -c5-)") | grep -o "CYBA{[^}]*}")"',
   'cd ~/mission5 && grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log',
   'submit "$(grep "$(head -1 README.txt | awk "{print \\$NF}")" access.log | sed "s/.*token=//")"',
-  'cd ~/mission6 && base64 -d message.b64',
+  'cd ~/mission8 && base64 -d message.b64',
   'submit "$(base64 -d message.b64 | grep -o "CYBA{[^}]*}")"',
+  'cd ~/mission6 && sort codes.txt | uniq -u',
+  'submit "$(sort ~/mission6/codes.txt | uniq -u)"',
+  'cd ~/mission7 && ls -l && ./unlock.sh; chmod +x unlock.sh && ./unlock.sh',
+  'submit "$(~/mission7/unlock.sh | grep -o "CYBA{[^}]*}")"',
+  'cd ~/mission9 && c=$(cat cake.b64); while ! echo "$c" | grep -q Flag; do c=$(echo "$c" | base64 -d); done; echo "$c"',
+  'submit "$(echo "$c" | grep -o "CYBA{[^}]*}")"',
+  'cd ~/mission10 && w=$(grep "Piece 2" README.txt | awk "{print \\$3}") && p1=$(cat $(find vault -name ".*" -type f) | grep "piece 1" | cut -d" " -f3) && p2=$(grep "user=$w " auth.log | cut -d= -f4 | base64 -d | cut -d" " -f3) && chmod +x unlock.sh && p3=$(./unlock.sh | cut -d" " -f3) && echo "CYBA{$p1-$p2-$p3}"',
+  'submit "CYBA{$p1-$p2-$p3}"',
 ];
 for (const c of cmds) {
   const t = Date.now();
   await send(c + "\n");
-  await page.waitForTimeout(400);
+  // Long commands keep the emulated CPU busy; wait so the next line is not typed into a full serial buffer.
+  await page.waitForTimeout(c.length > 120 ? 8000 : 400);
   if (c.startsWith("submit")) {
     const n = (await page.evaluate(() => window.quest.done.size));
     await page.waitForFunction((n) => window.quest.done.size > n - 1, n, { timeout: 60000 }).catch(() => {});
   }
   console.log("cmd", ((Date.now() - t) / 1000).toFixed(1) + "s", c.slice(0, 50));
 }
-await page.waitForFunction(() => window.quest.done.size === 6, null, { timeout: 90000 }).catch(() => {});
+await page.waitForFunction(() => window.quest.done.size === 10, null, { timeout: 90000 }).catch(() => {});
 console.log("missions done:", await page.evaluate(() => [...window.quest.done].join(",")), "status:", await page.textContent("#status"));
 await send("clear; whoami; cat /etc/quest/1 | cut -c1-12; ls /root; hint 1\n");
 await page.waitForTimeout(3000);

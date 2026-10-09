@@ -34,9 +34,29 @@
         "verify": "step5/verify.sh"
       },
       {
-        "title": "Decoder ring (Hard, 400 pts)",
+        "title": "Odd one out (Medium, 200 pts)",
         "text": "step6/text.md",
         "verify": "step6/verify.sh"
+      },
+      {
+        "title": "Permission denied (Medium, 200 pts)",
+        "text": "step7/text.md",
+        "verify": "step7/verify.sh"
+      },
+      {
+        "title": "Decoder ring (Hard, 400 pts)",
+        "text": "step8/text.md",
+        "verify": "step8/verify.sh"
+      },
+      {
+        "title": "Layer cake (Hard, 400 pts)",
+        "text": "step9/text.md",
+        "verify": "step9/verify.sh"
+      },
+      {
+        "title": "Endgame (Very Hard, 800 pts)",
+        "text": "step10/text.md",
+        "verify": "step10/verify.sh"
       }
     ],
     "finish": {

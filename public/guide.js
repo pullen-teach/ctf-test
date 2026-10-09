@@ -162,6 +162,69 @@
       "hint": "Read the help for <code>grep</code> and look at the <b>Usage</b> line at the top: it shows what goes first and what goes second.<pre>grep --help</pre>"
     },
     {
+      "title": "Odd one out",
+      "level": "Medium",
+      "points": 200,
+      "objective": "Use a pipe to find the only code that appears once.",
+      "run": [
+        "cd ~/mission7",
+        "head codes.txt"
+      ],
+      "ref": [
+        [
+          "sort FILE",
+          "sort the lines of a file"
+        ],
+        [
+          "uniq --help",
+          "list everything uniq can do"
+        ],
+        [
+          "A | B",
+          "send the output of A into B"
+        ],
+        [
+          "wc -l FILE",
+          "count the lines in a file"
+        ]
+      ],
+      "notes": [
+        "<code>codes.txt</code> holds about 900 flags. Every fake one appears <b>at least twice</b>. The real flag appears <b>exactly once</b>.",
+        "Reading 900 lines is no fun. Chain two commands with a <b>pipe</b> (<code>|</code>): the first one sorts the lines so the copies sit next to each other, the second one finds the line that has no twin."
+      ],
+      "hint": "<code>uniq</code> only compares lines that sit <b>next to each other</b>, so <code>sort</code> the file first and pipe it into <code>uniq</code>. Then read the help for <code>uniq</code> and look for the option that prints only the <b>unique</b> lines.<pre>uniq --help</pre>"
+    },
+    {
+      "title": "Permission denied",
+      "level": "Medium",
+      "points": 200,
+      "objective": "Unlock a script with chmod and run it.",
+      "run": [
+        "cd ~/mission8",
+        "ls -l"
+      ],
+      "ref": [
+        [
+          "ls -l",
+          "show files with their permissions"
+        ],
+        [
+          "chmod --help",
+          "list everything chmod can do"
+        ],
+        [
+          "./FILE",
+          "run a script in this folder"
+        ]
+      ],
+      "notes": [
+        "The flag is behind a locked door: <code>unlock.sh</code>. It is a <b>script</b>, a file full of commands that runs when you type <code>./unlock.sh</code>.",
+        "Try it, and Linux will refuse. <code>ls -l</code> shows why: the letters at the start of each line are the file's <b>permissions</b>. <code>r</code> means read, <code>w</code> means write and <code>x</code> means execute (run). This script has no <code>x</code>.",
+        "You own the file, so you are allowed to change its permissions."
+      ],
+      "hint": "Read the help for <code>chmod</code>. You want to <b>add</b> (<code>+</code>) the e<b>x</b>ecute permission (<code>x</code>) to <code>unlock.sh</code>, then run <code>./unlock.sh</code> again.<pre>chmod --help</pre>"
+    },
+    {
       "title": "Decoder ring",
       "level": "Hard",
       "points": 400,
@@ -185,6 +248,73 @@
         "There is no secret key. Anyone can decode it."
       ],
       "hint": "Read the help for <code>base64</code> and look for the option that turns base64 back into normal text.<pre>base64 --help</pre>"
+    },
+    {
+      "title": "Layer cake",
+      "level": "Hard",
+      "points": 400,
+      "objective": "Peel back every layer of encoding to reveal the flag.",
+      "run": [
+        "cd ~/mission9",
+        "cat cake.b64"
+      ],
+      "ref": [
+        [
+          "base64 -d FILE",
+          "decode a base64 file"
+        ],
+        [
+          "A | base64 -d",
+          "decode the output of A"
+        ],
+        [
+          "cat FILE",
+          "print a file on the screen"
+        ]
+      ],
+      "notes": [
+        "You decoded base64 in the last mission. This message was encoded, then the result was encoded <b>again</b>, and again. Nobody wrote down how many layers there are.",
+        "Copying each result into the next command works, but it is slow. A pipe (<code>|</code>) can feed one <code>base64 -d</code> straight into the next. Keep adding layers until you see the flag."
+      ],
+      "hint": "Start with <code>base64 -d cake.b64</code>. Still gibberish? Add <code>| base64 -d</code> to the end and run it again. Repeat until it says <b>Flag</b>."
+    },
+    {
+      "title": "Endgame",
+      "level": "Very Hard",
+      "points": 800,
+      "objective": "Recover three hidden pieces and put the final flag together.",
+      "run": [
+        "cd ~/mission10",
+        "cat README.txt"
+      ],
+      "ref": [
+        [
+          "find DIR -name PATTERN",
+          "search a folder tree by name"
+        ],
+        [
+          "grep TEXT FILE",
+          "show the lines that contain TEXT"
+        ],
+        [
+          "cut --help",
+          "pull one field out of a line"
+        ],
+        [
+          "base64 -d",
+          "decode base64"
+        ],
+        [
+          "chmod +x FILE",
+          "make a file runnable"
+        ]
+      ],
+      "notes": [
+        "The final mission uses <b>everything</b> you have learned. The flag was split into three pieces, and each one is hidden a different way. <code>README.txt</code> tells you where each piece is.",
+        "Put the pieces together in order, joined with dashes: <code>CYBA{piece1-piece2-piece3}</code>.",
+        "There are no new commands here. <code>find</code>, <code>grep</code>, <code>cut</code>, <code>base64</code>, <code>chmod</code> and pipes are all you need."
+      ],
+      "hint": "Take one piece at a time. <b>Piece 1:</b> hidden file names start with a dot, so search <code>vault</code> for names that match <code>.*</code>. <b>Piece 2:</b> <code>grep</code> the intruder's name, then decode their token (<code>cut</code> can pull the token out of the line). <b>Piece 3:</b> you have opened a locked script before."
     }
   ];
 
@@ -330,7 +460,10 @@
     "Read files with <code>cat</code> and made commands explain themselves with <code>--help</code>.",
     "Found hidden files with <code>ls -a</code> and searched a folder tree with <code>find</code>.",
     "Searched a 12,000-line log with <code>grep</code>.",
-    "Decoded a base64 message, and learned that encoding is not encryption.",
+    "Found the one unique line with <code>sort | uniq -u</code>: chaining commands with pipes.",
+    "Read permissions with <code>ls -l</code> and unlocked a script with <code>chmod +x</code>.",
+    "Decoded base64, even several layers deep, and learned that encoding is not encryption.",
+    "Combined <code>find</code>, <code>grep</code>, <code>cut</code>, <code>base64</code> and <code>chmod</code> to beat the Very Hard Endgame.",
   ];
 
   function finish() {

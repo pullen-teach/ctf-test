@@ -16,7 +16,7 @@ neg() {
   if bash "/scenario/step$1/verify.sh"; then echo "  FAIL  step $1 passed before submitting"; fail=$((fail+1)); else echo "  PASS  step $1 refuses until the flag is submitted"; pass=$((pass+1)); fi
 }
 last() { grep -o 'CYBA{[^}]*}' | tail -1; }
-for n in 1 2 3 4 5 6; do neg $n; done
+for n in 1 2 3 4 5 6 7 8 9 10; do neg $n; done
 as 'submit CYBA{wrong-00000000}' >/dev/null; neg 1
 walk='cd ~/mission1/town && cd $(ls | sed -n "s/sign--go-into-the-//p") && cd .. && cd $(ls */ | sed -n "s/dead-end--go-back-up-and-try-the-//p") && cd $(ls | sed -n "s/go-into-the-\(.*\)-then-the-\(.*\)/\1\/\2/p") && pwd && ls'
 out=$(as "$walk"); echo "$out" | grep -q "you-made-it" && { echo "  PASS  following the signposts reaches the flag folder"; pass=$((pass+1)); } || { echo "  FAIL  trail: $out"; fail=$((fail+1)); }
@@ -31,7 +31,16 @@ ext=$(as 'cat ~/mission4/README.txt' | grep -o 'in \.[a-z]*' | cut -c5-)
 f=$(as "cd ~/mission4 && cat \"\$(find archive -name '*.$ext')\"" | last);            as "submit '$f'" >/dev/null; check 4
 who=$(as 'cat ~/mission5/README.txt' | head -1 | awk '{print $NF}')
 f=$(as "cd ~/mission5 && grep $who access.log" | sed 's/.*token=//');                 as "submit '$f'" >/dev/null; check 5
-f=$(as 'cd ~/mission6 && base64 -d message.b64' | last);                              as "submit '$f'" >/dev/null; check 6
+f=$(as 'cd ~/mission8 && base64 -d message.b64' | last);                              as "submit '$f'" >/dev/null; check 8
+f=$(as 'cd ~/mission6 && sort codes.txt | uniq -u');                                as "submit '$f'" >/dev/null; check 6
+as 'cd ~/mission7 && ./unlock.sh' | grep -q 'Permission denied' && { echo "  PASS  unlock.sh is locked until chmod"; pass=$((pass+1)); } || { echo "  FAIL  unlock.sh ran without chmod"; fail=$((fail+1)); }
+f=$(as 'cd ~/mission7 && chmod +x unlock.sh && ./unlock.sh' | last);                  as "submit '$f'" >/dev/null; check 7
+f=$(as 'cd ~/mission9 && c=$(cat cake.b64); while ! echo "$c" | grep -q Flag; do c=$(echo "$c" | base64 -d); done; echo "$c"' | last); as "submit '$f'" >/dev/null; check 9
+w=$(as 'cat ~/mission10/README.txt' | grep 'Piece 2' | awk '{print $3}')
+p1=$(as 'cd ~/mission10 && cat $(find vault -name ".*" -type f)' | grep 'piece 1' | cut -d' ' -f3)
+p2=$(as "cd ~/mission10 && grep 'user=$w ' auth.log | cut -d= -f4 | base64 -d" | cut -d' ' -f3)
+p3=$(as 'cd ~/mission10 && chmod +x unlock.sh && ./unlock.sh' | cut -d' ' -f3)
+as "submit 'CYBA{$p1-$p2-$p3}'" >/dev/null; check 10
 echo "  lines in log: $(wc -l < /home/player/mission5/access.log), intruder lines: $(grep -c "$who" /home/player/mission5/access.log)"
 if grep -rq "CYBA{" /root/.quest; then echo "  FAIL  a flag is stored in plain text"; fail=$((fail+1)); else echo "  PASS  only fingerprints are stored"; pass=$((pass+1)); fi
 if su - player -c "cat /root/.quest/1" >/dev/null 2>&1; then echo "  FAIL  player can read answers"; fail=$((fail+1)); else echo "  PASS  player cannot read the answer files"; pass=$((pass+1)); fi

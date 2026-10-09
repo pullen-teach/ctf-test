@@ -10,7 +10,7 @@
   const meter = document.getElementById("meter-fill");
   const started = performance.now();
   const done = new Set();
-  const TOTAL = 6;
+  const TOTAL = 10;
 
   // Competition clock: counts up from the first key typed in the terminal (or the
   // first Run button) and stops when every flag is captured. It never cuts anyone off.
