@@ -24,8 +24,10 @@
   }
   const elapsed = () => (clockStart === null ? 0 : (clockStop ?? performance.now()) - clockStart);
   function tick() { clockText.textContent = fmt(elapsed()); }
+  // The warm-up (mission 0) is untimed: the clock waits until it is captured or skipped.
   function startClock() {
     if (clockStart !== null) return;
+    if (window.questGuide && !window.questGuide.warmupOver()) return;
     clockStart = performance.now();
     clockEl.classList.add("running");
     const lab = document.getElementById("clock-label"); if (lab) lab.textContent = "Elapsed Time";
@@ -188,11 +190,12 @@
         if (term) term.focus();
       }, 300);
     }
-    const m = text.match(/\[quest\] mission (\d) complete/);
+    const m = text.match(/\[quest\] mission (\d+) complete/);
     if (m) markDone(Number(m[1]));
   });
 
   function markDone(n) {
+    if (n === 0) { window.questGuide.done(0, 0); return; }   // warm-up: bonus points, not one of the TOTAL flags
     if (done.has(n)) return;
     done.add(n);
     if (done.size === TOTAL) stopClock();

@@ -317,10 +317,13 @@
       "hint": "Take one piece at a time. <b>Piece 1:</b> hidden file names start with a dot, so search <code>vault</code> for names that match <code>.*</code>. <b>Piece 2:</b> <code>grep</code> the intruder's name, then decode their token (<code>cut</code> can pull the token out of the line). <b>Piece 3:</b> you have opened a locked script before."
     }
   ];
+  const WARMUP = {"title": "Warm-up", "level": "Warm-up", "points": 50, "objective": "Read the CTF orientation in the terminal with cat.", "run": ["cat orientation.txt"], "ref": [["cat FILE", "print a file on the screen"], ["clear", "clear the screen"]], "notes": ["Get comfortable before the clock starts. Your <b>home folder</b> holds <code>orientation.txt</code>: how a CTF works, what a flag looks like, scoring and the rules.", "<code>cat</code> prints a file on the screen. Click the terminal, type <code>cat orientation.txt</code> and press Enter. The warm-up flag is at the bottom.", "Submit it for <b>50 bonus points</b>, or skip the warm-up. The competition clock starts when you begin Mission 1."], "hint": "The flag is on the last line of <code>orientation.txt</code> in your home folder. Type <code>cat orientation.txt</code>, press Enter, then copy the flag into <code>submit</code>."};
 
   const N = MISSIONS.length;
   const el = (id) => document.getElementById(id);
   const done = new Set();
+  // Mission 0, the warm-up: optional, untimed, bonus points. current === -1 shows it.
+  let warm = false;
   // Clock time (ms) of each capture. "Took" is the time since the capture before it
   // (or since the clock started), so the splits add up to the total.
   const capturedAt = {};
@@ -331,8 +334,8 @@
     const before = Object.values(capturedAt).filter((t) => t < capturedAt[n]);
     return fmt(capturedAt[n] - (before.length ? Math.max(...before) : 0));
   };
-  const MAX = MISSIONS.reduce((t, m) => t + m.points, 0);
-  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0);
+  const MAX = MISSIONS.reduce((t, m) => t + m.points, 0) + WARMUP.points;
+  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0) + (warm ? WARMUP.points : 0);
   const scoreEl = el("score"), scorePts = el("score-pts");
   const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const TROPHY = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd54a"/><stop offset="1" stop-color="#f5a300"/></linearGradient></defs><path fill="url(#g)" d="M17 5h30v5h11v8c0 8-6 14-14 15a15 15 0 0 1-9 8.6V48h9v6H20v-6h9v-6.4A15 15 0 0 1 20 33C12 32 6 26 6 18v-8h11zm-5 11v2c0 4 2.5 7.5 6.5 8.6A30 30 0 0 1 17 16zm40 0h-5a30 30 0 0 1-1.5 10.6C54.5 25.5 52 22 52 18z"/><rect x="18" y="54" width="28" height="5" rx="1.5" fill="#d98a00"/><path fill="#fff6c9" d="M32 12l3 6.1 6.7 1-4.9 4.7 1.2 6.7L32 27.3l-6 3.2 1.2-6.7-4.9-4.7 6.7-1z"/></svg>';
@@ -349,16 +352,21 @@
   // The stepper: a check in a green circle for each captured mission, a ring for the current one.
   function paintSteps(cur) {
     const r = reachable();
-    dots.querySelectorAll(".step-btn").forEach((d, i) => {
+    const w = dots.querySelector(".warm-btn");
+    if (w) {
+      w.className = "step-btn warm-btn" + (warm ? " ok" : "") + (cur === -1 ? " here" : "");
+      w.querySelector(".step-dot").innerHTML = warm ? CHECK : "0";
+    }
+    dots.querySelectorAll(".step-btn:not(.warm-btn)").forEach((d, i) => {
       const ok = done.has(i + 1);
       d.className = "step-btn" + (ok ? " ok" : "") + (i === cur ? " here" : "");
       d.querySelector(".step-dot").innerHTML = ok ? CHECK : String(i + 1);
       d.disabled = !(i <= r || done.size === N);
       d.setAttribute("aria-current", i === cur ? "step" : "false");
     });
-    dots.querySelectorAll(".step-bar").forEach((b, i) => b.classList.toggle("ok", done.has(i + 1) && done.has(i + 2)));
+    dots.querySelectorAll(".step-bar:not(.warm-bar)").forEach((b, i) => b.classList.toggle("ok", done.has(i + 1) && done.has(i + 2)));
   }
-  let current = 0;
+  let current = -1;
   let runner = null;
 
   const article = el("mission");
@@ -388,10 +396,11 @@
   }
 
   function render() {
-    const m = MISSIONS[current];
+    const isWarm = current === -1;
+    const m = isWarm ? WARMUP : MISSIONS[current];
     const n = current + 1;
-    const ok = done.has(n);
-    count.textContent = "Mission " + n + " of " + N;
+    const ok = isWarm ? warm : done.has(n);
+    count.textContent = isWarm ? "Mission 0 · optional warm-up" : "Mission " + n + " of " + N;
     const rows = m.run.map((c) =>
       '<div class="cmd-row"><code class="cmd"><span class="run-prompt" aria-hidden="true">$</span>' + esc(c) + "</code>" +
       '<button class="mini copy" type="button" data-cmd="' + esc(c) + '" aria-label="Copy ' + esc(c) + '">' + ICON.copy + "<span>Copy</span></button>" +
@@ -399,7 +408,8 @@
     const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], ["hint " + n, "a nudge if you are stuck"]]);
     article.innerHTML =
       '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + lvlClass(m.level) + '">' + m.level + '</span>' +
-        '<span class="pts-pill">' + ICON.pts + m.points + " pts</span></div>" +
+        '<span class="pts-pill">' + ICON.pts + (isWarm ? "+" + m.points + " bonus" : m.points + " pts") + "</span>" +
+        (isWarm ? '<span class="untimed">Untimed</span>' : "") + "</div>" +
       '<div class="objective"><span class="c-ico">' + ICON.target + "</span><p><b>Objective</b>" + esc(m.objective) + "</p></div>" +
       '<section class="card start">' + head("term", "Start Here", "Run these commands to begin the mission.") + '<div class="cmd-rows">' + rows + "</div></section>" +
       '<section class="card ref">' + head("book", "Quick Reference", "Common commands you'll use in this mission.") +
@@ -407,7 +417,8 @@
       '<section class="card notes">' + head("info", "Mission Notes") + m.notes.map((p) => "<p>" + p + "</p>").join("") + "</section>" +
       (ok
         ? '<section class="card captured">' + '<span class="c-ico big">' + TROPHY + '</span><div><h3>Flag Captured <span class="pts">+' + m.points + " points</span></h3>" +
-          "<p>This flag took <b class=\"captured-at\">" + took(n) + "</b>; the clock read <b class=\"captured-at\">" + clockAt(n) + "</b> when you submitted it.</p></div></section>"
+          (isWarm ? "<p>Bonus points banked. The clock starts when you begin Mission 1.</p></div></section>"
+            : "<p>This flag took <b class=\"captured-at\">" + took(n) + "</b>; the clock read <b class=\"captured-at\">" + clockAt(n) + "</b> when you submitted it.</p></div></section>")
         : '<section class="card submit-card">' + head("flag", "Found the flag?", "Worth " + m.points + " points. Type <code>submit</code>, a space, then paste the whole flag:") +
           "<pre>submit CYBA{word-1a2b3c4d}</pre></section>") +
       '<details class="hint fold"><summary><span class="c-ico">' + ICON.bulb + '</span>Need a hint?<span class="chev" aria-hidden="true"></span></summary><div>' + m.hint + "</div></details>";
@@ -418,11 +429,12 @@
         setTimeout(() => { b.classList.remove("copied"); b.querySelector("span").textContent = "Copy"; }, 1400);
       }, () => {});
     }));
-    state.textContent = ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
+    state.textContent = isWarm ? (ok ? "Bonus captured. Ready when you are." : "Optional. The clock waits until Mission 1.")
+      : ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
     state.className = ok ? "m-state ok" : "m-state";
-    prev.disabled = current === 0;
-    next.disabled = !ok;
-    next.innerHTML = current === N - 1 ? "Finish &rarr;" : "Next mission &rarr;";
+    prev.disabled = isWarm;
+    next.disabled = !ok && !isWarm;
+    next.innerHTML = isWarm ? (ok ? "Start Mission 1 &rarr;" : "Skip warm-up &rarr;") : current === N - 1 ? "Finish &rarr;" : "Next mission &rarr;";
     paintSteps(current);
     body.scrollTop = 0;
   }
@@ -476,6 +488,8 @@
         "<div><h2>Quest Complete</h2><p>Great job! You captured all " + N + " flags and completed the Linux CTF in <b>" + total + "</b>.</p></div></div>" +
       '<div class="card sc"><h3><span class="h-ico">' + ICON.chart + "</span>Mission Scorecard</h3><table class=\"times\">" +
         '<tr class="head"><td></td><td>#</td><td>Mission</td><td class="num">Points</td><td class="num">Took</td><td class="num">Time</td></tr>' +
+        '<tr><td class="ck">' + (warm ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">0</td><td>Warm-up <span class="dim">(bonus)</span></td><td class="num">' +
+          (warm ? "+" + WARMUP.points + " pts" : '<span class="dim">skipped</span>') + '</td><td class="num dim"></td><td class="num"></td></tr>' +
         MISSIONS.map((m, i) => '<tr><td class="ck">' + (done.has(i + 1) ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + (i + 1) + "</td><td>" + m.title + '</td><td class="num">' + m.points + ' pts</td><td class="num dim">' + took(i + 1) + '</td><td class="num">' + clockAt(i + 1) + "</td></tr>").join("") +
         '<tr class="total"><td></td><td></td><td>Total</td><td class="num">' + score() + ' pts</td><td class="num"></td><td class="num">' + total + "</td></tr></table>" +
         '<p class="small"><b>Took</b>: time since your previous flag. <b>Time</b>: the clock when you submitted.</p></div>' +
@@ -494,23 +508,28 @@
   }
 
   function unfinish() { next.classList.remove("replay"); prev.hidden = false; if (boardBtn) boardBtn.hidden = true; el("guide-foot").classList.remove("finished"); }
-  prev.addEventListener("click", () => { if (current > 0) { current = Math.min(current, N) - 1; unfinish(); render(); } });
+  prev.addEventListener("click", () => { if (current > -1) { current = Math.min(current, N) - 1; unfinish(); render(); } });
   next.addEventListener("click", () => {
     if (current === N) { location.reload(); return; }
+    if (current === -1) { current = 0; render(); return; }   // skip or leave the warm-up: the clock can start now
     if (current === N - 1) { if (done.size === N) finish(); return; }
     if (done.has(current + 1)) { current++; render(); }
   });
 
   if (el("score-max")) el("score-max").textContent = MAX;
   showScore(false);
-  dots.innerHTML = MISSIONS.map((m, i) => (i ? '<span class="step-bar" aria-hidden="true"></span>' : "") +
+  dots.innerHTML = '<button type="button" class="step-btn warm-btn" title="Mission 0: Warm-up (optional, +' + WARMUP.points + ' bonus, untimed)"><span class="step-dot">0</span><span class="step-num">0</span></button><span class="step-bar warm-bar" aria-hidden="true"></span>' + MISSIONS.map((m, i) => (i ? '<span class="step-bar" aria-hidden="true"></span>' : "") +
     '<button type="button" class="step-btn" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ', ' + m.points + ' pts)"><span class="step-dot">' + (i + 1) + '</span><span class="step-num">' + (i + 1) + "</span></button>").join("");
-  dots.querySelectorAll(".step-btn").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; unfinish(); render(); } }));
+  dots.querySelectorAll(".step-btn:not(.warm-btn)").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; unfinish(); render(); } }));
+  dots.querySelector(".warm-btn").addEventListener("click", () => { current = -1; unfinish(); render(); });
   render();
 
   window.questGuide = {
-    done(n, at) { const fresh = !done.has(n); done.add(n); if (typeof at === "number" && !(n in capturedAt)) capturedAt[n] = at; showScore(fresh); if (current < N) render(); },
+    done(n, at) {
+      if (n === 0) { const fresh = !warm; warm = true; showScore(fresh); if (current === -1) render(); else paintSteps(current); return; }
+      const fresh = !done.has(n); done.add(n); if (typeof at === "number" && !(n in capturedAt)) capturedAt[n] = at; showScore(fresh); if (current < N) render(); },
     setRunner(fn) { runner = fn; },
     current: () => current + 1,
+    warmupOver: () => warm || current !== -1,
   };
 })();

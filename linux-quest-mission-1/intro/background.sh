@@ -43,6 +43,47 @@ Missions
                                              2700 pts
 
 Flags change every time the scenario starts.
+
+New to CTFs? Warm up first (optional, 50 bonus points):  cat orientation.txt
+EOF
+    ;;
+    orientation) cat <<'EOF'
+CTF Orientation
+===============
+
+What is a CTF?
+  Capture The Flag is a cybersecurity competition. Each mission hides a
+  flag: a secret piece of text. Find it, submit it, and score points.
+
+1. Read a mission's instructions
+  Every mission has its own folder with a README.txt inside:
+    cd ~/mission1          go into the mission's folder
+    cat README.txt         read its instructions
+    cd ~                   come back home
+
+2. Find the flag
+  A flag looks like this:  CYBA{word-1a2b3c4d}
+  It always starts with CYBA{ and ends with }.
+
+3. Submit the flag
+  Type submit, a space, then the whole flag:
+    submit CYBA{word-1a2b3c4d}     then press CHECK
+  Copy it exactly: highlight it with the mouse, then paste with Ctrl+V
+  or a right-click. Do not leave off the CYBA{ or the }.
+
+4. Stuck?
+  Read the command's built-in help first:  ls --help
+  Then open the Hint in the instructions panel.
+
+Scoring
+  Easy 100    Medium 200    Hard 400    Very Hard 800
+  The most points wins. On a tie, the faster time wins.
+
+Warm-up: Mission 0  (optional, 50 bonus points)
+  You just read this file with cat. Now practice step 3: submit the
+  flag below. Or skip it and go to Mission 1.
+
+Warm-up flag:
 EOF
     ;;
     1) cat <<'EOF'
@@ -263,6 +304,8 @@ touch "$M1/start-here--go-into-town" \
       "$E1/you-made-it--the-flag-is-the-file-name" \
       "$E1/$F1"
 readme home > "$H/README.txt"
+F0=$(flag warmup); keep 0 "$F0"
+{ readme orientation; echo "  $F0"; } > "$H/orientation.txt"
 readme 1 > "$M1/README.txt"
 
 # ---- step 2: let the cat out of the bag (cat --help shows -n) ----

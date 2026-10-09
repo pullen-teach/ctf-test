@@ -9,6 +9,10 @@
     },
     "steps": [
       {
+        "title": "Warm-up (optional, 50 bonus pts)",
+        "text": "step0/text.md"
+      },
+      {
         "title": "Make your move (Easy, 100 pts)",
         "text": "step1/text.md",
         "verify": "step1/verify.sh"

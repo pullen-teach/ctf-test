@@ -33,6 +33,9 @@ for f in "$M1/start-here--go-into-town" \
   : > "$f"
 done
 cp "$R/home.txt" "$H/README.txt"
+# 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
+F=$(flag warmup); keep 0 "$F"
+{ cat "$R/orientation.txt"; echo "  $F"; } > "$H/orientation.txt"
 cp "$R/1.txt" "$M1/README.txt"
 
 # 2: let the cat out of the bag. cat --help shows -n, which numbers lines.

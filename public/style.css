@@ -261,3 +261,13 @@ body.won .status { color: var(--green); }
 .hint pre { font: 0.9rem var(--mono); background: var(--surface); border: 1px solid #f1d39b; padding: 0.4rem 0.6rem; border-radius: 6px; margin: 0.5rem 0 0; }
 .how { border: 1px solid var(--line); }
 .how ol { padding-left: 2.2rem; display: grid; gap: 0.35rem; font-size: 0.95rem; margin-left: 0 !important; }
+
+/* warm-up (mission 0) */
+.level.warm-up { background: #eef0ff; color: #4b3fb8; }
+.untimed { font: 800 0.75rem var(--sans); color: var(--muted); background: #f1f4f9; border: 1px solid var(--line); border-radius: 999px; padding: 0.15rem 0.6rem; }
+.warm-btn .step-dot { border-style: dashed; }
+.warm-btn.ok .step-dot { border-style: solid; }
+.step-bar.warm-bar { flex: 0.5; background: repeating-linear-gradient(90deg, var(--line) 0 4px, transparent 4px 7px); }
+.step-dot { width: 1.95rem; height: 1.95rem; }
+.step-bar { margin-top: 0.95rem; }
+.dim { color: var(--muted); font-weight: 600; }
