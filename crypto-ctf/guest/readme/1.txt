@@ -1,0 +1,16 @@
+Mission 1: Base camp   [Easy, 100 points]
+
+Objective: Recognise base64 and decode it.
+
+  cd ~/mission1
+  cat message.b64
+
+Encoding is not encryption: it writes the same data a different way, and
+anyone can undo it. No key needed.
+
+message.b64 is written in base64: upper and lower case letters, digits,
++ and /, often ending in =. Decode it to read the flag.
+
+Useful commands: cat, base64
+When you have the flag: submit CYBA{...}
+Stuck? hint 1   (1 hint, 5 points each: 5% of this mission)

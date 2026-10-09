@@ -1,0 +1,21 @@
+Mission 7: Letter detective   [Hard, 400 points]
+
+Objective: Crack a substitution cipher with frequency analysis.
+
+  cd ~/mission7
+  cat cipher.txt
+
+In a substitution cipher every letter is swapped for another one. There
+are more possible keys than grains of sand on Earth, so trying them all
+is hopeless.
+
+But language leaves clues. freq counts the letters: in English e and t
+are the most common, and the is the most common word. Test your guesses
+with tr, writing solved letters in CAPITALS.
+
+The last sentence holds a secret word and a number. Submit them as
+CYBA{word-number}.
+
+Useful commands: freq, tr
+When you have the flag: submit CYBA{...}
+Stuck? hint 7   (3 hints, 20 points each: 5% of this mission)

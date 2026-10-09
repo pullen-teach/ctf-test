@@ -1,0 +1,17 @@
+Mission 6: Fingerprints   [Medium, 200 points]
+
+Objective: Use a SHA-256 fingerprint to find the real key.
+
+  cd ~/mission6
+  cat README.txt
+
+A hash is a fingerprint for data: the same input always gives the same
+hash, and changing a single letter changes it completely. You cannot
+turn a hash back into the data.
+
+The keys folder holds a dozen keys that all look alike. README.txt gives
+the SHA-256 fingerprint of the real one.
+
+Useful commands: sha256sum, grep
+When you have the flag: submit CYBA{...}
+Stuck? hint 6   (2 hints, 10 points each: 5% of this mission)

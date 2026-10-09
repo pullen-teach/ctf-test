@@ -1,0 +1,98 @@
+#!/bin/sh
+# Builds the Crypto CTF missions. Flags, keys and keywords are random on every boot.
+# Only SHA-256 fingerprints of the flags are kept (/etc/quest), so there is no answer file to read.
+H=/home/player
+Q=/etc/quest
+R=/usr/share/quest          # README texts, written by guest/make-missions.py
+mkdir -p "$Q"
+hex()  { head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+flag() { printf 'CYBA{%s-%s}' "$1" "$(hex)"; }
+pick() { printf '%s\n' "$@" | shuf -n1; }
+num()  { awk -v s="$(hex | cut -c1-6)" -v lo="$1" -v hi="$2" 'BEGIN { srand(("0x" s) + 0); print lo + int(rand() * (hi - lo + 1)) }'; }
+keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
+rot13() { tr 'A-Za-z' 'N-ZA-Mn-za-m'; }
+tohex() { xxd -p; }
+tob64() { base64; }
+clue() { { printf "$2"; echo; cat "$R/$1.txt"; } > "$H/mission$1/README.txt"; }
+mk()   { mkdir -p "$H/mission$1"; cp "$R/$1.txt" "$H/mission$1/README.txt"; }
+
+cp "$R/home.txt" "$H/README.txt"
+# 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
+F=$(flag warmup); keep 0 "$F"
+{ cat "$R/orientation.txt"; echo "  $F"; } > "$H/orientation.txt"
+
+# 1: base camp (base64)
+F=$(flag base); keep 1 "$F"; mk 1
+printf 'Welcome to base camp! Base64 is an encoding: anyone can decode it.\nFlag: %s\n' "$F" | tob64 > "$H/mission1/message.b64"
+
+# 2: hex marks the spot (xxd -r -p)
+F=$(flag hex); keep 2 "$F"; mk 2
+printf 'Hex writes every byte as two characters from 0-9 and a-f.\nFlag: %s\n' "$F" | tohex > "$H/mission2/signal.hex"
+
+# 3: spin cycle (ROT13)
+F=$(flag rot); keep 3 "$F"; mk 3
+printf 'Rotate me 13 places and I spin right back.\nFlag: %s\n' "$F" | rot13 > "$H/mission3/note.txt"
+
+# 4: hail Caesar (unknown shift, never 13)
+F=$(flag caesar); keep 4 "$F"; mk 4
+n=$(num 1 24); [ "$n" -ge 13 ] && n=$((n + 1))
+printf 'Veni vidi vici: I came, I saw, I conquered.\nFlag: %s\n' "$F" | caesar "$n" > "$H/mission4/scroll.txt"
+
+# 5: Russian doll (ROT13 inside, then hex and base64 in a random order)
+F=$(flag doll); keep 5 "$F"; mk 5
+t=/tmp/doll.$$
+printf 'You opened every doll!\nFlag: %s\n' "$F" | rot13 > "$t"
+for layer in $(pick "tohex tob64" "tob64 tohex"); do $layer < "$t" > "$t.n"; mv "$t.n" "$t"; done
+mv "$t" "$H/mission5/doll.txt"
+
+# 6: fingerprints (find the key whose SHA-256 matches)
+F=$(flag print); keep 6 "$F"; mkdir -p "$H/mission6/keys"
+awk -v d="$H/mission6/keys" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
+  srand(("0x" seed) + 0); real = 1 + int(rand() * 12)
+  for (k = 1; k <= 12; k++) {
+    name = ""; for (i = 0; i < 4; i++) name = name substr("abcdefghijklmnopqrstuvwxyz", 1 + int(rand() * 26), 1)
+    f = d "/key-" name ".txt"
+    if (k == real) { print flag > f; print f > "/tmp/realkey" }
+    else { h = ""; for (i = 0; i < 8; i++) h = h substr("0123456789abcdef", 1 + int(rand() * 16), 1); print "CYBA{print-" h "}" > f }
+    close(f)
+  }
+}'
+fp=$(sha256sum "$(cat /tmp/realkey)" | cut -d' ' -f1); rm -f /tmp/realkey
+clue 6 "The real key's SHA-256 fingerprint is:\n  $fp\n"
+
+# 7: letter detective (substitution cipher, cracked with frequency analysis)
+word=$(pick raven cipher shadow falcon ember); n7=$(num 10 99)
+F="CYBA{$word-$n7}"; keep 7 "$F"; mkdir -p "$H/mission7"
+cp "$R/7.txt" "$H/mission7/README.txt"
+plain="the message you are reading has been scrambled so that every letter stands for a different one. this is called a substitution cipher. to read it you look for patterns, because some letters appear far more often than others in english, and the word the appears again and again. once you recognise a few words the rest falls into place. the secret word is $word and the number is $n7."
+key=$(awk 'BEGIN { srand(); split("a b c d e f g h i j k l m n o p q r s t u v w x y z", L); for (i = 26; i > 1; i--) { j = int(rand() * i) + 1; t = L[i]; L[i] = L[j]; L[j] = t } s = ""; for (i = 1; i <= 26; i++) s = s L[i]; print s }')
+printf '%s\n' "$plain" | tr 'abcdefghijklmnopqrstuvwxyz' "$key" > "$H/mission7/cipher.txt"
+
+# 8: keyword cipher (Vigenere; keyword is an acrostic hidden in poem.txt)
+kw=$(pick raven cedar maple flint amber coral)
+F=$(flag keyword); keep 8 "$F"; mkdir -p "$H/mission8"
+cp "$R/8.txt" "$H/mission8/README.txt"
+printf 'The keyword unlocks the secret below.\nFlag: %s\n' "$F" | vigenere -e "$kw" > "$H/mission8/secret.txt"
+# an acrostic: the first letter of each line spells the keyword
+awk -v kw="$kw" 'BEGIN {
+  split("", lines)
+  w["r"]="Rivers run"; w["a"]="At first light"; w["v"]="Very quietly"; w["e"]="Echoes fade"; w["n"]="Night comes soon"
+  w["c"]="Clouds drift"; w["d"]="Dawn breaks"; w["m"]="Mountains stand"; w["p"]="Paths wind on"; w["l"]="Leaves fall"
+  w["f"]="Fields go gold"; w["i"]="In the still air"; w["t"]="Time slips by"; w["b"]="Birds take wing"; w["o"]="Over the hills"
+  for (i = 1; i <= length(kw); i++) { c = substr(kw, i, 1); print (c in w ? w[c] : toupper(c) "ushed the wind") }
+}' > "$H/mission8/poem.txt"
+
+# 9: the vault (Caesar-scrambled keyword note, then base64 over a Vigenere cipher)
+kw=$(pick harbor meadow silver copper willow)
+F=$(flag vault); keep 9 "$F"; mkdir -p "$H/mission9"
+n9=$(num 1 24); [ "$n9" -ge 13 ] && n9=$((n9 + 1))
+printf 'The vault keyword is %s\n' "$kw" | caesar "$n9" > "$H/mission9/key.txt"
+printf 'You cracked the vault. Encoding, ciphers and keys: you used them all.\nFlag: %s\n' "$F" | vigenere -e "$kw" | tob64 > "$H/mission9/vault.b64"
+clue 9 "vault.b64 was Vigenere-encrypted, then base64-encoded.\nThe keyword is in key.txt, but that note was scrambled with a Caesar shift.\n"
+
+# a hint.txt in every mission folder would leak that hints cost points, so hints live in the
+# hint command and the panel only. (Same as the Linux CTF.)
+
+# the submit, hint and mission commands and the tools were installed by build.sh into /bin.
+chmod 755 "$Q"; chmod 644 "$Q"/*
+chown -R 1000:1000 "$H"

@@ -1,0 +1,16 @@
+Mission 4: Hail Caesar   [Medium, 200 points]
+
+Objective: Break a Caesar cipher by trying every shift.
+
+  cd ~/mission4
+  cat scroll.txt
+
+Julius Caesar hid messages by shifting every letter a few places.
+scroll.txt uses a Caesar shift, but nobody wrote down which one.
+
+There are only 25 possible shifts. A computer can try them all in a
+blink: trying every possible key is called a brute-force attack.
+
+Useful command: caesar
+When you have the flag: submit CYBA{...}
+Stuck? hint 4   (2 hints, 10 points each: 5% of this mission)

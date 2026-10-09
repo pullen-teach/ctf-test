@@ -1,0 +1,16 @@
+Mission 9: The vault   [Very Hard, 800 points]
+
+Objective: Recover the keyword, then decode and decrypt the vault.
+
+  cd ~/mission9
+  cat README.txt
+
+The final mission chains everything. vault.b64 was encrypted with a
+Vigenère cipher, then encoded in base64.
+
+The keyword is written in key.txt, but that note was itself scrambled
+with a Caesar shift. Recover the keyword, decode the vault, decrypt it.
+
+Useful commands: caesar, base64, vigenere
+When you have the flag: submit CYBA{...}
+Stuck? hint 9   (4 hints, 40 points each: 5% of this mission)

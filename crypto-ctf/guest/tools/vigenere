@@ -1,0 +1,17 @@
+#!/bin/sh
+# vigenere -d KEY [FILE]   decrypt with a keyword      vigenere -e KEY [FILE]   encrypt
+usage() { echo "Usage: vigenere -d KEY [FILE]   decrypt a Vigenere cipher with the keyword KEY"
+          echo "       vigenere -e KEY [FILE]   encrypt"
+          echo "Each letter of the key shifts one letter of the text (a=0, b=1, ... z=25), then the key repeats."; }
+case "${1:-}" in -d) dir=-1 ;; -e) dir=1 ;; *) usage; [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; exit $? ;; esac
+key=$(printf '%s' "${2:-}" | tr 'A-Z' 'a-z' | tr -cd 'a-z')
+[ -n "$key" ] || { usage; exit 1; }
+shift 2
+awk -v key="$key" -v dir="$dir" 'BEGIN { L = "abcdefghijklmnopqrstuvwxyz"; U = toupper(L); k = 0; kl = length(key) }
+  { o = ""
+    for (i = 1; i <= length($0); i++) { c = substr($0, i, 1)
+      s = index(L, substr(key, k % kl + 1, 1)) - 1
+      if ((p = index(L, c)) > 0) { c = substr(L, ((p - 1 + dir * s) % 26 + 26) % 26 + 1, 1); k++ }
+      else if ((p = index(U, c)) > 0) { c = substr(U, ((p - 1 + dir * s) % 26 + 26) % 26 + 1, 1); k++ }
+      o = o c }
+    print o }' "$@"

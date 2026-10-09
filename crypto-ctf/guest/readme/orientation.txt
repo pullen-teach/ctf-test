@@ -1,0 +1,49 @@
+CTF Orientation
+===============
+
+What is a CTF?
+  Capture The Flag is a cybersecurity competition. Each mission hides a
+  flag: a secret piece of text. Find it, submit it, and score points.
+
+1. Read a mission's instructions
+  Every mission has its own folder with a README.txt inside:
+    cd ~/mission1          go into the mission's folder
+    cat README.txt         read its instructions
+    cd ~                   come back home
+  Or, from anywhere:  mission 1      (mission alone lists them all)
+
+2. Find the flag
+  A flag looks like this:  CYBA{word-1a2b3c4d}
+  It always starts with CYBA{ and ends with }.
+
+3. Submit the flag
+  Type submit, a space, then the whole flag:
+    submit CYBA{word-1a2b3c4d}
+  Copy it exactly: highlight it with the mouse, then paste with Ctrl+V
+  or a right-click. Do not leave off the CYBA{ or the }.
+
+  What the replies mean:
+    Correct! +100 points                 you captured it
+    Incorrect flag. Keep hunting!        right shape, wrong flag
+    That doesn't look like a flag.       copy the whole thing, CYBA{ to }
+
+4. Stuck?
+  Read the tool's built-in help first:  caesar --help
+  Then ask for a nudge:  hint 1
+  A hint costs 5% of that mission's points, charged once. hint 1 tells
+  you the price first; hint 1 --show reveals it.
+
+Scoring
+  Easy 100    Medium 200    Hard 400    Very Hard 800
+  The most points wins. On a tie, the faster time wins.
+  Hints cost 5% of the mission's points.
+
+The clock
+  The clock starts when you begin Mission 1 and counts up. It stops
+  when you capture the last flag.
+
+Warm-up: Mission 0  (optional, 50 bonus points, untimed)
+  You just read this file with cat. Now practice step 3: submit the
+  flag below. Or skip it and go to Mission 1.
+
+Warm-up flag:

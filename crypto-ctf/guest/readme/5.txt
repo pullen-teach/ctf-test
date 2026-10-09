@@ -1,0 +1,16 @@
+Mission 5: Russian doll   [Medium, 200 points]
+
+Objective: Peel three layers of encoding, one at a time.
+
+  cd ~/mission5
+  cat doll.txt
+
+Like a set of Russian dolls, this message is wrapped in three layers:
+hex, base64 and ROT13. Working out the order is part of the puzzle.
+
+Look at the text, decide which layer is on the outside, decode it, then
+look again. Pipes (|) chain the steps into one command.
+
+Useful commands: xxd, base64, caesar
+When you have the flag: submit CYBA{...}
+Stuck? hint 5   (2 hints, 10 points each: 5% of this mission)

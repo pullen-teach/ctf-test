@@ -1,0 +1,29 @@
+CyberQuest Crypto CTF
+=====================
+
+This file explains the game. Each mission folder has its own README.txt
+with that mission's instructions. Read one with:  cat README.txt
+
+How to play
+  1. Go to a mission:    cd ~/mission1
+  2. Look around:        ls
+  3. Read its brief:     cat README.txt     (or type: mission 1)
+  4. Find the flag. It looks like CYBA{word-1a2b3c4d}
+  5. Check it:           submit CYBA{...}
+  6. Stuck?              hint 1   (costs 5% of the mission's points)
+
+Missions
+   1  Base camp                    Easy       100 pts
+   2  Hex marks the spot           Easy       100 pts
+   3  Spin cycle                   Easy       100 pts
+   4  Hail Caesar                  Medium     200 pts
+   5  Russian doll                 Medium     200 pts
+   6  Fingerprints                 Medium     200 pts
+   7  Letter detective             Hard       400 pts
+   8  Keyword cipher               Hard       400 pts
+   9  The vault                    Very Hard  800 pts
+                                             2500 pts
+
+Flags change every time the page loads.
+
+New to CTFs? Warm up first (optional, 50 bonus points):  cat orientation.txt

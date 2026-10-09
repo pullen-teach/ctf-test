@@ -1,0 +1,11 @@
+Linux Quest (in-browser edition) bundles these open-source components:
+
+v86 (x86 emulator, WebAssembly)        BSD-2-Clause    https://github.com/copy/v86          v86/LICENSE.txt
+SeaBIOS / VGABIOS (from the v86 repo)  LGPL-3.0        https://github.com/copy/v86/tree/master/bios   bios/COPYING.LESSER
+xterm.js 6.0.0                         MIT             https://github.com/xtermjs/xterm.js  xterm/LICENSE.txt
+Linux kernel 6.6 (images/bzImage)      GPL-2.0         source: https://github.com/torvalds/linux/tree/v6.6
+                                                        build config: guest/kernel.config in this repository
+BusyBox 1.36.1 (inside images/quest.cpio.gz)  GPL-2.0  binary from Ubuntu package busybox-static 1.36.1-6ubuntu3 (i386)
+                                                        source: https://launchpad.net/ubuntu/+source/busybox/1:1.36.1-6ubuntu3
+
+Mission scripts and the web page are part of this project.

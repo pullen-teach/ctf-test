@@ -1,0 +1,17 @@
+Mission 8: Keyword cipher   [Hard, 400 points]
+
+Objective: Find a hidden keyword, then decrypt a Vigenère cipher.
+
+  cd ~/mission8
+  cat poem.txt
+
+A Vigenère cipher is a Caesar shift that changes with every letter,
+following a keyword: with the key cab, the first letter shifts by 2, the
+next by 0, the next by 1, then the key repeats.
+
+secret.txt was encrypted with a keyword. The keyword is hidden in plain
+sight in poem.txt. Find it, then decrypt.
+
+Useful commands: vigenere, cat
+When you have the flag: submit CYBA{...}
+Stuck? hint 8   (2 hints, 20 points each: 5% of this mission)

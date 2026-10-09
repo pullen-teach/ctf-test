@@ -1,0 +1,10 @@
+#!/bin/sh
+# freq [FILE]   count how often each letter appears, most common first
+case "${1:-}" in -h|--help) echo "Usage: freq [FILE]   count each letter (A to Z), most common first."
+  echo "In normal English text the most common letters are:  e t a o i n s h r d l u"; exit 0 ;; esac
+awk '{ s = tolower($0); for (i = 1; i <= length(s); i++) { c = substr(s, i, 1); if (c ~ /[a-z]/) { n[c]++; t++ } } }
+  END { if (!t) { print "no letters found"; exit }
+        for (c in n) printf "%d %s\n", n[c], c }' "$@" | sort -rn | awk '
+  { if (NR == 1) top = $1; bar = ""; for (i = 0; i < int($1 * 30 / top); i++) bar = bar "#"
+    printf "  %s  %4d  %s\n", $2, $1, bar }
+  END { print ""; print "  English, most common first:  e t a o i n s h r d l u" }'

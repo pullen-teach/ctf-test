@@ -1,0 +1,17 @@
+Mission 3: Spin cycle   [Easy, 100 points]
+
+Objective: Undo a ROT13 rotation.
+
+  cd ~/mission3
+  cat note.txt
+
+ROT13 rotates every letter 13 places along the alphabet: A becomes N and
+B becomes O. The alphabet has 26 letters, so rotating by 13 twice brings
+you back where you started.
+
+note.txt was rotated with ROT13. Rotate it again to read it. This
+computer has a caesar tool for shifting letters.
+
+Useful commands: caesar, tr
+When you have the flag: submit CYBA{...}
+Stuck? hint 3   (1 hint, 5 points each: 5% of this mission)
