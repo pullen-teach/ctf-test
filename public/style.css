@@ -85,6 +85,7 @@ a { color: #2459d8; }
 .times td { padding: 0.3rem 0; border-bottom: 1px solid var(--line); }
 .times td.num { text-align: right; font: 700 0.9rem var(--mono); white-space: nowrap; padding-left: 0.8rem; }
 .times tr.total td { border-bottom: 0; font-weight: 800; }
+.times tr.head td { font: 800 0.7rem var(--sans); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .mission p { margin: 0; }
 .mission p code, .hint code { white-space: nowrap; }
 .moves { display: block; line-height: 1.9; padding: 0.5rem 0.8rem; border-left: 3px solid var(--line); }

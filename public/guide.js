@@ -123,7 +123,16 @@
   const N = MISSIONS.length;
   const el = (id) => document.getElementById(id);
   const done = new Set();
+  // Clock time (ms) of each capture. "Took" is the time since the capture before it
+  // (or since the clock started), so the splits add up to the total.
   const capturedAt = {};
+  const fmt = (ms) => (window.questClock ? window.questClock.fmt(ms) : "");
+  const clockAt = (n) => (n in capturedAt ? fmt(capturedAt[n]) : "");
+  const took = (n) => {
+    if (!(n in capturedAt)) return "";
+    const before = Object.values(capturedAt).filter((t) => t < capturedAt[n]);
+    return fmt(capturedAt[n] - (before.length ? Math.max(...before) : 0));
+  };
   const MAX = MISSIONS.reduce((t, m) => t + m.points, 0);
   const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0);
   const scoreEl = el("score"), scorePts = el("score-pts");
@@ -163,7 +172,7 @@
       '<div class="card tools"><span class="label">Useful ' + (m.useful.length > 1 ? "commands" : "command") + '</span><div class="chips">' +
         m.useful.map((u) => '<code class="chip">' + u + "</code>").join("") + '</div></div>' +
       '<div class="card submit-card' + (ok ? " is-done" : "") + '"><span class="label">' + (ok ? "Flag captured" : "Found the flag? Worth " + m.points + " points") + '</span>' +
-        (ok ? "<p><span class=\"pts\">+" + m.points + " points</span>, captured at <span class=\"captured-at\">" + (capturedAt[n] || "") + "</span> on the clock. Move on to the next mission.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
+        (ok ? "<p><span class=\"pts\">+" + m.points + " points</span>. This flag took <span class=\"captured-at\">" + took(n) + "</span>; the clock read <span class=\"captured-at\">" + clockAt(n) + "</span> when you submitted it.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
       '<details class="hint"><summary>Need a hint?</summary><div>' + m.hint + "</div></details>";
     article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
     state.textContent = ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
@@ -185,8 +194,10 @@
     article.innerHTML =
       "<h2>Quest complete</h2><p class=\"big-win\">" + score() + " / " + MAX + " points in " + (window.questClock ? window.questClock.text() : "") + "</p>" +
       "<div class=\"card\"><span class=\"label\">Your scorecard</span><table class=\"times\">" +
-      MISSIONS.map((m, i) => "<tr><td>" + (i + 1) + ". " + m.title + "</td><td class=\"num\">" + m.points + " pts</td><td class=\"num\">" + (capturedAt[i + 1] || "") + "</td></tr>").join("") +
-      "<tr class=\"total\"><td>Total</td><td class=\"num\">" + score() + " pts</td><td class=\"num\">" + (window.questClock ? window.questClock.text() : "") + "</td></tr></table></div>" +
+      "<tr class=\"head\"><td>Mission</td><td class=\"num\">Points</td><td class=\"num\">Took</td><td class=\"num\">Clock</td></tr>" +
+      MISSIONS.map((m, i) => "<tr><td>" + (i + 1) + ". " + m.title + "</td><td class=\"num\">" + m.points + "</td><td class=\"num\">" + took(i + 1) + "</td><td class=\"num\">" + clockAt(i + 1) + "</td></tr>").join("") +
+      "<tr class=\"total\"><td>Total</td><td class=\"num\">" + score() + "</td><td class=\"num\"></td><td class=\"num\">" + (window.questClock ? window.questClock.text() : "") + "</td></tr></table>" +
+      "<p class=\"small\"><b>Took</b> is the time since your previous flag. <b>Clock</b> is the running time when you submitted.</p></div>" +
       "<p>You moved around with <code>cd</code> and <code>ls</code>, let the cat out of the bag with <code>--help</code>, found hidden files, searched a folder tree and a 12,000-line log, and decoded a message that only looked secret.</p>" +
       "<p><b>Encoding is not encryption.</b> If no key is needed to undo it, it was never secret.</p>" +
       "<p>Reload the page for a fresh computer with new flags, and see if you can beat your time.</p>";
@@ -211,7 +222,7 @@
   render();
 
   window.questGuide = {
-    done(n, at) { const fresh = !done.has(n); done.add(n); if (at && !capturedAt[n]) capturedAt[n] = at; showScore(fresh); if (current < N) render(); },
+    done(n, at) { const fresh = !done.has(n); done.add(n); if (typeof at === "number" && !(n in capturedAt)) capturedAt[n] = at; showScore(fresh); if (current < N) render(); },
     setRunner(fn) { runner = fn; },
     current: () => current + 1,
   };

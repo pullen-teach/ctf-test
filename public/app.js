@@ -37,7 +37,7 @@
     clockEl.classList.remove("running"); clockEl.classList.add("stopped");
     clockEl.title = "Finished in " + fmt(elapsed());
   }
-  window.questClock = { elapsed, text: () => fmt(elapsed()), start: () => startClock() };
+  window.questClock = { elapsed, fmt, text: () => fmt(elapsed()), start: () => startClock() };
   const termBox = document.getElementById("terminal");
   termBox.addEventListener("keydown", (e) => { if (!e.ctrlKey && !e.metaKey && !e.altKey) startClock(); }, true);
   termBox.addEventListener("paste", startClock, true);
@@ -142,7 +142,7 @@
     if (done.has(n)) return;
     done.add(n);
     if (done.size === TOTAL) stopClock();
-    window.questGuide.done(n, window.questClock.text());
+    window.questGuide.done(n, window.questClock.elapsed());
     document.querySelector('.step[data-n="' + n + '"]')?.classList.add("done");
     setStatus(done.size === TOTAL ? "All " + TOTAL + " flags captured" : done.size + " of " + TOTAL + " flags");
     if (done.size === TOTAL) document.body.classList.add("won");

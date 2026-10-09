@@ -86,18 +86,16 @@ equivalent):
 
 ### 4. UI: match the reference
 
-- **Header:**
-  - "CyberQuest" with a **Linux CTF** pill;
-  - a progress track with one segment per mission, each a different color when captured;
-  - the student's score as `points / max pts`, which pops briefly when it goes up;
-  - in competition mode, their rank, for example "#4 of 23";
-  - the competition clock;
-  - a status line.
+- **Header:** "CyberQuest" with a **Linux CTF** pill, a progress track with one colored segment per mission, and a status line.
+- **Sidebar top (always visible):**
+  - three stat cards: **Points** (`200 / 1100`, pops when it rises), **Clock** (`mm:ss`, "Elapsed time", a blinking red dot while running, "Finished" when stopped) and **Flags captured** (`2 / 6`, green "All captured!" at the end);
+  - a **stepper** of numbered circles joined by a line: captured missions become green circles with a check mark and the line between two captured missions turns green, the current mission gets a ring, and captured missions can be clicked to revisit;
+  - in competition mode, add the student's rank, for example "#4 of 23".
 - **Competition clock:**
   - counts **up**, never down, and never cuts anyone off;
   - shows `mm:ss`, switching to `h:mm:ss` after an hour;
   - starts at the student's first keystroke or paste in the terminal, or the first click of a run button;
-  - stops when every flag is captured, then turns green;
+  - stops when every flag is captured;
   - in competition mode, the server records the start and capture times so a page reload cannot reset the clock.
 - **Terminal (left):**
   - a `<QuestTerminal/>` client component wrapping xterm.js, loaded client-only (dynamic import, no SSR);
@@ -107,12 +105,18 @@ equivalent):
   - title with a difficulty badge showing level and points, for example "Medium · 200";
   - a "Start here" block of run buttons that type a command into the terminal;
   - the brief, and a "Useful commands" card;
-  - a "Found the flag? Worth N points" card that becomes "+N points, captured at mm:ss on the clock";
+  - a "Found the flag? Worth N points" card that becomes "+N points. This flag took mm:ss; the clock read mm:ss when you submitted it";
   - a "Need a hint?" disclosure;
   - a sticky footer with Back and Next, where Next stays locked until that mission's flag is accepted.
-- **Finish screen:** "1100 / 1100 points in mm:ss", then a scorecard table (mission, points,
-  capture time, total), the closing "Encoding is not encryption" lesson, and an invitation to
-  beat their time.
+- **Finish screen (in the sidebar):**
+  - a "Quest complete" card with a trophy and confetti: "Great job! You captured all 6 flags and finished the Linux CTF in mm:ss";
+  - a **Mission scorecard** table: a check icon, mission, points, **Took** and **Clock**, plus a highlighted total row;
+  - a **What you learned** list with one check-marked line per mission;
+  - the "Encoding is not encryption" lesson;
+  - a **Replay quest** button that starts a fresh world;
+  - in competition mode, a **View scoreboard** button next to it.
+  - **Clock** is the running time when the flag was submitted.
+  - **Took** is the time since the previous capture, or since the clock started for the first one, so the Took column adds up to the total. Captures can happen out of mission order, so compute Took in capture order.
 - **Terminal commands:**
   - `mission` lists the missions with their difficulty, and `mission N` prints the same brief as the panel;
   - `hint N` names the command to look up and points to its `--help`;
@@ -209,7 +213,7 @@ Both are simulated and served by the backend, using the same panel format and hi
 
 ### Mentor view
 
-- **Everything on the scoreboard,** plus each competitor's per-mission capture times.
+- **Everything on the scoreboard,** plus each competitor's per-mission Took and Clock times (as on the student scorecard). This shows mentors where students got stuck.
 - **Flag sharing:** a submit of a flag that belongs to another competitor is refused like any wrong flag. It is also logged on the mentor view only, so mentors can spot sharing without the student being told whose flag it was.
 
 ### Data
