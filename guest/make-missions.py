@@ -19,7 +19,8 @@ MOVES = [("pwd", "where am I?"), ("ls", "what is in this folder?"), ("cd NAME", 
          ("cd ..", "go back up one level"), ("cd ~", "go home")]
 
 MISSIONS = [
-    dict(title="Make your move", level="Easy", run=["cd ~/mission1", "ls"],
+    dict(title="Make your move", objective='Navigate the file system using basic Linux commands to find the flag.', ref=MOVES,
+         level="Easy", run=["cd ~/mission1", "ls"],
          body=["Moving around is the first real skill on the command line:", MOVES,
                "A flag is waiting at the end of a trail that starts in `~/mission1`. Nothing on this trail needs opening: "
                "the **file names** are the signposts. Use `ls` to read them and `cd` to follow them. Some turns are dead ends.",
@@ -29,7 +30,8 @@ MISSIONS = [
               "Run `ls` in every folder: the names tell you which folder to `cd` into next.",
          hint_cmd=None,
          short="lost? pwd shows where you are, cd .. goes back up, ls reads the signs."),
-    dict(title="Let the cat out of the bag", level="Easy", run=["cd ~/mission2", "cat README.txt"],
+    dict(title="Let the cat out of the bag", objective='Read files with cat, and use --help to number the lines.', ref=[("cat FILE", "print a file on the screen"), ("cat --help", "list everything cat can do")],
+         level="Easy", run=["cd ~/mission2", "cat README.txt"],
          body=["`cat` prints a file on the screen. You just used it to read `README.txt`.",
                "The cat is hiding in `bag.txt`: 100 lines, and every one looks like a flag. Only the line number in "
                "`README.txt` is real. Counting 100 lines by hand is how mistakes happen.",
@@ -38,26 +40,30 @@ MISSIONS = [
          useful=["cat"],
          hint="Read the help for `cat` and look for the option that **numbers** the lines. Options go between the command and the file name.",
          hint_cmd="cat --help", short="the command to look up is cat.     Read: cat --help"),
-    dict(title="Now you see me", level="Easy", run=["cd ~/mission3", "ls"],
+    dict(title="Now you see me", objective='Reveal the hidden files and find the real flag.', ref=[("ls", "list the files in a folder"), ("ls --help", "list everything ls can do"), ("cat FILE", "print a file on the screen")],
+         level="Easy", run=["cd ~/mission3", "ls"],
          body=["There is a flag in this folder, but plain `ls` will not show it.",
                "On Linux, a file whose name starts with a dot is **hidden**. Watch out: one hidden file is a decoy."],
          useful=["ls", "cat"],
          hint="Read the help for `ls` and look for an option that also shows names starting with `.`",
          hint_cmd="ls --help", short="the command to look up is ls.      Read: ls --help"),
-    dict(title="Needle in the tree", level="Medium", run=["cd ~/mission4", "cat README.txt"],
+    dict(title="Needle in the tree", objective='Search a folder tree by file name to find the flag.', ref=[("find", "search a folder tree for files"), ("find --help", "list everything find can do"), ("cat FILE", "print a file on the screen")],
+         level="Medium", run=["cd ~/mission4", "cat README.txt"],
          body=["The `archive` folder holds about 80 files in 20 folders. Exactly **one** of them has the file ending named "
                "in `README.txt`, and it holds the flag.",
                "Opening folders one by one is too slow. Let the computer search."],
          useful=["find", "cat"],
          hint="Read the help for `find` and look for a way to match a file's **name** against a pattern. In a pattern, `*` means \"anything\".",
          hint_cmd="find --help", short="the command to look up is find.    Read: find --help"),
-    dict(title="Search party", level="Medium", run=["cd ~/mission5", "cat README.txt"],
+    dict(title="Search party", objective="Search a huge log for the intruder's line.", ref=[("grep", "search inside files for text"), ("grep --help", "list everything grep can do"), ("head FILE", "show the first lines of a file"), ("wc -l FILE", "count the lines in a file")],
+         level="Medium", run=["cd ~/mission5", "cat README.txt"],
          body=["`access.log` has {LOGLINES} lines. One intruder logged in exactly once.",
                "Their **token** on that line is the flag. Scrolling would take all day."],
          useful=["grep", "head", "wc"],
          hint="Read the help for `grep` and look at the **Usage** line at the top: it shows what goes first and what goes second.",
          hint_cmd="grep --help", short="the command to look up is grep.    Read: grep --help"),
-    dict(title="Decoder ring", level="Hard", run=["cd ~/mission6", "cat message.b64"],
+    dict(title="Decoder ring", objective='Decode a base64 message to reveal the flag.', ref=[("cat FILE", "print a file on the screen"), ("base64 --help", "list everything base64 can do")],
+         level="Hard", run=["cd ~/mission6", "cat message.b64"],
          body=["It looks like gibberish, but it is not encrypted. It is **encoded** with base64: a way of writing any data "
                "using only letters, digits, `+`, `/` and `=`.",
                "There is no secret key. Anyone can decode it."],
@@ -84,7 +90,7 @@ def useful_label(m): return "Useful command" + ("s" if len(m["useful"]) > 1 else
 # ---------------------------------------------------------------- plain text
 def brief(i, loglines):
     m, n = MISSIONS[i], i + 1
-    out = ["Mission %d: %s   [%s, %d points]" % (n, m["title"], m["level"], m["points"]), ""] + ["  " + c for c in m["run"]] + [""]
+    out = ["Mission %d: %s   [%s, %d points]" % (n, m["title"], m["level"], m["points"]), ""] + ["Objective: " + m["objective"], ""] + ["  " + c for c in m["run"]] + [""]
     for b in m["body"]:
         if isinstance(b, list):
             out += ["  %-11s %s" % row for row in b] + [""]
@@ -124,7 +130,10 @@ def write_guest():
            '  if [ "$h" = "$(cat /etc/quest/$n)" ]; then',
            '    echo "Correct! +$p points   [quest] mission $n complete"',
            "    exit 0", "  fi", "done",
-           'echo "Not a flag. Copy the whole thing, CYBA{ to }."', "exit 1", ""]
+           'case "$1" in',
+           '  "CYBA{"*"}") echo "Incorrect flag. Keep hunting!" ;;',
+           '  *) echo "That doesn\'t look like a flag. Copy the whole thing, CYBA{ to }." ;;',
+           "esac", "exit 1", ""]
     open(os.path.join(HERE, "submit"), "w").write("\n".join(sub))
 
 def patch(path, start, end, new):
@@ -155,14 +164,10 @@ def write_lite():
 def write_panel():
     out = []
     for m in MISSIONS:
-        body = []
-        for b in m["body"]:
-            if isinstance(b, list):
-                body.append('<span class="moves">' + "<br>".join("<code>%s</code> %s" % (esc(c), esc(d)) for c, d in b) + "</span>")
-            else:
-                body.append(html(fill(b, WEB_LOG)))
+        notes = [html(fill(b, WEB_LOG)) for b in m["body"] if isinstance(b, str) and not b.endswith(":")]
         hint = html(m["hint"]) + ("<pre>%s</pre>" % esc(m["hint_cmd"]) if m["hint_cmd"] else "")
-        out.append(dict(title=m["title"], level=m["level"], points=m["points"], run=m["run"], body=body, useful=m["useful"], hint=hint))
+        out.append(dict(title=m["title"], level=m["level"], points=m["points"], objective=m["objective"], run=m["run"],
+                        ref=[list(r) for r in m["ref"]], notes=notes, hint=hint))
     block = ("  // Generated by guest/make-missions.py: edit that file, not this one.\n"
              "  const MISSIONS = " + json.dumps(out, indent=2).replace("\n", "\n  ") + ";\n")
     p = os.path.join(ROOT, "public", "guide.js")
@@ -187,7 +192,7 @@ def write_killercoda():
         print("Killercoda folder not found, skipped:", KC); return
     for i, m in enumerate(MISSIONS):
         n = i + 1
-        md = ["# Mission %d: %s" % (n, m["title"]), "", "**Difficulty:** %s · **%d points**" % (m["level"], m["points"]), "", "```"] + m["run"] + ["```{{exec}}", ""]
+        md = ["# Mission %d: %s" % (n, m["title"]), "", "**Difficulty:** %s · **%d points**" % (m["level"], m["points"]), "", "**Objective:** " + m["objective"], "", "```"] + m["run"] + ["```{{exec}}", ""]
         for b in m["body"]:
             if isinstance(b, list):
                 md += ["| Command | What it does |", "|---|---|"] + ["| `%s` | %s |" % row for row in b] + [""]

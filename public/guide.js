@@ -11,20 +11,36 @@
       "title": "Make your move",
       "level": "Easy",
       "points": 100,
+      "objective": "Navigate the file system using basic Linux commands to find the flag.",
       "run": [
         "cd ~/mission1",
         "ls"
       ],
-      "body": [
-        "Moving around is the first real skill on the command line:",
-        "<span class=\"moves\"><code>pwd</code> where am I?<br><code>ls</code> what is in this folder?<br><code>cd NAME</code> move into a folder<br><code>cd ..</code> go back up one level<br><code>cd ~</code> go home</span>",
+      "ref": [
+        [
+          "pwd",
+          "where am I?"
+        ],
+        [
+          "ls",
+          "what is in this folder?"
+        ],
+        [
+          "cd NAME",
+          "move into a folder"
+        ],
+        [
+          "cd ..",
+          "go back up one level"
+        ],
+        [
+          "cd ~",
+          "go home"
+        ]
+      ],
+      "notes": [
         "A flag is waiting at the end of a trail that starts in <code>~/mission1</code>. Nothing on this trail needs opening: the <b>file names</b> are the signposts. Use <code>ls</code> to read them and <code>cd</code> to follow them. Some turns are dead ends.",
         "At the end of the trail, <code>ls</code> shows you the flag itself."
-      ],
-      "useful": [
-        "pwd",
-        "ls",
-        "cd"
       ],
       "hint": "Lost? <code>pwd</code> shows where you are and <code>cd ..</code> goes back up one level. Run <code>ls</code> in every folder: the names tell you which folder to <code>cd</code> into next."
     },
@@ -32,17 +48,25 @@
       "title": "Let the cat out of the bag",
       "level": "Easy",
       "points": 100,
+      "objective": "Read files with cat, and use --help to number the lines.",
       "run": [
         "cd ~/mission2",
         "cat README.txt"
       ],
-      "body": [
+      "ref": [
+        [
+          "cat FILE",
+          "print a file on the screen"
+        ],
+        [
+          "cat --help",
+          "list everything cat can do"
+        ]
+      ],
+      "notes": [
         "<code>cat</code> prints a file on the screen. You just used it to read <code>README.txt</code>.",
         "The cat is hiding in <code>bag.txt</code>: 100 lines, and every one looks like a flag. Only the line number in <code>README.txt</code> is real. Counting 100 lines by hand is how mistakes happen.",
         "Almost every Linux command can <b>explain itself</b>: type its name, a space, then <code>--help</code>. Ask <code>cat</code> for its help and look for an option that numbers the lines. You will use <code>--help</code> in every mission after this one."
-      ],
-      "useful": [
-        "cat"
       ],
       "hint": "Read the help for <code>cat</code> and look for the option that <b>numbers</b> the lines. Options go between the command and the file name.<pre>cat --help</pre>"
     },
@@ -50,17 +74,28 @@
       "title": "Now you see me",
       "level": "Easy",
       "points": 100,
+      "objective": "Reveal the hidden files and find the real flag.",
       "run": [
         "cd ~/mission3",
         "ls"
       ],
-      "body": [
+      "ref": [
+        [
+          "ls",
+          "list the files in a folder"
+        ],
+        [
+          "ls --help",
+          "list everything ls can do"
+        ],
+        [
+          "cat FILE",
+          "print a file on the screen"
+        ]
+      ],
+      "notes": [
         "There is a flag in this folder, but plain <code>ls</code> will not show it.",
         "On Linux, a file whose name starts with a dot is <b>hidden</b>. Watch out: one hidden file is a decoy."
-      ],
-      "useful": [
-        "ls",
-        "cat"
       ],
       "hint": "Read the help for <code>ls</code> and look for an option that also shows names starting with <code>.</code><pre>ls --help</pre>"
     },
@@ -68,17 +103,28 @@
       "title": "Needle in the tree",
       "level": "Medium",
       "points": 200,
+      "objective": "Search a folder tree by file name to find the flag.",
       "run": [
         "cd ~/mission4",
         "cat README.txt"
       ],
-      "body": [
+      "ref": [
+        [
+          "find",
+          "search a folder tree for files"
+        ],
+        [
+          "find --help",
+          "list everything find can do"
+        ],
+        [
+          "cat FILE",
+          "print a file on the screen"
+        ]
+      ],
+      "notes": [
         "The <code>archive</code> folder holds about 80 files in 20 folders. Exactly <b>one</b> of them has the file ending named in <code>README.txt</code>, and it holds the flag.",
         "Opening folders one by one is too slow. Let the computer search."
-      ],
-      "useful": [
-        "find",
-        "cat"
       ],
       "hint": "Read the help for <code>find</code> and look for a way to match a file's <b>name</b> against a pattern. In a pattern, <code>*</code> means \"anything\".<pre>find --help</pre>"
     },
@@ -86,18 +132,32 @@
       "title": "Search party",
       "level": "Medium",
       "points": 200,
+      "objective": "Search a huge log for the intruder's line.",
       "run": [
         "cd ~/mission5",
         "cat README.txt"
       ],
-      "body": [
+      "ref": [
+        [
+          "grep",
+          "search inside files for text"
+        ],
+        [
+          "grep --help",
+          "list everything grep can do"
+        ],
+        [
+          "head FILE",
+          "show the first lines of a file"
+        ],
+        [
+          "wc -l FILE",
+          "count the lines in a file"
+        ]
+      ],
+      "notes": [
         "<code>access.log</code> has 12,000 lines. One intruder logged in exactly once.",
         "Their <b>token</b> on that line is the flag. Scrolling would take all day."
-      ],
-      "useful": [
-        "grep",
-        "head",
-        "wc"
       ],
       "hint": "Read the help for <code>grep</code> and look at the <b>Usage</b> line at the top: it shows what goes first and what goes second.<pre>grep --help</pre>"
     },
@@ -105,16 +165,24 @@
       "title": "Decoder ring",
       "level": "Hard",
       "points": 400,
+      "objective": "Decode a base64 message to reveal the flag.",
       "run": [
         "cd ~/mission6",
         "cat message.b64"
       ],
-      "body": [
+      "ref": [
+        [
+          "cat FILE",
+          "print a file on the screen"
+        ],
+        [
+          "base64 --help",
+          "list everything base64 can do"
+        ]
+      ],
+      "notes": [
         "It looks like gibberish, but it is not encrypted. It is <b>encoded</b> with base64: a way of writing any data using only letters, digits, <code>+</code>, <code>/</code> and <code>=</code>.",
         "There is no secret key. Anyone can decode it."
-      ],
-      "useful": [
-        "base64"
       ],
       "hint": "Read the help for <code>base64</code> and look for the option that turns base64 back into normal text.<pre>base64 --help</pre>"
     }
@@ -138,7 +206,7 @@
   const scoreEl = el("score"), scorePts = el("score-pts");
   const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const TROPHY = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd54a"/><stop offset="1" stop-color="#f5a300"/></linearGradient></defs><path fill="url(#g)" d="M17 5h30v5h11v8c0 8-6 14-14 15a15 15 0 0 1-9 8.6V48h9v6H20v-6h9v-6.4A15 15 0 0 1 20 33C12 32 6 26 6 18v-8h11zm-5 11v2c0 4 2.5 7.5 6.5 8.6A30 30 0 0 1 17 16zm40 0h-5a30 30 0 0 1-1.5 10.6C54.5 25.5 52 22 52 18z"/><rect x="18" y="54" width="28" height="5" rx="1.5" fill="#d98a00"/><path fill="#fff6c9" d="M32 12l3 6.1 6.7 1-4.9 4.7 1.2 6.7L32 27.3l-6 3.2 1.2-6.7-4.9-4.7 6.7-1z"/></svg>';
-  const ICON = {"chart": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"13\" width=\"4.5\" height=\"8\" rx=\"1\" fill=\"#2459d8\"/><rect x=\"9.75\" y=\"8\" width=\"4.5\" height=\"13\" rx=\"1\" fill=\"#2459d8\"/><rect x=\"16.5\" y=\"3\" width=\"4.5\" height=\"18\" rx=\"1\" fill=\"#2a9fd6\"/></svg>", "bulb": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"#f5b301\" d=\"M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z\"/><rect x=\"9\" y=\"19\" width=\"6\" height=\"2.6\" rx=\"1.2\" fill=\"#c98a00\"/></svg>", "replay": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 12a8 8 0 1 1-2.34-5.66\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/><path d=\"M20 4v5h-5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>", "cup": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" d=\"M7 3h10v5a5 5 0 0 1-10 0zM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6\"/></svg>"};
+  const ICON = {"chart": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"13\" width=\"4.5\" height=\"8\" rx=\"1\" fill=\"#2459d8\"/><rect x=\"9.75\" y=\"8\" width=\"4.5\" height=\"13\" rx=\"1\" fill=\"#2459d8\"/><rect x=\"16.5\" y=\"3\" width=\"4.5\" height=\"18\" rx=\"1\" fill=\"#2a9fd6\"/></svg>", "bulb": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"#f5b301\" d=\"M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z\"/><rect x=\"9\" y=\"19\" width=\"6\" height=\"2.6\" rx=\"1.2\" fill=\"#c98a00\"/></svg>", "replay": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 12a8 8 0 1 1-2.34-5.66\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/><path d=\"M20 4v5h-5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>", "cup": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" d=\"M7 3h10v5a5 5 0 0 1-10 0zM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6\"/></svg>", "target": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9.5\" fill=\"none\" stroke=\"#d1416b\" stroke-width=\"2.2\"/><circle cx=\"12\" cy=\"12\" r=\"5.5\" fill=\"none\" stroke=\"#d1416b\" stroke-width=\"2.2\"/><circle cx=\"12\" cy=\"12\" r=\"1.9\" fill=\"#d1416b\"/></svg>", "term": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"2\" y=\"3.5\" width=\"20\" height=\"17\" rx=\"3\" fill=\"#7448d4\"/><path d=\"M6.5 9l3.2 3-3.2 3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"11.5\" y=\"14.2\" width=\"6\" height=\"1.9\" rx=\".9\" fill=\"#fff\"/></svg>", "book": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"#2459d8\" d=\"M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5z\"/><path fill=\"#9db7f0\" d=\"M6.5 18H20v4H6.5a2 2 0 0 1 0-4z\"/><rect x=\"8\" y=\"6\" width=\"8\" height=\"1.8\" rx=\".9\" fill=\"#fff\"/></svg>", "info": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"#2a9fd6\"/><rect x=\"10.8\" y=\"10.2\" width=\"2.4\" height=\"7\" rx=\"1.2\" fill=\"#fff\"/><circle cx=\"12\" cy=\"7.1\" r=\"1.45\" fill=\"#fff\"/></svg>", "pts": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9.5\" fill=\"#f5b301\"/><circle cx=\"12\" cy=\"12\" r=\"6.6\" fill=\"none\" stroke=\"#fff3c4\" stroke-width=\"1.6\"/><path fill=\"#fff\" d=\"M12 7.6l1.35 2.75 3.03.44-2.19 2.14.52 3.02L12 14.5l-2.71 1.45.52-3.02-2.19-2.14 3.03-.44z\"/></svg>", "copy": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"8.5\" y=\"8.5\" width=\"12\" height=\"12\" rx=\"2.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"M15.5 5.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8.5a2 2 0 0 0 2 2h.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>", "play": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5.5v13l10.5-6.5z\" fill=\"currentColor\"/></svg>", "flag": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 21V4\" stroke=\"#17875a\" stroke-width=\"2.2\" stroke-linecap=\"round\"/><path d=\"M6 4.5h11.5l-2.5 4 2.5 4H6z\" fill=\"#17875a\"/></svg>"};
   function showScore(bump) {
     if (!scorePts) return;
     scorePts.textContent = score();
@@ -175,25 +243,51 @@
   // Missions you can open: every captured one, plus the first one not yet captured.
   const reachable = () => { let i = 0; while (i < N - 1 && done.has(i + 1)) i++; return i; };
 
+  const lvlClass = (l) => l.toLowerCase().replace(/\s+/g, "-");
+  const head = (ico, title, sub) => '<div class="c-head"><span class="c-ico">' + ICON[ico] + '</span><div><h3>' + title + "</h3>" + (sub ? "<p>" + sub + "</p>" : "") + "</div></div>";
+  // Copy without starting the clock; falls back to a hidden textarea where the clipboard API is blocked.
+  function copyText(t) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).catch(() => fallback(t));
+    return fallback(t);
+  }
+  function fallback(t) {
+    const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } finally { ta.remove(); }
+    return Promise.resolve();
+  }
+
   function render() {
     const m = MISSIONS[current];
     const n = current + 1;
     const ok = done.has(n);
     count.textContent = "Mission " + n + " of " + N;
-    const runs = m.run.map((c) =>
-      '<button class="run" type="button" data-cmd="' + esc(c) + '" aria-label="Run ' + esc(c) + ' in the terminal">' +
-      '<span class="run-prompt" aria-hidden="true">$</span><span class="run-cmd">' + esc(c) + '</span>' +
-      '<span class="run-go" aria-hidden="true">Run &#9654;</span></button>').join("");
+    const rows = m.run.map((c) =>
+      '<div class="cmd-row"><code class="cmd"><span class="run-prompt" aria-hidden="true">$</span>' + esc(c) + "</code>" +
+      '<button class="mini copy" type="button" data-cmd="' + esc(c) + '" aria-label="Copy ' + esc(c) + '">' + ICON.copy + "<span>Copy</span></button>" +
+      '<button class="mini run" type="button" data-cmd="' + esc(c) + '" aria-label="Run ' + esc(c) + ' in the terminal">' + ICON.play + "<span>Run</span></button></div>").join("");
+    const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], ["hint " + n, "a nudge if you are stuck"]]);
     article.innerHTML =
-      '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + m.level.toLowerCase().replace(/\s+/g, "-") + '" title="Difficulty and points">' + m.level + ' · ' + m.points + '</span></div>' +
-      '<div class="runs"><span class="label">Start here</span>' + runs + '</div>' +
-      m.body.map((p) => "<p>" + p + "</p>").join("") +
-      '<div class="card tools"><span class="label">Useful ' + (m.useful.length > 1 ? "commands" : "command") + '</span><div class="chips">' +
-        m.useful.map((u) => '<code class="chip">' + u + "</code>").join("") + '</div></div>' +
-      '<div class="card submit-card' + (ok ? " is-done" : "") + '"><span class="label">' + (ok ? "Flag captured" : "Found the flag? Worth " + m.points + " points") + '</span>' +
-        (ok ? "<p><span class=\"pts\">+" + m.points + " points</span>. This flag took <span class=\"captured-at\">" + took(n) + "</span>; the clock read <span class=\"captured-at\">" + clockAt(n) + "</span> when you submitted it.</p>" : '<p>Type <code>submit</code>, a space, then paste the whole flag:</p><pre>submit CYBA{word-1a2b3c4d}</pre>') + '</div>' +
-      '<details class="hint"><summary>Need a hint?</summary><div>' + m.hint + "</div></details>";
+      '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + lvlClass(m.level) + '">' + m.level + '</span>' +
+        '<span class="pts-pill">' + ICON.pts + m.points + " pts</span></div>" +
+      '<div class="objective"><span class="c-ico">' + ICON.target + "</span><p><b>Objective</b>" + esc(m.objective) + "</p></div>" +
+      '<section class="card start">' + head("term", "Start Here", "Run these commands to begin the mission.") + '<div class="cmd-rows">' + rows + "</div></section>" +
+      '<section class="card ref">' + head("book", "Quick Reference", "Common commands you'll use in this mission.") +
+        '<table class="ref-table"><tr><th>Command</th><th>What it does</th></tr>' + ref.map(([c, d]) => "<tr><td><code>" + esc(c) + "</code></td><td>" + esc(d) + "</td></tr>").join("") + "</table></section>" +
+      '<section class="card notes">' + head("info", "Mission Notes") + m.notes.map((p) => "<p>" + p + "</p>").join("") + "</section>" +
+      (ok
+        ? '<section class="card captured">' + '<span class="c-ico big">' + TROPHY + '</span><div><h3>Flag Captured <span class="pts">+' + m.points + " points</span></h3>" +
+          "<p>This flag took <b class=\"captured-at\">" + took(n) + "</b>; the clock read <b class=\"captured-at\">" + clockAt(n) + "</b> when you submitted it.</p></div></section>"
+        : '<section class="card submit-card">' + head("flag", "Found the flag?", "Worth " + m.points + " points. Type <code>submit</code>, a space, then paste the whole flag:") +
+          "<pre>submit CYBA{word-1a2b3c4d}</pre></section>") +
+      '<details class="hint fold"><summary><span class="c-ico">' + ICON.bulb + '</span>Need a hint?<span class="chev" aria-hidden="true"></span></summary><div>' + m.hint + "</div></details>";
     article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
+    article.querySelectorAll(".copy").forEach((b) => b.addEventListener("click", () => {
+      copyText(b.dataset.cmd).then(() => {
+        b.classList.add("copied"); b.querySelector("span").textContent = "Copied";
+        setTimeout(() => { b.classList.remove("copied"); b.querySelector("span").textContent = "Copy"; }, 1400);
+      }, () => {});
+    }));
     state.textContent = ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
     state.className = ok ? "m-state ok" : "m-state";
     prev.disabled = current === 0;

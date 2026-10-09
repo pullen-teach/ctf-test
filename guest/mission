@@ -5,6 +5,8 @@ case "$1" in
   1) cat <<'EOF'
 Mission 1: Make your move   [Easy, 100 points]
 
+Objective: Navigate the file system using basic Linux commands to find the flag.
+
   cd ~/mission1
   ls
 
@@ -29,6 +31,8 @@ EOF
   2) cat <<'EOF'
 Mission 2: Let the cat out of the bag   [Easy, 100 points]
 
+Objective: Read files with cat, and use --help to number the lines.
+
   cd ~/mission2
   cat README.txt
 
@@ -49,6 +53,8 @@ EOF
   3) cat <<'EOF'
 Mission 3: Now you see me   [Easy, 100 points]
 
+Objective: Reveal the hidden files and find the real flag.
+
   cd ~/mission3
   ls
 
@@ -63,6 +69,8 @@ EOF
   ;;
   4) cat <<'EOF'
 Mission 4: Needle in the tree   [Medium, 200 points]
+
+Objective: Search a folder tree by file name to find the flag.
 
   cd ~/mission4
   cat README.txt
@@ -79,6 +87,8 @@ EOF
   5) cat <<'EOF'
 Mission 5: Search party   [Medium, 200 points]
 
+Objective: Search a huge log for the intruder's line.
+
   cd ~/mission5
   cat README.txt
 
@@ -92,6 +102,8 @@ EOF
   ;;
   6) cat <<'EOF'
 Mission 6: Decoder ring   [Hard, 400 points]
+
+Objective: Decode a base64 message to reveal the flag.
 
   cd ~/mission6
   cat message.b64

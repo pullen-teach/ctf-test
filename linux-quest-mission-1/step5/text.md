@@ -2,6 +2,8 @@
 
 **Difficulty:** Medium · **200 points**
 
+**Objective:** Search a huge log for the intruder's line.
+
 ```
 cd ~/mission5
 cat README.txt

@@ -2,6 +2,8 @@
 
 **Difficulty:** Easy · **100 points**
 
+**Objective:** Reveal the hidden files and find the real flag.
+
 ```
 cd ~/mission3
 ls

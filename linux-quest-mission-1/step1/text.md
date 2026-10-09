@@ -2,6 +2,8 @@
 
 **Difficulty:** Easy · **100 points**
 
+**Objective:** Navigate the file system using basic Linux commands to find the flag.
+
 ```
 cd ~/mission1
 ls

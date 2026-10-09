@@ -2,6 +2,8 @@
 
 **Difficulty:** Hard · **400 points**
 
+**Objective:** Decode a base64 message to reveal the flag.
+
 ```
 cd ~/mission6
 cat message.b64

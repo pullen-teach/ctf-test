@@ -11,5 +11,8 @@ for p in 100 100 100 200 200 400; do
     exit 0
   fi
 done
-echo "Not a flag. Copy the whole thing, CYBA{ to }."
+case "$1" in
+  "CYBA{"*"}") echo "Incorrect flag. Keep hunting!" ;;
+  *) echo "That doesn't look like a flag. Copy the whole thing, CYBA{ to }." ;;
+esac
 exit 1

@@ -2,6 +2,8 @@
 
 **Difficulty:** Medium · **200 points**
 
+**Objective:** Search a folder tree by file name to find the flag.
+
 ```
 cd ~/mission4
 cat README.txt

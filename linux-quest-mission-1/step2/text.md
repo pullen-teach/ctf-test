@@ -2,6 +2,8 @@
 
 **Difficulty:** Easy · **100 points**
 
+**Objective:** Read files with cat, and use --help to number the lines.
+
 ```
 cd ~/mission2
 cat README.txt
