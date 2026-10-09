@@ -1,0 +1,4 @@
+Hint for Mission 1: Make your move
+
+Lost? pwd shows where you are and cd .. goes back up one level. Run ls
+in every folder: the names tell you which folder to cd into next.

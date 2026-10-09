@@ -14,4 +14,4 @@ Copying each result into the next command works, but it is slow. A pipe
 until you see the flag.
 
 Useful command: base64
-When you have the flag: submit CYBA{...}     Stuck? hint 9
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt

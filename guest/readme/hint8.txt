@@ -1,0 +1,6 @@
+Hint for Mission 8: Decoder ring
+
+Read the help for base64 and look for the option that turns base64 back
+into normal text.
+
+Try:  base64 --help

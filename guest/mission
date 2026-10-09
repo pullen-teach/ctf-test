@@ -45,7 +45,7 @@ Use ls to read them and cd to follow them. Some turns are dead ends.
 At the end of the trail, ls shows you the flag itself.
 
 Useful commands: pwd, ls, cd
-When you have the flag: submit CYBA{...}     Stuck? hint 1
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   2) cat <<'EOF'
@@ -67,7 +67,7 @@ then --help. Ask cat for its help and look for an option that numbers
 the lines. You will use --help in every mission after this one.
 
 Useful command: cat
-When you have the flag: submit CYBA{...}     Stuck? hint 2
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   3) cat <<'EOF'
@@ -84,7 +84,7 @@ On Linux, a file whose name starts with a dot is hidden. Watch out: one
 hidden file is a decoy.
 
 Useful commands: ls, cat
-When you have the flag: submit CYBA{...}     Stuck? hint 3
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   4) cat <<'EOF'
@@ -101,7 +101,7 @@ them has the file ending named in README.txt, and it holds the flag.
 Opening folders one by one is too slow. Let the computer search.
 
 Useful commands: find, cat
-When you have the flag: submit CYBA{...}     Stuck? hint 4
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   5) cat <<'EOF'
@@ -117,7 +117,7 @@ access.log has 12,000 lines. One intruder logged in exactly once.
 Their token on that line is the flag. Scrolling would take all day.
 
 Useful commands: grep, head, wc
-When you have the flag: submit CYBA{...}     Stuck? hint 5
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   6) cat <<'EOF'
@@ -136,7 +136,7 @@ first one sorts the lines so the copies sit next to each other, the
 second one finds the line that has no twin.
 
 Useful commands: sort, uniq
-When you have the flag: submit CYBA{...}     Stuck? hint 6
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   7) cat <<'EOF'
@@ -157,7 +157,7 @@ x means execute (run). This script has no x.
 You own the file, so you are allowed to change its permissions.
 
 Useful commands: ls, chmod
-When you have the flag: submit CYBA{...}     Stuck? hint 7
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   8) cat <<'EOF'
@@ -175,7 +175,7 @@ base64: a way of writing any data using only letters, digits, +, / and
 There is no secret key. Anyone can decode it.
 
 Useful command: base64
-When you have the flag: submit CYBA{...}     Stuck? hint 8
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   9) cat <<'EOF'
@@ -195,7 +195,7 @@ Copying each result into the next command works, but it is slow. A pipe
 until you see the flag.
 
 Useful command: base64
-When you have the flag: submit CYBA{...}     Stuck? hint 9
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   10) cat <<'EOF'
@@ -217,7 +217,7 @@ There are no new commands here. find, grep, cut, base64, chmod and pipes
 are all you need.
 
 Useful commands: find, grep, cut, base64, chmod
-When you have the flag: submit CYBA{...}     Stuck? hint 10
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
 EOF
   ;;
   *) cat <<'EOF'

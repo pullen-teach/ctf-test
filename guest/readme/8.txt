@@ -12,4 +12,4 @@ base64: a way of writing any data using only letters, digits, +, / and
 There is no secret key. Anyone can decode it.
 
 Useful command: base64
-When you have the flag: submit CYBA{...}     Stuck? hint 8
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt

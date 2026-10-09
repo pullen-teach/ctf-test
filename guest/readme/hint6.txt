@@ -1,0 +1,7 @@
+Hint for Mission 6: Odd one out
+
+uniq only compares lines that sit next to each other, so sort the file
+first and pipe it into uniq. Then read the help for uniq and look for
+the option that prints only the unique lines.
+
+Try:  uniq --help

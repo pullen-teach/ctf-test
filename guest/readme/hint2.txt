@@ -1,0 +1,6 @@
+Hint for Mission 2: Let the cat out of the bag
+
+Read the help for cat and look for the option that numbers the lines.
+Options go between the command and the file name.
+
+Try:  cat --help

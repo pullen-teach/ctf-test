@@ -15,4 +15,4 @@ x means execute (run). This script has no x.
 You own the file, so you are allowed to change its permissions.
 
 Useful commands: ls, chmod
-When you have the flag: submit CYBA{...}     Stuck? hint 7
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt

@@ -86,6 +86,93 @@ Warm-up: Mission 0  (optional, 50 bonus points)
 Warm-up flag:
 EOF
     ;;
+    hint1) cat <<'EOF'
+Hint for Mission 1: Make your move
+
+Lost? pwd shows where you are and cd .. goes back up one level. Run ls
+in every folder: the names tell you which folder to cd into next.
+EOF
+    ;;
+    hint2) cat <<'EOF'
+Hint for Mission 2: Let the cat out of the bag
+
+Read the help for cat and look for the option that numbers the lines.
+Options go between the command and the file name.
+
+Try:  cat --help
+EOF
+    ;;
+    hint3) cat <<'EOF'
+Hint for Mission 3: Now you see me
+
+Read the help for ls and look for an option that also shows names
+starting with .
+
+Try:  ls --help
+EOF
+    ;;
+    hint4) cat <<'EOF'
+Hint for Mission 4: Needle in the tree
+
+Read the help for find and look for a way to match a file's name against
+a pattern. In a pattern, * means "anything".
+
+Try:  find --help
+EOF
+    ;;
+    hint5) cat <<'EOF'
+Hint for Mission 5: Search party
+
+Read the help for grep and look at the Usage line at the top: it shows
+what goes first and what goes second.
+
+Try:  grep --help
+EOF
+    ;;
+    hint6) cat <<'EOF'
+Hint for Mission 6: Odd one out
+
+uniq only compares lines that sit next to each other, so sort the file
+first and pipe it into uniq. Then read the help for uniq and look for
+the option that prints only the unique lines.
+
+Try:  uniq --help
+EOF
+    ;;
+    hint7) cat <<'EOF'
+Hint for Mission 7: Permission denied
+
+Read the help for chmod. You want to add (+) the execute permission (x)
+to unlock.sh, then run ./unlock.sh again.
+
+Try:  chmod --help
+EOF
+    ;;
+    hint8) cat <<'EOF'
+Hint for Mission 8: Decoder ring
+
+Read the help for base64 and look for the option that turns base64 back
+into normal text.
+
+Try:  base64 --help
+EOF
+    ;;
+    hint9) cat <<'EOF'
+Hint for Mission 9: Layer cake
+
+Start with base64 -d cake.b64. Still gibberish? Add | base64 -d to the
+end and run it again. Repeat until it says Flag.
+EOF
+    ;;
+    hint10) cat <<'EOF'
+Hint for Mission 10: Endgame
+
+Take one piece at a time. Piece 1: hidden file names start with a dot,
+so search vault for names that match .*. Piece 2: grep the intruder's
+name, then decode their token (cut can pull the token out of the line).
+Piece 3: you have opened a locked script before.
+EOF
+    ;;
     1) cat <<'EOF'
 Mission 1: Make your move   [Easy, 100 points]
 
@@ -109,7 +196,7 @@ Use ls to read them and cd to follow them. Some turns are dead ends.
 At the end of the trail, ls shows you the flag itself.
 
 Useful commands: pwd, ls, cd
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     2) cat <<'EOF'
@@ -131,7 +218,7 @@ then --help. Ask cat for its help and look for an option that numbers
 the lines. You will use --help in every mission after this one.
 
 Useful command: cat
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     3) cat <<'EOF'
@@ -148,7 +235,7 @@ On Linux, a file whose name starts with a dot is hidden. Watch out: one
 hidden file is a decoy.
 
 Useful commands: ls, cat
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     4) cat <<'EOF'
@@ -165,7 +252,7 @@ them has the file ending named in README.txt, and it holds the flag.
 Opening folders one by one is too slow. Let the computer search.
 
 Useful commands: find, cat
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     5) cat <<'EOF'
@@ -181,7 +268,7 @@ access.log has 40,000 lines. One intruder logged in exactly once.
 Their token on that line is the flag. Scrolling would take all day.
 
 Useful commands: grep, head, wc
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     6) cat <<'EOF'
@@ -200,7 +287,7 @@ first one sorts the lines so the copies sit next to each other, the
 second one finds the line that has no twin.
 
 Useful commands: sort, uniq
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     7) cat <<'EOF'
@@ -221,7 +308,7 @@ x means execute (run). This script has no x.
 You own the file, so you are allowed to change its permissions.
 
 Useful commands: ls, chmod
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     8) cat <<'EOF'
@@ -239,7 +326,7 @@ base64: a way of writing any data using only letters, digits, +, / and
 There is no secret key. Anyone can decode it.
 
 Useful command: base64
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     9) cat <<'EOF'
@@ -259,7 +346,7 @@ Copying each result into the next command works, but it is slow. A pipe
 until you see the flag.
 
 Useful command: base64
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
     10) cat <<'EOF'
@@ -281,7 +368,7 @@ There are no new commands here. find, grep, cut, base64, chmod and pipes
 are all you need.
 
 Useful commands: find, grep, cut, base64, chmod
-When you have the flag: submit CYBA{...}, then press CHECK.
+When you have the flag: submit CYBA{...}, then press CHECK.     Stuck? cat hint.txt
 EOF
     ;;
   esac
@@ -424,6 +511,9 @@ printf 'piece 3: %s\n' "$p3" | base64 | base64 > "$M/.door"
 printf '#!/bin/sh\n# The last door. It only opens when this file has execute permission.\nbase64 -d ~/mission10/.door | base64 -d\n' > "$M/unlock.sh"
 chmod 644 "$M/unlock.sh"
 { printf 'The flag is CYBA{piece1-piece2-piece3}: three pieces, joined with dashes.\n  Piece 1: in a hidden file somewhere under vault/  (some hidden files are decoys)\n  Piece 2: %s logged in once in auth.log. Their token is base64.\n  Piece 3: whatever unlock.sh prints.\n\n' "$who10"; readme 10; } > "$M/README.txt"
+
+# ---- a hint.txt in every mission folder ----
+for n in 1 2 3 4 5 6 7 8 9 10; do readme "hint$n" > "$H/mission$n/hint.txt"; done
 
 # ---- the submit command ----
 cat > /usr/local/bin/submit <<'SH'

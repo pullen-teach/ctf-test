@@ -1,0 +1,6 @@
+Hint for Mission 5: Search party
+
+Read the help for grep and look at the Usage line at the top: it shows
+what goes first and what goes second.
+
+Try:  grep --help

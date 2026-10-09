@@ -1,0 +1,6 @@
+Hint for Mission 10: Endgame
+
+Take one piece at a time. Piece 1: hidden file names start with a dot,
+so search vault for names that match .*. Piece 2: grep the intruder's
+name, then decode their token (cut can pull the token out of the line).
+Piece 3: you have opened a locked script before.

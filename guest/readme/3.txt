@@ -11,4 +11,4 @@ On Linux, a file whose name starts with a dot is hidden. Watch out: one
 hidden file is a decoy.
 
 Useful commands: ls, cat
-When you have the flag: submit CYBA{...}     Stuck? hint 3
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt

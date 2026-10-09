@@ -11,4 +11,4 @@ them has the file ending named in README.txt, and it holds the flag.
 Opening folders one by one is too slow. Let the computer search.
 
 Useful commands: find, cat
-When you have the flag: submit CYBA{...}     Stuck? hint 4
+When you have the flag: submit CYBA{...}     Stuck? cat hint.txt

@@ -403,15 +403,14 @@
     count.textContent = isWarm ? "Mission 0 · optional warm-up" : "Mission " + n + " of " + N;
     const rows = m.run.map((c) =>
       '<div class="cmd-row"><code class="cmd"><span class="run-prompt" aria-hidden="true">$</span>' + esc(c) + "</code>" +
-      '<button class="mini copy" type="button" data-cmd="' + esc(c) + '" aria-label="Copy ' + esc(c) + '">' + ICON.copy + "<span>Copy</span></button>" +
-      '<button class="mini run" type="button" data-cmd="' + esc(c) + '" aria-label="Run ' + esc(c) + ' in the terminal">' + ICON.play + "<span>Run</span></button></div>").join("");
-    const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], ["hint " + n, "a nudge if you are stuck"]]);
+      '<button class="mini copy" type="button" data-cmd="' + esc(c) + '" aria-label="Copy ' + esc(c) + '">' + ICON.copy + "<span>Copy</span></button></div>").join("");
+    const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], [isWarm ? "hint 0" : "cat hint.txt", "a nudge if you are stuck"]]);
     article.innerHTML =
       '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + lvlClass(m.level) + '">' + m.level + '</span>' +
         '<span class="pts-pill">' + ICON.pts + (isWarm ? "+" + m.points + " bonus" : m.points + " pts") + "</span>" +
         (isWarm ? '<span class="untimed">Untimed</span>' : "") + "</div>" +
       '<div class="objective"><span class="c-ico">' + ICON.target + "</span><p><b>Objective</b>" + esc(m.objective) + "</p></div>" +
-      '<section class="card start">' + head("term", "Start Here", "Run these commands to begin the mission.") + '<div class="cmd-rows">' + rows + "</div></section>" +
+      '<section class="card start">' + head("term", "Start Here", "Type these commands in the terminal to begin.") + '<div class="cmd-rows">' + rows + "</div></section>" +
       '<section class="card ref">' + head("book", "Quick Reference", "Common commands you'll use in this mission.") +
         '<table class="ref-table"><tr><th>Command</th><th>What it does</th></tr>' + ref.map(([c, d]) => "<tr><td><code>" + esc(c) + "</code></td><td>" + esc(d) + "</td></tr>").join("") + "</table></section>" +
       '<section class="card notes">' + head("info", "Mission Notes") + m.notes.map((p) => "<p>" + p + "</p>").join("") + "</section>" +
@@ -422,7 +421,6 @@
         : '<section class="card submit-card">' + head("flag", "Found the flag?", "Worth " + m.points + " points. Type <code>submit</code>, a space, then paste the whole flag:") +
           "<pre>submit CYBA{word-1a2b3c4d}</pre></section>") +
       '<details class="hint fold"><summary><span class="c-ico">' + ICON.bulb + '</span>Need a hint?<span class="chev" aria-hidden="true"></span></summary><div>' + m.hint + "</div></details>";
-    article.querySelectorAll(".run").forEach((b) => b.addEventListener("click", () => { if (runner) runner(b.dataset.cmd); }));
     article.querySelectorAll(".copy").forEach((b) => b.addEventListener("click", () => {
       copyText(b.dataset.cmd).then(() => {
         b.classList.add("copied"); b.querySelector("span").textContent = "Copied";
@@ -503,7 +501,7 @@
     if (boardBtn) boardBtn.hidden = false;
     el("guide-foot").classList.add("finished");
     current = N;
-    paintSteps(-1);
+    paintSteps(-2);
     body.scrollTop = 0;
   }
 

@@ -1,0 +1,6 @@
+Hint for Mission 4: Needle in the tree
+
+Read the help for find and look for a way to match a file's name against
+a pattern. In a pattern, * means "anything".
+
+Try:  find --help

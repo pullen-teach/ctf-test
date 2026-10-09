@@ -1,0 +1,4 @@
+Hint for Mission 9: Layer cake
+
+Start with base64 -d cake.b64. Still gibberish? Add | base64 -d to the
+end and run it again. Repeat until it says Flag.

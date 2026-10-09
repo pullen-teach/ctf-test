@@ -155,7 +155,7 @@ def brief(i, loglines):
         else:
             out += textwrap.wrap(plain(fill(b, loglines)), 72) + [""]
     out += [useful_label(m) + ": " + ", ".join(m["useful"]),
-            "When you have the flag: submit CYBA{...}     Stuck? hint %d" % n]
+            "When you have the flag: submit CYBA{...}     Stuck? cat hint.txt"]
     return "\n".join(out) + "\n"
 
 def brief_warmup():
@@ -178,7 +178,7 @@ def overview():
 def readme(i, loglines, kc=False):
     t = brief(i, loglines)
     if kc:
-        t = t.replace("     Stuck? hint %d" % (i + 1), ", then press CHECK.")
+        t = t.replace("submit CYBA{...}     Stuck?", "submit CYBA{...}, then press CHECK.     Stuck?")
     return t
 
 def readme_home(kc=False):
@@ -243,8 +243,16 @@ def orientation(kc=False):
         "Warm-up flag:"]
     return "\n".join(lines) + "\n"
 
+def hint_file(i):
+    m = MISSIONS[i]
+    out = ["Hint for Mission %d: %s" % (i + 1, m["title"]), ""] + textwrap.wrap(plain(m["hint"]), 72)
+    if m["hint_cmd"]:
+        out += ["", "Try:  " + m["hint_cmd"]]
+    return "\n".join(out) + "\n"
+
 def readmes(loglines, kc=False):
     r = {"home": readme_home(kc), "orientation": orientation(kc)}
+    r.update({"hint%d" % (i + 1): hint_file(i) for i in range(N)})
     r.update({str(i + 1): readme(i, loglines, kc) for i in range(N)})
     return r
 

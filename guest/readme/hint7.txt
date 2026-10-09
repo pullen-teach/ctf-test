@@ -1,0 +1,6 @@
+Hint for Mission 7: Permission denied
+
+Read the help for chmod. You want to add (+) the execute permission (x)
+to unlock.sh, then run ./unlock.sh again.
+
+Try:  chmod --help

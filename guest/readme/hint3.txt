@@ -1,0 +1,6 @@
+Hint for Mission 3: Now you see me
+
+Read the help for ls and look for an option that also shows names
+starting with .
+
+Try:  ls --help
