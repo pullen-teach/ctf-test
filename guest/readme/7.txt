@@ -15,4 +15,5 @@ x means execute (run). This script has no x.
 You own the file, so you are allowed to change its permissions.
 
 Useful commands: ls, chmod
-When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
+When you have the flag: submit CYBA{...}
+Stuck? hint 7   (2 hints, 10 points each: 5% of this mission)

@@ -1,0 +1,17 @@
+Mission 7: Fingerprints   [Medium, 200 points]
+
+Objective: Crack a SHA-256 hash by fingerprinting a list of guesses.
+
+  cd ~/mission7
+  cat target.sha256
+
+A hash is a fingerprint of some text. The same text always gives the
+same hash, but you cannot turn a hash back into the text.
+
+candidates.txt holds 100 possible flags. Exactly one has the fingerprint
+in target.sha256. Password crackers work the same way: hash every guess
+from a list and compare.
+
+Useful commands: hashlines, grep
+When you have the flag: submit CYBA{...}
+Stuck? hint 7   (2 hints, 10 points each: 5% of this mission)

@@ -5,7 +5,7 @@ const logs = [];
 page.on("console", (m) => logs.push(m.type() + ": " + m.text()));
 page.on("pageerror", (e) => logs.push("pageerror: " + e));
 const t0 = Date.now();
-await page.goto(process.env.QUEST_URL || "http://127.0.0.1:8099/");
+await page.goto(process.env.QUEST_URL || "http://127.0.0.1:8099/linux/");
 try {
   await page.waitForFunction(() => window.questReadySeconds, null, { timeout: 180000 });
 } catch (e) { console.log("NOT READY", (Date.now()-t0)/1000, logs.slice(-15).join("\n")); await page.screenshot({ path: "v86-fail.png" }); process.exit(1); }

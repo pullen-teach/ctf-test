@@ -1,0 +1,23 @@
+#!/bin/sh
+# vigenere -d KEY [FILE] decrypts; vigenere -e KEY [FILE] encrypts.
+case "$1" in -d|-e) ;; *) cat <<'EOF'
+Usage: vigenere -d KEY [FILE]   decrypt with the keyword KEY
+       vigenere -e KEY [FILE]   encrypt with the keyword KEY
+Each letter is shifted by the matching letter of the keyword (A=0, B=1 ...),
+and the keyword repeats. Digits, spaces and symbols stay the same.
+Reads FILE, or the output of another command through a pipe (|).
+EOF
+[ "$1" = "--help" ] || [ "$1" = "-h" ]; exit $? ;; esac
+d=1; [ "$1" = "-d" ] && d=-1
+key=$2; shift 2
+[ -n "$key" ] || { echo "vigenere: missing keyword" >&2; exit 1; }
+awk -v key="$key" -v d="$d" '
+BEGIN { U = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; L = "abcdefghijklmnopqrstuvwxyz"; key = toupper(key); gsub(/[^A-Z]/, "", key); n = length(key); j = 0 }
+{ o = ""
+  for (i = 1; i <= length($0); i++) {
+    c = substr($0, i, 1); k = d * (index(U, substr(key, j % n + 1, 1)) - 1)
+    if (p = index(U, c)) { o = o substr(U, ((p - 1 + k) % 26 + 26) % 26 + 1, 1); j++ }
+    else if (p = index(L, c)) { o = o substr(L, ((p - 1 + k) % 26 + 26) % 26 + 1, 1); j++ }
+    else o = o c
+  }
+  print o }' "$@"

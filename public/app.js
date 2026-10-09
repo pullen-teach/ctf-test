@@ -100,7 +100,7 @@
     meter.style.width = "60%";
     window.quest = { emulator: null, done, lite: true };
     window.questGuide.setRunner((cmd) => { startClock(); window.LinuxQuestLite.typeLine(cmd); });
-    window.LinuxQuestLite.start(document.getElementById("terminal"), { onMission: markDone })
+    window.LinuxQuestLite.start(document.getElementById("terminal"), { onMission: markDone, onHint: (n, k) => window.questGuide.hintUsed(n, k) })
       .then(() => {
         meter.style.width = "100%";
         bootEl.classList.add("gone");
@@ -114,12 +114,15 @@
     return;
   }
 
+  // A page can set window.QUEST_CONFIG = { base: "../", initrd: "crypto.cpio.gz" } to share
+  // the emulator files with the Linux CTF and boot its own missions.
+  const CFG = window.QUEST_CONFIG || {}, BASE = CFG.base || "";
   const emulator = new V86({
-    wasm_path: "v86/v86.wasm",
-    bios: { url: "bios/seabios.bin" },
-    vga_bios: { url: "bios/vgabios.bin" },
-    bzimage: { url: "images/bzImage" },
-    initrd: { url: "images/quest.cpio.gz" },
+    wasm_path: BASE + "v86/v86.wasm",
+    bios: { url: BASE + "bios/seabios.bin" },
+    vga_bios: { url: BASE + "bios/vgabios.bin" },
+    bzimage: { url: BASE + "images/bzImage" },
+    initrd: { url: CFG.initrd || "images/quest.cpio.gz" },
     cmdline: "console=ttyS0 quiet loglevel=3 tsc=reliable mitigations=off",
     memory_size: 128 * 1024 * 1024,
     vga_memory_size: 2 * 1024 * 1024,
@@ -190,6 +193,8 @@
         if (term) term.focus();
       }, 300);
     }
+    const hm = text.match(/\[quest\] hint (\d+)\.(\d+) used/);
+    if (hm) window.questGuide.hintUsed(Number(hm[1]), Number(hm[2]));
     const m = text.match(/\[quest\] mission (\d+) complete/);
     if (m) markDone(Number(m[1]));
   });

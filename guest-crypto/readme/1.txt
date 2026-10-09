@@ -1,0 +1,16 @@
+Mission 1: Not so secret   [Easy, 100 points]
+
+Objective: Decode a base64 message and learn why encoding is not encryption.
+
+  cd ~/mission1
+  cat message.b64
+
+message.b64 looks scrambled, but it is only encoded with base64: a way
+to write any data using letters, digits, +, / and =.
+
+Encoding is not encryption. There is no key: anyone who knows the
+encoding can turn it back.
+
+Useful command: base64
+When you have the flag: submit CYBA{...}
+Stuck? hint 1   (1 hint, 5 points each: 5% of this mission)

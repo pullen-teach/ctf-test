@@ -1,0 +1,11 @@
+#!/bin/sh
+# hashlines [FILE]: the SHA-256 fingerprint of every line, next to the line.
+case "$1" in --help|-h) cat <<'EOF'
+Usage: hashlines [FILE]   print the SHA-256 fingerprint of every line, then the line
+This is how a wordlist attack works: hash every guess and compare.
+Reads FILE, or the output of another command through a pipe (|).
+EOF
+exit 0 ;; esac
+cat "$@" | while IFS= read -r l; do
+  printf '%s  %s\n' "$(printf '%s' "$l" | sha256sum | cut -d' ' -f1)" "$l"
+done

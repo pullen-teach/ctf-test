@@ -1,0 +1,16 @@
+Mission 5: Mirror, mirror   [Medium, 200 points]
+
+Objective: Reverse the Atbash cipher with a flipped alphabet.
+
+  cd ~/mission5
+  cat mirror.txt
+
+This message uses Atbash, one of the oldest known ciphers: the alphabet
+is flipped, so A becomes Z, B becomes Y, C becomes X, and so on.
+
+Flipping twice gives you back the original. You already know a tool that
+swaps one set of letters for another.
+
+Useful command: tr
+When you have the flag: submit CYBA{...}
+Stuck? hint 5   (2 hints, 10 points each: 5% of this mission)

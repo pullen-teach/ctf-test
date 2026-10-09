@@ -20,4 +20,5 @@ Use ls to read them and cd to follow them. Some turns are dead ends.
 At the end of the trail, ls shows you the flag itself.
 
 Useful commands: pwd, ls, cd
-When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
+When you have the flag: submit CYBA{...}
+Stuck? hint 1   (1 hint, 5 points each: 5% of this mission)

@@ -16,4 +16,5 @@ There are no new commands here. find, grep, cut, base64, chmod and pipes
 are all you need.
 
 Useful commands: find, grep, cut, base64, chmod
-When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
+When you have the flag: submit CYBA{...}
+Stuck? hint 10   (4 hints, 40 points each: 5% of this mission)

@@ -13,4 +13,5 @@ first one sorts the lines so the copies sit next to each other, the
 second one finds the line that has no twin.
 
 Useful commands: sort, uniq
-When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
+When you have the flag: submit CYBA{...}
+Stuck? hint 6   (2 hints, 10 points each: 5% of this mission)

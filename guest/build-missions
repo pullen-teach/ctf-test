@@ -166,8 +166,5 @@ printf '#!/bin/sh\n# The last door. It only opens when this file has execute per
 chmod 644 "$M/unlock.sh"
 clue 10 "The flag is CYBA{piece1-piece2-piece3}: three pieces, joined with dashes.\n  Piece 1: in a hidden file somewhere under vault/  (some hidden files are decoys)\n  Piece 2: $who logged in once in auth.log. Their token is base64.\n  Piece 3: whatever unlock.sh prints.\n"
 
-# A hint.txt in every mission folder: the same nudge as the hint command.
-n=1; while [ "$n" -le 10 ]; do cp "$R/hint$n.txt" "$H/mission$n/hint.txt"; n=$((n + 1)); done
-
 chmod 755 "$Q"; chmod 644 "$Q"/*
 chown -R 1000:1000 "$H"

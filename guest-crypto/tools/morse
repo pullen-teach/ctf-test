@@ -1,0 +1,19 @@
+#!/bin/sh
+# morse [FILE] decodes Morse code; morse -e [FILE] encodes text.
+case "$1" in --help|-h) cat <<'EOF'
+Usage: morse [FILE]      decode Morse code (. short, - long) into letters
+       morse -e [FILE]   encode letters and digits as Morse code
+Letters are separated by spaces and words by /.
+Reads FILE, or the output of another command through a pipe (|).
+EOF
+exit 0 ;; esac
+m=d; [ "$1" = "-e" ] && { m=e; shift; }
+awk -v mode="$m" '
+BEGIN {
+  n = split("A .- B -... C -.-. D -.. E . F ..-. G --. H .... I .. J .--- K -.- L .-.. M -- N -. O --- P .--. Q --.- R .-. S ... T - U ..- V ...- W .-- X -..- Y -.-- Z --.. 0 ----- 1 .---- 2 ..--- 3 ...-- 4 ....- 5 ..... 6 -.... 7 --... 8 ---.. 9 ----.", a, " ")
+  for (i = 1; i < n; i += 2) { E[a[i]] = a[i + 1]; D[a[i + 1]] = a[i] }
+}
+mode == "e" { s = toupper($0); o = ""
+  for (i = 1; i <= length(s); i++) { c = substr(s, i, 1); if (c == " ") o = o "/ "; else if (c in E) o = o E[c] " " }
+  sub(/ +$/, "", o); print o; next }
+{ o = ""; k = split($0, t, " "); for (i = 1; i <= k; i++) o = o (t[i] == "/" ? " " : (t[i] in D ? D[t[i]] : "?")); print o }' "$@"

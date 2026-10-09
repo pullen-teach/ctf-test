@@ -1,0 +1,16 @@
+Mission 8: XOR marks   [Hard, 400 points]
+
+Objective: Brute-force a single-byte XOR key.
+
+  cd ~/mission8
+  cat cipher.hex
+
+XOR is a building block of most modern ciphers. Every byte of this
+message was XORed with the same secret key byte: a number from 1 to 255.
+
+One byte means only 255 possible keys. Same trick as Caesar: try every
+key and look for the one that gives readable text.
+
+Useful commands: xor, grep
+When you have the flag: submit CYBA{...}
+Stuck? hint 8   (2 hints, 20 points each: 5% of this mission)

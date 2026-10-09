@@ -3,83 +3,116 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CyberQuest Linux CTF</title>
+  <title>CyberQuest CTF</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1726'/%3E%3Cpath d='M8 10l7 6-7 6' fill='none' stroke='%2346d39a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M17 22h7' stroke='%23f5a623' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="xterm/xterm.css">
-  <link rel="stylesheet" href="style.css?v=20261009a">
+  <style>
+    :root {
+      --paper: #f3f6fb; --surface: #fff; --ink: #12213a; --muted: #56657e; --line: #d6deea;
+      --terminal: #0e1726; --prompt: #46d39a; --amber: #f5a623; --violet: #7448d4; --green: #17875a;
+      --sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+      --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); }
+    a { color: inherit; }
+    .bar { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 1rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .brand { font-size: 1.15rem; font-weight: 800; }
+    .tag { background: var(--ink); color: #fff; border-radius: 999px; padding: 0.1rem 0.75rem; font-weight: 700; font-size: 0.9rem; }
+
+    .hero { background: var(--terminal); color: #fff; padding: 3rem 1rem 6.5rem; }
+    .wrap { max-width: 1040px; margin: 0 auto; }
+    .prompt { font: 600 1rem var(--mono); color: #b8c4d9; margin: 0 0 1rem; }
+    .prompt b { color: var(--prompt); }
+    .cursor { display: inline-block; width: 0.55em; height: 1.1em; vertical-align: -0.15em; background: var(--prompt); animation: blink 1.1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.1; margin: 0 0 0.8rem; letter-spacing: -0.01em; }
+    .lede { font-size: 1.15rem; color: #b8c4d9; max-width: 40rem; margin: 0; }
+
+    .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin-top: -4.5rem; padding: 0 1rem; }
+    .game { position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; text-decoration: none; box-shadow: 0 10px 30px rgba(18, 33, 58, 0.12); transition: transform 0.15s, box-shadow 0.15s; overflow: hidden; }
+    .game::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--accent); }
+    .game:hover, .game:focus-visible { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(18, 33, 58, 0.18); }
+    .game:focus-visible { outline: 3px solid var(--accent-solid); outline-offset: 3px; }
+    .linux { --accent: linear-gradient(90deg, #17875a, #2a9fd6, #2459d8); --accent-solid: #17875a; }
+    .crypto { --accent: linear-gradient(90deg, #f5a623, #d1416b, #7448d4); --accent-solid: #7448d4; }
+    .g-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.9rem; }
+    .g-ico { flex: none; width: 3.2rem; height: 3.2rem; border-radius: 12px; display: grid; place-items: center; background: var(--terminal); }
+    .g-ico svg { width: 1.8rem; height: 1.8rem; }
+    .g-kicker { font: 700 0.78rem var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .game h2 { margin: 0; font-size: 1.55rem; line-height: 1.15; }
+    .game p { margin: 0 0 1rem; color: var(--muted); }
+    .facts { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin: 0 0 1rem; padding: 0; list-style: none; font-size: 0.95rem; }
+    .facts b { font-weight: 800; }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 1.4rem; padding: 0; list-style: none; }
+    .chips li { font: 600 0.82rem var(--mono); background: #eef2f8; border-radius: 6px; padding: 0.15rem 0.5rem; }
+    .go { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; background: var(--ink); color: #fff; font-weight: 700; border-radius: 10px; padding: 0.75rem 1rem; }
+    .game:hover .go { background: var(--accent-solid); }
+
+    .soon { max-width: 1040px; margin: 1.5rem auto 0; padding: 0 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; }
+    .soon div { border: 2px dashed var(--line); border-radius: 16px; padding: 1rem 1.5rem; color: var(--muted); }
+    .soon b { color: var(--ink); }
+
+    .how { max-width: 1040px; margin: 2.5rem auto; padding: 0 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+    .how div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.2rem; }
+    .how h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+    .how p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .how code { font: 600 0.9em var(--mono); background: #eef2f8; padding: 0 0.3rem; border-radius: 4px; }
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 0 1rem 2rem; }
+    footer a { color: #2459d8; }
+    @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } .game { transition: none; } }
+  </style>
 </head>
 <body>
   <header class="bar">
     <strong class="brand">CyberQuest</strong>
-    <span class="tag">Linux CTF</span>
-    <div class="track" id="track" aria-label="Missions completed">
-      <span class="step" data-n="1"></span><span class="step" data-n="2"></span><span class="step" data-n="3"></span><span class="step" data-n="4"></span><span class="step" data-n="5"></span><span class="step" data-n="6"></span><span class="step" data-n="7"></span><span class="step" data-n="8"></span><span class="step" data-n="9"></span><span class="step" data-n="10"></span>
-    </div>
-    <span class="status" id="status" role="status">Loading Linux…</span>
+    <span class="tag">CTF</span>
   </header>
 
-  <main class="layout">
-    <section class="terminal-wrap" aria-label="Linux terminal">
-      <div id="terminal"></div>
-      <div class="boot" id="boot">
-        <div class="boot-card">
-          <pre class="boot-prompt">player@quest:~$ <span class="cursor">▍</span></pre>
-          <p id="boot-text">Starting a real Linux computer inside this browser tab…</p>
-          <div class="meter"><div id="meter-fill"></div></div>
-          <p class="boot-small">Nothing is installed. Everything runs on this device.</p>
-        </div>
-      </div>
-    </section>
+  <section class="hero">
+    <div class="wrap">
+      <p class="prompt"><b>player@quest</b>:~$ ls challenges/ <span class="cursor" aria-hidden="true"></span></p>
+      <h1>Pick your challenge.</h1>
+      <p class="lede">Each challenge set is a capture-the-flag competition that runs a real Linux computer right in this browser tab. Ten flags, one clock, easiest first.</p>
+    </div>
+  </section>
 
-    <aside class="side guide" aria-label="Your mission">
-      <div class="guide-head">
-        <div class="stats">
-          <div class="stat" id="score" title="Your score">
-            <span class="stat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#f5a623" d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v3H8v-3h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1 1.7V7zm10 0v2.7A2 2 0 0 0 18 8V7h-1z"/></svg></span>
-            <span class="stat-txt"><b><span id="score-pts">0</span><span class="of"> / <span id="score-max">0</span></span></b><small>Total Points</small></span>
-          </div>
-          <div class="stat clock" id="clock" title="Competition clock: starts when you start typing in the terminal, stops when every flag is captured">
-            <span class="stat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#2459d8" stroke-width="2.2"/><path d="M12 7v5l3.5 2" fill="none" stroke="#2459d8" stroke-width="2.2" stroke-linecap="round"/></svg><span class="clock-dot" aria-hidden="true"></span></span>
-            <span class="stat-txt"><b id="clock-time">00:00</b><small id="clock-label">Starts at Mission 1</small></span>
-          </div>
-          <div class="stat flags" id="flags-stat">
-            <span class="stat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#17875a" d="M5 3h2v18H5zM8 4h11l-2.5 4L19 12H8z"/></svg></span>
-            <span class="stat-txt"><b id="flags-count">0<span class="of"> / 10</span></b><small id="flags-label">Flags Captured</small></span>
-          </div>
+  <main>
+    <div class="games wrap">
+      <a class="game linux" href="linux/">
+        <div class="g-head">
+          <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 9l7 7-7 7" fill="none" stroke="#46d39a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 23h8" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/></svg></span>
+          <div><span class="g-kicker">Challenge set 1</span><h2>Linux CTF</h2></div>
         </div>
-        <nav id="m-dots" class="stepper" aria-label="Missions"></nav>
-      </div>
-      <div class="guide-body">
-        <span id="m-count" class="m-count">Mission 1 of 10</span>
-        <article id="mission" class="mission" aria-live="polite"></article>
-        <details class="how card fold">
-          <summary><span class="c-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#7448d4" d="M7.5 6h9a5.5 5.5 0 0 1 5.4 6.6l-.9 4.6a2.6 2.6 0 0 1-4.5 1.2L14.4 16H9.6l-2.1 2.4A2.6 2.6 0 0 1 3 17.2l-.9-4.6A5.5 5.5 0 0 1 7.5 6z"/><path d="M7.5 9.5v4M5.5 11.5h4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.6" cy="10.4" r="1.2" fill="#fff"/><circle cx="17.8" cy="12.6" r="1.2" fill="#fff"/></svg></span>How to play<span class="chev" aria-hidden="true"></span></summary>
-          <ol>
-            <li>Click the terminal and type the commands. <b>Copy</b> puts a command on your clipboard to paste.</li>
-            <li>Paste with <code>Ctrl+V</code> or a right-click. Highlighting text copies it; middle-click pastes it.</li>
-            <li>Prefer the terminal? Your home folder and each mission folder have a <code>README.txt</code>: <code>cat README.txt</code> (or <code>mission 1</code>).</li>
-            <li>A flag looks like <code>CYBA{word-1a2b3c4d}</code>. Check it: <code>submit CYBA{...}</code></li>
-            <li>Stuck? <code>hint 1</code> (up to 10).</li>
-          </ol>
-          <p class="small">Flags change every time this page loads.</p>
-        </details>
-        <p class="credit">Runs on <a href="https://github.com/copy/v86">v86</a>, Linux and BusyBox. <a href="NOTICE.txt">Licenses and source</a>.</p>
-      </div>
-      <div class="guide-foot" id="guide-foot">
-        <p id="m-state" class="m-state"></p>
-        <div class="foot-btns">
-          <button id="prev" class="btn ghost" type="button">&larr; Back</button>
-          <button id="board" class="btn ghost board" type="button" hidden><span class="b-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M7 3h10v5a5 5 0 0 1-10 0zM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6"/></svg></span>View Leaderboard</button>
-          <button id="next" class="btn" type="button" disabled>Next mission &rarr;</button>
+        <p>Learn the command line, then compete. Move around, search, read hidden files and fix permissions to find every flag.</p>
+        <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
+        <ul class="chips" aria-label="Skills"><li>cd</li><li>ls -a</li><li>find</li><li>grep</li><li>|</li><li>chmod</li><li>base64</li></ul>
+        <span class="go">Start the Linux CTF &rarr;</span>
+      </a>
+      <a class="game crypto" href="crypto/">
+        <div class="g-head">
+          <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="16" r="5" fill="none" stroke="#f5a623" stroke-width="3"/><path d="M16 16h11M23 16v4M27 16v3" fill="none" stroke="#b49cf0" stroke-width="3" stroke-linecap="round"/></svg></span>
+          <div><span class="g-kicker">Challenge set 2</span><h2>Crypto CTF</h2></div>
         </div>
-      </div>
-    </aside>
+        <p>Crack the codes, then compete. Decode, brute-force and fingerprint your way from base64 to the Vigen&egrave;re vault.</p>
+        <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
+        <ul class="chips" aria-label="Skills"><li>base64</li><li>xxd</li><li>tr</li><li>caesar</li><li>xor</li><li>sha256sum</li><li>vigenere</li></ul>
+        <span class="go">Start the Crypto CTF &rarr;</span>
+      </a>
+    </div>
+
+    <div class="soon">
+      <div><b>Coming soon: Forensics CTF.</b> Investigate a break-in from logs, files and archives.</div>
+      <div><b>Coming soon: Web CTF.</b> Find the flaws in a deliberately broken website.</div>
+    </div>
+
+    <div class="how">
+      <div><h3>Nothing to install</h3><p>Everything runs on your own device, inside this tab. Works on Chromebooks.</p></div>
+      <div><h3>Don't reload mid-game</h3><p>A reload builds a fresh computer: new flags, zero points, a new clock.</p></div>
+      <div><h3>Warm up first</h3><p>Mission 0 is optional and untimed, worth 50 bonus points. The clock starts at Mission 1.</p></div>
+      <div><h3>Stuck?</h3><p>Every command has <code>--help</code>. Hints cost 5% of a mission's points.</p></div>
+    </div>
   </main>
 
-  <script src="xterm/xterm.js"></script>
-  <script src="v86/libv86.js"></script>
-  <script src="lite.js?v=20261009a"></script>
-  <script src="guide.js?v=20261009a"></script>
-  <script src="app.js?v=20261009a"></script>
+  <footer>CyberQuest Academy &middot; Runs on <a href="https://github.com/copy/v86">v86</a>, Linux and BusyBox &middot; <a href="NOTICE.txt">Licenses and source</a></footer>
 </body>
 </html>

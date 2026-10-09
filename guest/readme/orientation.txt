@@ -30,10 +30,13 @@ What is a CTF?
 4. Stuck?
   Read the command's built-in help first:  ls --help
   Then ask for a nudge:  hint 1
+  A hint costs 5% of that mission's points, charged once. hint 1 tells
+  you the price first; hint 1 --show reveals it.
 
 Scoring
   Easy 100    Medium 200    Hard 400    Very Hard 800
   The most points wins. On a tie, the faster time wins.
+  Hints cost 5% of the mission's points.
 
 The clock
   The clock starts when you begin Mission 1 and counts up. It stops

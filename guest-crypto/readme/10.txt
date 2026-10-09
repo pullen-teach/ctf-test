@@ -1,0 +1,17 @@
+Mission 10: The vault   [Very Hard, 800 points]
+
+Objective: Crack the keyword's hash, then open the vault.
+
+  cd ~/mission10
+  cat README.txt
+
+The final vault combines three skills. It was encrypted with a Vigenère
+keyword, then base64-encoded. Nobody wrote the keyword down: only its
+SHA-256 fingerprint survived.
+
+Crack the fingerprint against the wordlist, then use the keyword to open
+the vault.
+
+Useful commands: hashlines, grep, base64, vigenere
+When you have the flag: submit CYBA{...}
+Stuck? hint 10   (4 hints, 40 points each: 5% of this mission)

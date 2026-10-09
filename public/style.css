@@ -272,3 +272,18 @@ body.won .status { color: var(--green); }
 .step-dot { width: 1.95rem; height: 1.95rem; }
 .step-bar { margin-top: 0.95rem; }
 .dim { color: var(--muted); font-weight: 600; }
+
+/* hint prices */
+.hint-cost { margin-left: 0.4rem; font: 800 0.72rem var(--sans); color: #9a5b00; background: #ffe7b8; border-radius: 999px; padding: 0.1rem 0.45rem; vertical-align: middle; }
+.hint-cost.free { color: #12704b; background: #e2f5ec; }
+.times .hint-cost { display: block; width: max-content; margin: 0.15rem 0 0 auto; }
+.hint p { margin: 0 0 0.6rem; }
+.btn.hint-buy { background: #c98a00; padding: 0.45rem 0.9rem; font-size: 0.88rem; }
+.hint-step { margin: 0 0 0.55rem; }
+.hint-step b { color: #9a5b00; }
+
+/* link between the Linux and Crypto CTF pages */
+.switch { margin-left: auto; font: 700 0.85rem var(--sans); color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 0.15rem 0.7rem; }
+.switch:hover { color: var(--ink); background: #f3f6fb; }
+.switch + .status { margin-left: 0.8rem; }
+.switch + .switch { margin-left: 0.4rem; }

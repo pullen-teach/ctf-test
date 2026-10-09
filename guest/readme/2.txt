@@ -16,4 +16,5 @@ then --help. Ask cat for its help and look for an option that numbers
 the lines. You will use --help in every mission after this one.
 
 Useful command: cat
-When you have the flag: submit CYBA{...}     Stuck? cat hint.txt
+When you have the flag: submit CYBA{...}
+Stuck? hint 2   (1 hint, 5 points each: 5% of this mission)

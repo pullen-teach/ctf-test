@@ -11,6 +11,7 @@
       "title": "Make your move",
       "level": "Easy",
       "points": 100,
+      "hintCost": 5,
       "objective": "Navigate the file system using basic Linux commands to find the flag.",
       "run": [
         "cd ~/mission1",
@@ -42,12 +43,15 @@
         "A flag is waiting at the end of a trail that starts in <code>~/mission1</code>. Nothing on this trail needs opening: the <b>file names</b> are the signposts. Use <code>ls</code> to read them and <code>cd</code> to follow them. Some turns are dead ends.",
         "At the end of the trail, <code>ls</code> shows you the flag itself."
       ],
-      "hint": "Lost? <code>pwd</code> shows where you are and <code>cd ..</code> goes back up one level. Run <code>ls</code> in every folder: the names tell you which folder to <code>cd</code> into next."
+      "hints": [
+        "Lost? <code>pwd</code> shows where you are and <code>cd ..</code> goes back up one level. Run <code>ls</code> in every folder: the names tell you which folder to <code>cd</code> into next."
+      ]
     },
     {
       "title": "Let the cat out of the bag",
       "level": "Easy",
       "points": 100,
+      "hintCost": 5,
       "objective": "Read files with cat, and use --help to number the lines.",
       "run": [
         "cd ~/mission2",
@@ -68,12 +72,15 @@
         "The cat is hiding in <code>bag.txt</code>: 100 lines, and every one looks like a flag. Only the line number in <code>README.txt</code> is real. Counting 100 lines by hand is how mistakes happen.",
         "Almost every Linux command can <b>explain itself</b>: type its name, a space, then <code>--help</code>. Ask <code>cat</code> for its help and look for an option that numbers the lines. You will use <code>--help</code> in every mission after this one."
       ],
-      "hint": "Read the help for <code>cat</code> and look for the option that <b>numbers</b> the lines. Options go between the command and the file name.<pre>cat --help</pre>"
+      "hints": [
+        "Read the help for <code>cat</code> (<code>cat --help</code>) and look for the option that <b>numbers</b> the lines. Options go between the command and the file name."
+      ]
     },
     {
       "title": "Now you see me",
       "level": "Easy",
       "points": 100,
+      "hintCost": 5,
       "objective": "Reveal the hidden files and find the real flag.",
       "run": [
         "cd ~/mission3",
@@ -97,12 +104,15 @@
         "There is a flag in this folder, but plain <code>ls</code> will not show it.",
         "On Linux, a file whose name starts with a dot is <b>hidden</b>. Watch out: one hidden file is a decoy."
       ],
-      "hint": "Read the help for <code>ls</code> and look for an option that also shows names starting with <code>.</code><pre>ls --help</pre>"
+      "hints": [
+        "Read the help for <code>ls</code> (<code>ls --help</code>) and look for an option that also shows names starting with a dot. One hidden file is a decoy, so check them all."
+      ]
     },
     {
       "title": "Needle in the tree",
       "level": "Medium",
       "points": 200,
+      "hintCost": 10,
       "objective": "Search a folder tree by file name to find the flag.",
       "run": [
         "cd ~/mission4",
@@ -126,12 +136,16 @@
         "The <code>archive</code> folder holds about 80 files in 20 folders. Exactly <b>one</b> of them has the file ending named in <code>README.txt</code>, and it holds the flag.",
         "Opening folders one by one is too slow. Let the computer search."
       ],
-      "hint": "Read the help for <code>find</code> and look for a way to match a file's <b>name</b> against a pattern. In a pattern, <code>*</code> means \"anything\".<pre>find --help</pre>"
+      "hints": [
+        "Read the help for <code>find</code> (<code>find --help</code>) and look for a way to match a file's <b>name</b> against a pattern. In a pattern, <code>*</code> means \"anything\".",
+        "Search the archive by name, using the ending from <code>README.txt</code>: <code>find archive -name \"*.ENDING\"</code>. Keep the quotes. Then <code>cat</code> the path it prints."
+      ]
     },
     {
       "title": "Search party",
       "level": "Medium",
       "points": 200,
+      "hintCost": 10,
       "objective": "Search a huge log for the intruder's line.",
       "run": [
         "cd ~/mission5",
@@ -159,12 +173,16 @@
         "<code>access.log</code> has 12,000 lines. One intruder logged in exactly once.",
         "Their <b>token</b> on that line is the flag. Scrolling would take all day."
       ],
-      "hint": "Read the help for <code>grep</code> and look at the <b>Usage</b> line at the top: it shows what goes first and what goes second.<pre>grep --help</pre>"
+      "hints": [
+        "Read the help for <code>grep</code> (<code>grep --help</code>). The <b>Usage</b> line shows the order: what to look for first, then which file.",
+        "<code>grep NAME access.log</code> prints only the lines that contain NAME. Use the intruder's name from <code>README.txt</code>: the token on that line is the flag."
+      ]
     },
     {
       "title": "Odd one out",
       "level": "Medium",
       "points": 200,
+      "hintCost": 10,
       "objective": "Use a pipe to find the only code that appears once.",
       "run": [
         "cd ~/mission7",
@@ -192,12 +210,16 @@
         "<code>codes.txt</code> holds about 900 flags. Every fake one appears <b>at least twice</b>. The real flag appears <b>exactly once</b>.",
         "Reading 900 lines is no fun. Chain two commands with a <b>pipe</b> (<code>|</code>): the first one sorts the lines so the copies sit next to each other, the second one finds the line that has no twin."
       ],
-      "hint": "<code>uniq</code> only compares lines that sit <b>next to each other</b>, so <code>sort</code> the file first and pipe it into <code>uniq</code>. Then read the help for <code>uniq</code> and look for the option that prints only the <b>unique</b> lines.<pre>uniq --help</pre>"
+      "hints": [
+        "<code>uniq</code> only compares lines that sit <b>next to each other</b>, so <code>sort</code> the file first and pipe it in: <code>sort codes.txt | uniq ...</code>. Read <code>uniq --help</code> for the right option.",
+        "<code>uniq -u</code> prints only the lines that appear exactly once. Put it at the end of the pipe."
+      ]
     },
     {
       "title": "Permission denied",
       "level": "Medium",
       "points": 200,
+      "hintCost": 10,
       "objective": "Unlock a script with chmod and run it.",
       "run": [
         "cd ~/mission8",
@@ -222,12 +244,16 @@
         "Try it, and Linux will refuse. <code>ls -l</code> shows why: the letters at the start of each line are the file's <b>permissions</b>. <code>r</code> means read, <code>w</code> means write and <code>x</code> means execute (run). This script has no <code>x</code>.",
         "You own the file, so you are allowed to change its permissions."
       ],
-      "hint": "Read the help for <code>chmod</code>. You want to <b>add</b> (<code>+</code>) the e<b>x</b>ecute permission (<code>x</code>) to <code>unlock.sh</code>, then run <code>./unlock.sh</code> again.<pre>chmod --help</pre>"
+      "hints": [
+        "<code>ls -l</code> shows the permissions: there is no <code>x</code>, so the script is not allowed to run. Read <code>chmod --help</code> to see how to <b>add</b> a permission.",
+        "<code>chmod +x unlock.sh</code> adds the execute permission. Then run it with <code>./unlock.sh</code>."
+      ]
     },
     {
       "title": "Decoder ring",
       "level": "Hard",
       "points": 400,
+      "hintCost": 20,
       "objective": "Decode a base64 message to reveal the flag.",
       "run": [
         "cd ~/mission6",
@@ -247,12 +273,16 @@
         "It looks like gibberish, but it is not encrypted. It is <b>encoded</b> with base64: a way of writing any data using only letters, digits, <code>+</code>, <code>/</code> and <code>=</code>.",
         "There is no secret key. Anyone can decode it."
       ],
-      "hint": "Read the help for <code>base64</code> and look for the option that turns base64 back into normal text.<pre>base64 --help</pre>"
+      "hints": [
+        "Letters, digits and an <code>=</code> at the end: that's <b>base64</b>. Read <code>base64 --help</code> and look for the option that <b>decodes</b>.",
+        "<code>base64 -d message.b64</code> turns it back into normal text."
+      ]
     },
     {
       "title": "Layer cake",
       "level": "Hard",
       "points": 400,
+      "hintCost": 20,
       "objective": "Peel back every layer of encoding to reveal the flag.",
       "run": [
         "cd ~/mission9",
@@ -276,12 +306,17 @@
         "You decoded base64 in the last mission. This message was encoded, then the result was encoded <b>again</b>, and again. Nobody wrote down how many layers there are.",
         "Copying each result into the next command works, but it is slow. A pipe (<code>|</code>) can feed one <code>base64 -d</code> straight into the next. Keep adding layers until you see the flag."
       ],
-      "hint": "Start with <code>base64 -d cake.b64</code>. Still gibberish? Add <code>| base64 -d</code> to the end and run it again. Repeat until it says <b>Flag</b>."
+      "hints": [
+        "Decode once with <code>base64 -d cake.b64</code>. Still looks like base64? Then there is another layer underneath.",
+        "Pipe one decode into the next: <code>base64 -d cake.b64 | base64 -d</code>. Press the Up arrow and add another <code>| base64 -d</code> each time.",
+        "There are 4 to 6 layers. Stop when the output starts with <code>Flag:</code>. Garbage symbols mean you decoded once too many: remove the last pipe."
+      ]
     },
     {
       "title": "Endgame",
       "level": "Very Hard",
       "points": 800,
+      "hintCost": 40,
       "objective": "Recover three hidden pieces and put the final flag together.",
       "run": [
         "cd ~/mission10",
@@ -314,16 +349,25 @@
         "Put the pieces together in order, joined with dashes: <code>CYBA{piece1-piece2-piece3}</code>.",
         "There are no new commands here. <code>find</code>, <code>grep</code>, <code>cut</code>, <code>base64</code>, <code>chmod</code> and pipes are all you need."
       ],
-      "hint": "Take one piece at a time. <b>Piece 1:</b> hidden file names start with a dot, so search <code>vault</code> for names that match <code>.*</code>. <b>Piece 2:</b> <code>grep</code> the intruder's name, then decode their token (<code>cut</code> can pull the token out of the line). <b>Piece 3:</b> you have opened a locked script before."
+      "hints": [
+        "<b>Piece 1:</b> hidden names start with a dot. <code>find vault -name \".*\" -type f</code> lists every hidden file in the tree. <code>cat</code> each one: the decoys say so.",
+        "<b>Piece 2:</b> <code>grep</code> the intruder's name in <code>auth.log</code>. The token is everything after <code>token=</code>. Decode it with <code>echo TOKEN | base64 -d</code>.",
+        "<b>Piece 3:</b> <code>unlock.sh</code> is locked, just like Mission 7: <code>chmod +x unlock.sh</code>, then <code>./unlock.sh</code>.",
+        "Join the three 6-character values with dashes, in order: <code>CYBA{piece1-piece2-piece3}</code>. Leave out the words \"piece 1:\"."
+      ]
     }
   ];
-  const WARMUP = {"title": "Warm-up", "level": "Warm-up", "points": 50, "objective": "Read the CTF orientation in the terminal with cat.", "run": ["cat orientation.txt"], "ref": [["cat FILE", "print a file on the screen"], ["clear", "clear the screen"]], "notes": ["Get comfortable before the clock starts. Your <b>home folder</b> holds <code>orientation.txt</code>: how a CTF works, what a flag looks like, scoring and the rules.", "<code>cat</code> prints a file on the screen. Click the terminal, type <code>cat orientation.txt</code> and press Enter. The warm-up flag is at the bottom.", "Submit it for <b>50 bonus points</b>, or skip the warm-up. The competition clock starts when you begin Mission 1."], "hint": "The flag is on the last line of <code>orientation.txt</code> in your home folder. Type <code>cat orientation.txt</code>, press Enter, then copy the flag into <code>submit</code>."};
+  const WARMUP = {"title": "Warm-up", "level": "Warm-up", "points": 50, "objective": "Read the CTF orientation in the terminal with cat.", "run": ["cat orientation.txt"], "ref": [["cat FILE", "print a file on the screen"], ["clear", "clear the screen"]], "notes": ["Get comfortable before the clock starts. Your <b>home folder</b> holds <code>orientation.txt</code>: how a CTF works, what a flag looks like, scoring and the rules.", "<code>cat</code> prints a file on the screen. Click the terminal, type <code>cat orientation.txt</code> and press Enter. The warm-up flag is at the bottom.", "Submit it for <b>50 bonus points</b>, or skip the warm-up. The competition clock starts when you begin Mission 1."], "hints": ["The flag is on the last line of <code>orientation.txt</code> in your home folder. Type <code>cat orientation.txt</code>, press Enter, then copy the flag into <code>submit</code>."], "hintCost": 0};
 
   const N = MISSIONS.length;
   const el = (id) => document.getElementById(id);
   const done = new Set();
   // Mission 0, the warm-up: optional, untimed, bonus points. current === -1 shows it.
   let warm = false;
+  // Hints cost 5% of the mission's points, charged once per mission, from the panel or the terminal.
+  const hintsUsed = {};   // mission number -> how many of its hints have been bought
+  const hintCost = (n) => (hintsUsed[n] || 0) * MISSIONS[n - 1].hintCost;
+  const hintTotal = () => Object.keys(hintsUsed).reduce((t, n) => t + hintCost(Number(n)), 0);
   // Clock time (ms) of each capture. "Took" is the time since the capture before it
   // (or since the clock started), so the splits add up to the total.
   const capturedAt = {};
@@ -335,7 +379,7 @@
     return fmt(capturedAt[n] - (before.length ? Math.max(...before) : 0));
   };
   const MAX = MISSIONS.reduce((t, m) => t + m.points, 0) + WARMUP.points;
-  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0) + (warm ? WARMUP.points : 0);
+  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0) + (warm ? WARMUP.points : 0) - hintTotal();
   const scoreEl = el("score"), scorePts = el("score-pts");
   const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const TROPHY = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd54a"/><stop offset="1" stop-color="#f5a300"/></linearGradient></defs><path fill="url(#g)" d="M17 5h30v5h11v8c0 8-6 14-14 15a15 15 0 0 1-9 8.6V48h9v6H20v-6h9v-6.4A15 15 0 0 1 20 33C12 32 6 26 6 18v-8h11zm-5 11v2c0 4 2.5 7.5 6.5 8.6A30 30 0 0 1 17 16zm40 0h-5a30 30 0 0 1-1.5 10.6C54.5 25.5 52 22 52 18z"/><rect x="18" y="54" width="28" height="5" rx="1.5" fill="#d98a00"/><path fill="#fff6c9" d="M32 12l3 6.1 6.7 1-4.9 4.7 1.2 6.7L32 27.3l-6 3.2 1.2-6.7-4.9-4.7 6.7-1z"/></svg>';
@@ -395,6 +439,21 @@
     return Promise.resolve();
   }
 
+  // The hint box: hints bought so far, then the price of the next one.
+  function hintHtml(m, n, isWarm) {
+    const have = isWarm ? m.hints.length : hintsUsed[n] || 0, total = m.hints.length;
+    const label = isWarm ? 'Need a hint? <span class="hint-cost free">free</span>'
+      : have ? "Hints " + have + " of " + total + ' <span class="hint-cost">−' + have * m.hintCost + " pts</span>"
+      : "Need a hint? " + '<span class="hint-cost">' + total + (total > 1 ? " hints, " : " hint, ") + "−" + m.hintCost + " pts each</span>";
+    let body = m.hints.slice(0, have).map((h, k) => '<div class="hint-step">' + (isWarm ? "" : "<b>Hint " + (k + 1) + ".</b> ") + h + "</div>").join("");
+    if (!isWarm && have < total)
+      body += "<p>" + (have ? "Want more direction? " : "") + "Hint " + (have + 1) + " costs <b>" + m.hintCost + " points</b>: 5% of this mission's " + m.points +
+        ". Each hint is charged once, here or with <code>hint " + n + " --show</code> in the terminal.</p>" +
+        '<button type="button" class="btn hint-buy">Show hint ' + (have + 1) + " of " + total + " (−" + m.hintCost + " pts)</button>";
+    return '<details class="hint fold"' + (have && !isWarm ? " open" : "") + '><summary><span class="c-ico">' + ICON.bulb + "</span>" + label +
+      '<span class="chev" aria-hidden="true"></span></summary><div>' + body + "</div></details>";
+  }
+
   function render() {
     const isWarm = current === -1;
     const m = isWarm ? WARMUP : MISSIONS[current];
@@ -420,7 +479,9 @@
             : "<p>This flag took <b class=\"captured-at\">" + took(n) + "</b>; the clock read <b class=\"captured-at\">" + clockAt(n) + "</b> when you submitted it.</p></div></section>")
         : '<section class="card submit-card">' + head("flag", "Found the flag?", "Worth " + m.points + " points. Type <code>submit</code>, a space, then paste the whole flag:") +
           "<pre>submit CYBA{word-1a2b3c4d}</pre></section>") +
-      '<details class="hint fold"><summary><span class="c-ico">' + ICON.bulb + '</span>Need a hint?<span class="chev" aria-hidden="true"></span></summary><div>' + m.hint + "</div></details>";
+hintHtml(m, n, isWarm);
+    const buy = article.querySelector(".hint-buy");
+    if (buy) buy.addEventListener("click", () => window.questGuide.hintUsed(n, (hintsUsed[n] || 0) + 1));
     article.querySelectorAll(".copy").forEach((b) => b.addEventListener("click", () => {
       copyText(b.dataset.cmd).then(() => {
         b.classList.add("copied"); b.querySelector("span").textContent = "Copied";
@@ -488,7 +549,7 @@
         '<tr class="head"><td></td><td>#</td><td>Mission</td><td class="num">Points</td><td class="num">Took</td><td class="num">Time</td></tr>' +
         '<tr><td class="ck">' + (warm ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">0</td><td>Warm-up <span class="dim">(bonus)</span></td><td class="num">' +
           (warm ? "+" + WARMUP.points + " pts" : '<span class="dim">skipped</span>') + '</td><td class="num dim"></td><td class="num"></td></tr>' +
-        MISSIONS.map((m, i) => '<tr><td class="ck">' + (done.has(i + 1) ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + (i + 1) + "</td><td>" + m.title + '</td><td class="num">' + m.points + ' pts</td><td class="num dim">' + took(i + 1) + '</td><td class="num">' + clockAt(i + 1) + "</td></tr>").join("") +
+        MISSIONS.map((m, i) => '<tr><td class="ck">' + (done.has(i + 1) ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + (i + 1) + "</td><td>" + m.title + '</td><td class="num">' + (done.has(i + 1) ? m.points : 0) + " pts" + (hintCost(i + 1) ? '<span class="hint-cost">−' + hintCost(i + 1) + (hintsUsed[i + 1] > 1 ? " hints" : " hint") + "</span>" : "") + '</td><td class="num dim">' + took(i + 1) + '</td><td class="num">' + clockAt(i + 1) + "</td></tr>").join("") +
         '<tr class="total"><td></td><td></td><td>Total</td><td class="num">' + score() + ' pts</td><td class="num"></td><td class="num">' + total + "</td></tr></table>" +
         '<p class="small"><b>Took</b>: time since your previous flag. <b>Time</b>: the clock when you submitted.</p></div>' +
       '<div class="card learned"><h3><span class="h-ico">' + ICON.bulb + "</span>What you learned</h3><ul>" + LEARNED.map((t) => '<li><span class="tick blue">' + CHECK + "</span><span>" + t + "</span></li>").join("") + "</ul></div>";
@@ -529,5 +590,12 @@
     setRunner(fn) { runner = fn; },
     current: () => current + 1,
     warmupOver: () => warm || current !== -1,
+    // A hint was bought (k = which tier). Charged once: buying a tier you already have is free.
+    hintUsed(n, k) {
+      if (!(n >= 1 && n <= N)) return;
+      const m = MISSIONS[n - 1], had = hintsUsed[n] || 0, now = Math.min(m.hints.length, Math.max(had, k || had + 1));
+      if (now > had) { hintsUsed[n] = now; showScore(true); }
+      if (current === n - 1) render();
+    },
   };
 })();

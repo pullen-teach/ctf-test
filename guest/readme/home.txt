@@ -10,7 +10,7 @@ How to play
   3. Read its brief:     cat README.txt     (or type: mission 1)
   4. Find the flag. It looks like CYBA{word-1a2b3c4d}
   5. Check it:           submit CYBA{...}
-  6. Stuck?              hint 1
+  6. Stuck?              hint 1   (costs 5% of the mission's points)
 
 Missions
    1  Make your move               Easy       100 pts

@@ -1,0 +1,16 @@
+Mission 2: Hex marks the spot   [Easy, 100 points]
+
+Objective: Turn hexadecimal back into readable text.
+
+  cd ~/mission2
+  cat secret.hex
+
+secret.hex is a long run of digits and the letters a to f. That is
+hexadecimal: every two characters are one byte, one letter of the
+message.
+
+xxd is a hex tool. It turns bytes into hex, and hex back into bytes.
+
+Useful command: xxd
+When you have the flag: submit CYBA{...}
+Stuck? hint 2   (1 hint, 5 points each: 5% of this mission)

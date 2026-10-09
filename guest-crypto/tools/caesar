@@ -1,0 +1,23 @@
+#!/bin/sh
+# caesar N [FILE] / caesar all [FILE]: shift letters along the alphabet.
+case "$1" in ""|--help|-h) cat <<'EOF'
+Usage: caesar N [FILE]     shift every letter N places along the alphabet
+       caesar all [FILE]   try all 25 shifts; each line starts with its shift
+Letters wrap around (Z then A). Digits, spaces and symbols stay the same.
+Reads FILE, or the output of another command through a pipe (|).
+EOF
+[ -n "$1" ]; exit $? ;; esac
+n=$1; shift
+awk -v n="$n" '
+BEGIN { U = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; L = "abcdefghijklmnopqrstuvwxyz" }
+function sh(s, k,   o, i, c, p) {
+  k = ((k % 26) + 26) % 26; o = ""
+  for (i = 1; i <= length(s); i++) {
+    c = substr(s, i, 1)
+    if (p = index(U, c)) o = o substr(U, (p - 1 + k) % 26 + 1, 1)
+    else if (p = index(L, c)) o = o substr(L, (p - 1 + k) % 26 + 1, 1)
+    else o = o c
+  }
+  return o
+}
+{ if (n == "all") { for (k = 1; k <= 25; k++) print "shift " k ": " sh($0, k) } else print sh($0, n + 0) }' "$@"

@@ -1,0 +1,16 @@
+Mission 3: Thirteen steps   [Easy, 100 points]
+
+Objective: Undo ROT13 by translating letters with tr.
+
+  cd ~/mission3
+  cat message.txt
+
+ROT13 moves every letter 13 places along the alphabet: A becomes N, B
+becomes O, and so on. Do it twice and you are back where you started.
+
+tr (translate) swaps characters: give it the letters to change and the
+letters to change them into. Feed it the file with <.
+
+Useful command: tr
+When you have the flag: submit CYBA{...}
+Stuck? hint 3   (1 hint, 5 points each: 5% of this mission)

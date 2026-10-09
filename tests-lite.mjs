@@ -1,7 +1,7 @@
 // Lite mode test: Chromium with --js-flags=--jitless has no WebAssembly, like a
 // browser under DefaultJavaScriptJitSetting=2. Serve public/ on :8099 first.
 import { chromium } from "playwright";
-const url = process.env.QUEST_URL || "http://127.0.0.1:8099/";
+const url = process.env.QUEST_URL || "http://127.0.0.1:8099/linux/";
 const browser = await chromium.launch({ args: ["--no-proxy-server", "--js-flags=--jitless"] });
 const page = await browser.newPage({ viewport: { width: 1360, height: 800 } });
 const errs = []; page.on("pageerror", (e) => errs.push(e.message));

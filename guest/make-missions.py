@@ -134,6 +134,34 @@ WARMUP = dict(title="Warm-up", level="Warm-up", points=50,
 POINTS = {"Easy": 100, "Medium": 200, "Hard": 400, "Very Hard": 800}
 for _m in MISSIONS: _m["points"] = POINTS[_m["level"]]
 TOTAL_POINTS = sum(m["points"] for m in MISSIONS)
+# Hints, in tiers: each one gives more direction than the last. Each costs 5% of the
+# mission's points, charged once. Easy missions get one hint; harder ones get more.
+HINT_TIERS = {
+    "Make your move": ["Lost? `pwd` shows where you are and `cd ..` goes back up one level. Run `ls` in every folder: the names tell you which folder to `cd` into next."],
+    "Let the cat out of the bag": ["Read the help for `cat` (`cat --help`) and look for the option that **numbers** the lines. Options go between the command and the file name."],
+    "Now you see me": ["Read the help for `ls` (`ls --help`) and look for an option that also shows names starting with a dot. One hidden file is a decoy, so check them all."],
+    "Needle in the tree": ["Read the help for `find` (`find --help`) and look for a way to match a file's **name** against a pattern. In a pattern, `*` means \"anything\".",
+                           "Search the archive by name, using the ending from `README.txt`: `find archive -name \"*.ENDING\"`. Keep the quotes. Then `cat` the path it prints."],
+    "Search party": ["Read the help for `grep` (`grep --help`). The **Usage** line shows the order: what to look for first, then which file.",
+                     "`grep NAME access.log` prints only the lines that contain NAME. Use the intruder's name from `README.txt`: the token on that line is the flag."],
+    "Odd one out": ["`uniq` only compares lines that sit **next to each other**, so `sort` the file first and pipe it in: `sort codes.txt | uniq ...`. Read `uniq --help` for the right option.",
+                    "`uniq -u` prints only the lines that appear exactly once. Put it at the end of the pipe."],
+    "Permission denied": ["`ls -l` shows the permissions: there is no `x`, so the script is not allowed to run. Read `chmod --help` to see how to **add** a permission.",
+                          "`chmod +x unlock.sh` adds the execute permission. Then run it with `./unlock.sh`."],
+    "Decoder ring": ["Letters, digits and an `=` at the end: that's **base64**. Read `base64 --help` and look for the option that **decodes**.",
+                     "`base64 -d message.b64` turns it back into normal text."],
+    "Layer cake": ["Decode once with `base64 -d cake.b64`. Still looks like base64? Then there is another layer underneath.",
+                   "Pipe one decode into the next: `base64 -d cake.b64 | base64 -d`. Press the Up arrow and add another `| base64 -d` each time.",
+                   "There are 4 to 6 layers. Stop when the output starts with `Flag:`. Garbage symbols mean you decoded once too many: remove the last pipe."],
+    "Endgame": ["**Piece 1:** hidden names start with a dot. `find vault -name \".*\" -type f` lists every hidden file in the tree. `cat` each one: the decoys say so.",
+                "**Piece 2:** `grep` the intruder's name in `auth.log`. The token is everything after `token=`. Decode it with `echo TOKEN | base64 -d`.",
+                "**Piece 3:** `unlock.sh` is locked, just like Mission 7: `chmod +x unlock.sh`, then `./unlock.sh`.",
+                "Join the three 6-character values with dashes, in order: `CYBA{piece1-piece2-piece3}`. Leave out the words \"piece 1:\"."],
+}
+for _m in MISSIONS: _m["hints"] = HINT_TIERS[_m["title"]]
+# Each hint costs 5% of the mission's points. The warm-up hint is free.
+HINT_RATE = 0.05
+def hint_cost(m): return int(round(m["points"] * HINT_RATE))
 WEB_LOG, KC_LOG = "12,000", "40,000"
 
 def fill(t, loglines): return t.replace("{LOGLINES}", loglines)
@@ -155,7 +183,8 @@ def brief(i, loglines):
         else:
             out += textwrap.wrap(plain(fill(b, loglines)), 72) + [""]
     out += [useful_label(m) + ": " + ", ".join(m["useful"]),
-            "When you have the flag: submit CYBA{...}     Stuck? cat hint.txt"]
+            "When you have the flag: submit CYBA{...}",
+            "Stuck? hint %d   (%d hint%s, %d points each: 5%% of this mission)" % (n, len(m["hints"]), "" if len(m["hints"]) == 1 else "s", hint_cost(m))]
     return "\n".join(out) + "\n"
 
 def brief_warmup():
@@ -178,7 +207,8 @@ def overview():
 def readme(i, loglines, kc=False):
     t = brief(i, loglines)
     if kc:
-        t = t.replace("submit CYBA{...}     Stuck?", "submit CYBA{...}, then press CHECK.     Stuck?")
+        t = t.replace("submit CYBA{...}\n", "submit CYBA{...}, then press CHECK.\n")
+        t = re.sub(r"Stuck\? hint \d+ .*", "Stuck? Open the Hint in the instructions panel.", t)
     return t
 
 def readme_home(kc=False):
@@ -188,7 +218,7 @@ def readme_home(kc=False):
              "  3. Read its brief:     cat README.txt" + ("" if kc else "     (or type: mission 1)"),
              "  4. Find the flag. It looks like CYBA{word-1a2b3c4d}",
              "  5. Check it:           submit CYBA{...}" + ("     then press CHECK" if kc else "")]
-    if not kc: steps.append("  6. Stuck?              hint 1")
+    if not kc: steps.append("  6. Stuck?              hint 1   (costs 5% of the mission's points)")
     return "\n".join(["CyberQuest Linux CTF", "====================", "",
                       "This file explains the game. Each mission folder has its own README.txt",
                       "with that mission's instructions. Read one with:  cat README.txt", "", "How to play"] + steps +
@@ -228,10 +258,13 @@ def orientation(kc=False):
     lines += [
         "4. Stuck?",
         "  Read the command's built-in help first:  ls --help",
-    ] + (["  Then ask for a nudge:  hint 1"] if not kc else ["  Then open the Hint in the instructions panel."]) + ["",
+    ] + (["  Then ask for a nudge:  hint 1",
+              "  A hint costs 5% of that mission's points, charged once. hint 1 tells",
+              "  you the price first; hint 1 --show reveals it."] if not kc else ["  Then open the Hint in the instructions panel."]) + ["",
         "Scoring",
         "  Easy 100    Medium 200    Hard 400    Very Hard 800",
-        "  The most points wins. On a tie, the faster time wins." + ("" if not kc else ""), ""]
+        "  The most points wins. On a tie, the faster time wins.",
+        "  Hints cost 5% of the mission's points." if not kc else "  Hints are free in this version.", ""]
     if not kc:
         lines += ["The clock",
         "  The clock starts when you begin Mission 1 and counts up. It stops",
@@ -252,7 +285,7 @@ def hint_file(i):
 
 def readmes(loglines, kc=False):
     r = {"home": readme_home(kc), "orientation": orientation(kc)}
-    r.update({"hint%d" % (i + 1): hint_file(i) for i in range(N)})
+
     r.update({str(i + 1): readme(i, loglines, kc) for i in range(N)})
     return r
 
@@ -266,11 +299,31 @@ def write_guest():
         sh += ["  %d) cat <<'EOF'" % (i + 1), brief(i, WEB_LOG) + "EOF", "  ;;"]
     sh += ["  *) cat <<'EOF'", overview() + "EOF", "  ;;", "esac", ""]
     open(os.path.join(HERE, "mission"), "w").write("\n".join(sh))
-    h = ["#!/bin/sh", "# Names the command to learn, never the answer. Students read its --help.",
-         "# Generated by guest/make-missions.py: edit that file, not this one.", 'case "$1" in']
-    h += ['  0) echo "Mission 0: %s" ;;' % WARMUP["short"]]
-    h += ['  %d) echo "%s" ;;' % (i + 1, hint_line(i)) for i in range(N)]
-    h += ['  *) echo "Usage: hint 1   (up to %d)" ;;' % N, "esac", ""]
+    def sq(t): return "'" + "\n".join(textwrap.wrap(plain(t), 66)).replace("'", "'\\''") + "'"
+    h = ["#!/bin/sh", "# hint N           shows the hints you already have and the price of the next one",
+         "# hint N --show    buys the next hint. Each hint costs 5% of the mission's points,",
+         "# charged once: the page keeps the score when it sees the [quest] line. The warm-up hint is free.",
+         "# Generated by guest/make-missions.py: edit that file, not this one.",
+         'case "$1" in',
+         "  0) echo %s; exit 0 ;;" % sq("Mission 0: " + WARMUP["hint"])]
+    for i, m in enumerate(MISSIONS):
+        h += ["  %d) pts=%d; cost=%d; total=%d" % (i + 1, m["points"], hint_cost(m), len(m["hints"]))]
+        h += ["     h%d=%s" % (k + 1, sq(t)) for k, t in enumerate(m["hints"])]
+        h += ["     ;;"]
+    h += ['  *) echo "Usage: hint 1   (up to %d)"; exit 1 ;;' % N, "esac",
+          "seen=/tmp/.quest-hints",
+          'have=$(grep -c "^$1\\." "$seen" 2>/dev/null); [ -n "$have" ] || have=0',
+          'i=1; while [ "$i" -le "$have" ]; do eval "t=\\$h$i"; echo "Hint $i of $total: $t"; i=$((i + 1)); done',
+          'if [ "$2" = "--show" ]; then',
+          '  if [ "$have" -ge "$total" ]; then echo "No more hints for mission $1."; exit 0; fi',
+          '  k=$((have + 1)); echo "$1.$k" >> "$seen"; eval "t=\\$h$k"',
+          '  echo "Hint $k of $total: $t"',
+          '  echo "[quest] hint $1.$k used (-$cost points)"',
+          "  exit 0",
+          "fi",
+          'if [ "$have" -ge "$total" ]; then echo "That is every hint for mission $1."; exit 0; fi',
+          'echo "Hint $((have + 1)) of $total costs $cost points (5% of $pts), charged once."',
+          'echo "To see it, type:  hint $1 --show"', ""]
     open(os.path.join(HERE, "hint"), "w").write("\n".join(h))
     pts = " ".join(str(m["points"]) for m in [WARMUP] + MISSIONS)
     sub = ["#!/bin/sh", "# submit <flag>  checks your flag against every mission and shows its points.",
@@ -301,14 +354,15 @@ def write_lite():
     p = os.path.join(ROOT, "public", "lite.js")
     texts = {str(i + 1): brief(i, WEB_LOG) for i in range(N)}
     texts["0"] = brief_warmup()
-    hints = {i + 1: hint_line(i) for i in range(N)}
-    hints[0] = "Mission 0: " + WARMUP["short"]
+    hints = {i + 1: [plain(t) for t in m["hints"]] for i, m in enumerate(MISSIONS)}
+    hints[0] = "Mission 0: " + plain(WARMUP["hint"])
     block = ("  // Mission briefs and hints. Generated by guest/make-missions.py.\n"
              "  const MISSION_TEXT = " + json.dumps(texts, indent=0) + ";\n"
              "  const MISSION_OVERVIEW = " + json.dumps(overview()) + ";\n"
              "  const HINTS = " + json.dumps(hints, indent=0).replace('"', '"') + ";\n"
              "  const MISSION_COUNT = " + str(N) + ";\n"
              "  const README_TEXT = " + json.dumps(readmes(WEB_LOG), indent=0) + ";\n"
+             "  const HINT_COST = " + json.dumps({i + 1: hint_cost(m) for i, m in enumerate(MISSIONS)}) + ";\n"
              "  const MISSION_POINTS = " + json.dumps(dict([(0, WARMUP["points"])] + [(i + 1, m["points"]) for i, m in enumerate(MISSIONS)])) + ";\n"
              "  // End of generated briefs.\n")
     s = open(p).read()
@@ -324,12 +378,11 @@ def write_panel():
     out = []
     for m in MISSIONS:
         notes = [html(fill(b, WEB_LOG)) for b in m["body"] if isinstance(b, str) and not b.endswith(":")]
-        hint = html(m["hint"]) + ("<pre>%s</pre>" % esc(m["hint_cmd"]) if m["hint_cmd"] else "")
-        out.append(dict(title=m["title"], level=m["level"], points=m["points"], objective=m["objective"], run=m["run"],
-                        ref=[list(r) for r in m["ref"]], notes=notes, hint=hint))
+        out.append(dict(title=m["title"], level=m["level"], points=m["points"], hintCost=hint_cost(m), objective=m["objective"], run=m["run"],
+                        ref=[list(r) for r in m["ref"]], notes=notes, hints=[html(t) for t in m["hints"]]))
     w = WARMUP
     warm = dict(title=w["title"], level=w["level"], points=w["points"], objective=w["objective"], run=w["run"],
-                ref=[list(r) for r in w["ref"]], notes=[html(b) for b in w["body"]], hint=html(w["hint"]))
+                ref=[list(r) for r in w["ref"]], notes=[html(b) for b in w["body"]], hints=[html(w["hint"])], hintCost=0)
     block = ("  // Generated by guest/make-missions.py: edit that file, not this one.\n"
              "  const MISSIONS = " + json.dumps(out, indent=2).replace("\n", "\n  ") + ";\n"
              "  const WARMUP = " + json.dumps(warm) + ";\n")
@@ -364,11 +417,9 @@ def write_killercoda():
         tools = ", ".join("`%s`" % u for u in m["useful"])
         md += ["**%s:** %s." % (useful_label(m), tools) + (" Use `--help` to discover what they can do." if n > 2 else ""), "",
                "When you have the flag, record it with `submit` and press **CHECK**.", "", "<br>", "",
-               "<details><summary>Hint</summary>", "", m["hint"], ""]
-        if m["hint_cmd"]:
-            cmd = m["hint_cmd"].split()[0]
-            md += ["```", m["hint_cmd"], "```", "", "The full manual page has even more: `man %s` (press `q` to quit)." % cmd, ""]
-        md += ["</details>", ""]
+               ]
+        for k, t in enumerate(m["hints"]):
+            md += ["<details><summary>Hint %d of %d</summary>" % (k + 1, len(m["hints"])), "", t, "", "</details>", ""]
         d = os.path.join(KC, "step%d" % n); os.makedirs(d, exist_ok=True)
         open(os.path.join(d, "text.md"), "w").write("\n".join(md))
         open(os.path.join(d, "verify.sh"), "w").write(VERIFY % (n, n))

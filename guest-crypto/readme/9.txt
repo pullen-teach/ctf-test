@@ -1,0 +1,17 @@
+Mission 9: Keyed up   [Hard, 400 points]
+
+Objective: Find the keyword, then decrypt a Vigenère cipher.
+
+  cd ~/mission9
+  ls
+
+secret.txt is encrypted with the Vigenère cipher: each letter is shifted
+by a different amount, set by a keyword that repeats. Brute force won't
+work here: there are far too many keys.
+
+But somebody left a briefing behind, scrambled with a cipher you already
+know.
+
+Useful commands: tr, vigenere
+When you have the flag: submit CYBA{...}
+Stuck? hint 9   (2 hints, 20 points each: 5% of this mission)

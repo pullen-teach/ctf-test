@@ -1,0 +1,16 @@
+Mission 6: Dots and dashes   [Medium, 200 points]
+
+Objective: Decode a Morse code signal and build the flag from it.
+
+  cd ~/mission6
+  cat README.txt
+
+Morse code turns letters into short and long signals: . is short and -
+is long. Letters are separated by spaces, words by /.
+
+Morse has no curly braces, so README.txt tells you how to turn the
+decoded code into a flag.
+
+Useful command: morse
+When you have the flag: submit CYBA{...}
+Stuck? hint 6   (2 hints, 10 points each: 5% of this mission)
