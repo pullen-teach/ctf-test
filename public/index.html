@@ -33,6 +33,7 @@
     .game::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--accent); }
     .game:hover, .game:focus-visible { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(18, 33, 58, 0.18); }
     .game:focus-visible { outline: 3px solid var(--accent-solid); outline-offset: 3px; }
+    .warmup { --accent: linear-gradient(90deg, #f5a623, #f5c542, #46d39a); --accent-solid: #f5a623; }
     .linux { --accent: linear-gradient(90deg, #17875a, #2a9fd6, #2459d8); --accent-solid: #17875a; }
     .crypto { --accent: linear-gradient(90deg, #f5a623, #d1416b, #7448d4); --accent-solid: #7448d4; }
     .forensics { --accent: linear-gradient(90deg, #46d39a, #0f9488, #2a9fd6); --accent-solid: #0f9488; }
@@ -73,21 +74,32 @@
     <div class="wrap">
       <p class="prompt"><b>player@quest</b>:~$ ls challenges/ <span class="cursor" aria-hidden="true"></span></p>
       <h1>Pick your challenge.</h1>
-      <p class="lede">Start with the foundation, then pick a category. Each one is a capture-the-flag competition that runs a real Linux computer right in this browser tab. Ten flags, one clock, easiest first.</p>
+      <p class="lede">New to capture-the-flag? Start with the warm-ups. Then take on the command-line foundation and the category challenges &mdash; each one is a competition that runs a real Linux computer right in this browser tab. Ten flags, one clock, easiest first.</p>
     </div>
   </section>
 
   <main>
     <div class="games wrap">
+      <a class="game warmup" href="warmup/">
+        <span class="g-kicker">Start here: New to CTFs?</span>
+        <div class="g-head">
+          <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 4v24" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/><path d="M9 5h15l-4 5 4 5H9z" fill="#f5a623"/></svg></span>
+          <h2>Warm-ups</h2>
+        </div>
+        <p>Two quick warm-ups before you compete. Learn how a CTF works and submit your first flag, then build terminal speed: Tab, the up arrow, Ctrl+C and copy-paste.</p>
+        <ul class="facts"><li><b>2</b> warm-ups</li><li><b>100</b> bonus points</li><li>Optional &middot; untimed</li></ul>
+        <ul class="chips" aria-label="Skills"><li>cat</li><li>submit</li><li>Tab</li><li>up arrow</li><li>Ctrl+C</li><li>copy / paste</li></ul>
+        <span class="go">Start the Warm-ups &rarr;</span>
+      </a>
       <a class="game linux" href="linux/">
         <span class="g-kicker">CTF Foundation: Command line</span>
         <div class="g-head">
           <span class="g-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 9l7 7-7 7" fill="none" stroke="#46d39a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 23h8" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/></svg></span>
           <h2>Linux CTF</h2>
         </div>
-        <p>Learn the command line, then compete. Two warm-ups (orientation and speed drills), then move around, search, read hidden files and fix permissions.</p>
-        <ul class="facts"><li><b>2 warm-ups + 10</b> missions</li><li><b>2,800</b> points</li><li>Easy to Very Hard</li></ul>
-        <ul class="chips" aria-label="Skills"><li>Tab</li><li>Ctrl+C</li><li>cd</li><li>ls -a</li><li>find</li><li>grep</li><li>|</li><li>chmod</li><li>base64</li></ul>
+        <p>Learn the command line, then compete. Move around, search, read hidden files, decode and fix permissions to capture every flag.</p>
+        <ul class="facts"><li><b>10</b> missions</li><li><b>2,700</b> points</li><li>Easy to Very Hard</li></ul>
+        <ul class="chips" aria-label="Skills"><li>cd</li><li>ls -a</li><li>find</li><li>grep</li><li>|</li><li>chmod</li><li>base64</li></ul>
         <span class="go">Start the Linux CTF &rarr;</span>
       </a>
       <a class="game crypto" href="crypto/">
@@ -97,7 +109,7 @@
           <h2>Crypto CTF</h2>
         </div>
         <p>Crack the codes, then compete. Decode, brute-force and fingerprint your way from base64 to the Vigen&egrave;re vault.</p>
-        <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
+        <ul class="facts"><li><b>10</b> missions</li><li><b>2,700</b> points</li><li>Easy to Very Hard</li></ul>
         <ul class="chips" aria-label="Skills"><li>base64</li><li>xxd</li><li>tr</li><li>caesar</li><li>xor</li><li>sha256sum</li><li>vigenere</li></ul>
         <span class="go">Start the Crypto CTF &rarr;</span>
       </a>
@@ -108,7 +120,7 @@
           <h2>Forensics CTF</h2>
         </div>
         <p>Read the evidence, then compete. File signatures, metadata, hidden data, logs and a packet capture: solve the break-in.</p>
-        <ul class="facts"><li><b>Warm-up + 10</b> missions</li><li><b>2,750</b> points</li><li>Easy to Very Hard</li></ul>
+        <ul class="facts"><li><b>10</b> missions</li><li><b>2,700</b> points</li><li>Easy to Very Hard</li></ul>
         <ul class="chips" aria-label="Skills"><li>ls -l</li><li>strings</li><li>xxd</li><li>tar</li><li>zcat</li><li>sha256sum -c</li><li>uniq -c</li></ul>
         <span class="go">Start the Forensics CTF &rarr;</span>
       </a>
@@ -121,7 +133,7 @@
     <div class="how">
       <div><h3>Nothing to install</h3><p>Everything runs on your own device, inside this tab. Works on Chromebooks.</p></div>
       <div><h3>Don't reload mid-game</h3><p>A reload builds a fresh computer: new flags, zero points, a new clock.</p></div>
-      <div><h3>Warm up first</h3><p>Warm-ups are optional and untimed, worth 50 bonus points each. The clock starts at Mission 1.</p></div>
+      <div><h3>Warm up first</h3><p>New to CTFs? The <b>Warm-ups</b> tile is optional and untimed. Each CTF's clock starts when you begin Mission 1.</p></div>
       <div><h3>Stuck?</h3><p>Every command has <code>--help</code>. Hints cost 5% of a mission's points.</p></div>
     </div>
   </main>

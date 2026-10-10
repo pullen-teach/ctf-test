@@ -43,9 +43,6 @@ authlog() {
 INTRUDERS="203.0.113.66 198.51.100.201 192.0.2.150 203.0.113.250 198.51.100.99"
 
 cp "$R/home.txt" "$H/README.txt"
-# 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
-F=$(flag warmup); keep 0 "$F"
-{ cat "$R/orientation.txt"; echo "  $F"; } > "$H/orientation.txt"
 
 # 1: the file changed at the minute of the break-in
 hh=$(printf '%02d' $(( $(num 4) + 1 ))); mm=$(printf '%02d' $(( $(num 60) - 1 )))

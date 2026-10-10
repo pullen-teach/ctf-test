@@ -11,7 +11,6 @@ const run = (c) => page.evaluate(async (c) => { const r = await window.questLite
 const flag = (t) => (t.match(/CYBA\{[^}]+\}/) || [null])[0];
 const show = (label, t) => console.log("--- " + label + "\n" + t.trimEnd().split("\n").slice(0, 6).join("\n"));
 const flags = [];
-flags.push((await run("cat ~/orientation.txt")).match(/CYBA\{warmup-[^}]+\}/)[0]);
 // 1: the file changed at the break-in minute
 await run("cd ~/mission1");
 const t1 = (await run("head -1 README.txt")).match(/(\d\d:\d\d)/)[1];
@@ -68,7 +67,7 @@ for (const [n, f] of flags.entries()) {
   if (/Correct/.test(r)) ok++;
 }
 await page.waitForTimeout(500);
-console.log("captured", ok, "of 11 | status:", (await page.textContent("#status")).trim());
+console.log("captured", ok, "of 10 | status:", (await page.textContent("#status")).trim(), "| points:", (await page.textContent("#score-pts")).trim(), "/", (await page.textContent("#score-max")).trim());
 console.log("errors:", errs);
 await browser.close();
-process.exit(ok === 11 && !errs.length ? 0 : 1);
+process.exit(ok === 10 && !errs.length ? 0 : 1);

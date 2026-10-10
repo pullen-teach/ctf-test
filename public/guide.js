@@ -185,7 +185,7 @@
       "hintCost": 10,
       "objective": "Use a pipe to find the only code that appears once.",
       "run": [
-        "cd ~/mission7",
+        "cd ~/mission6",
         "head codes.txt"
       ],
       "ref": [
@@ -222,7 +222,7 @@
       "hintCost": 10,
       "objective": "Unlock a script with chmod and run it.",
       "run": [
-        "cd ~/mission8",
+        "cd ~/mission7",
         "ls -l"
       ],
       "ref": [
@@ -250,14 +250,14 @@
       ]
     },
     {
-      "title": "Decoder ring",
+      "title": "Find and replace",
       "level": "Hard",
       "points": 400,
       "hintCost": 20,
-      "objective": "Decode a base64 message to reveal the flag.",
+      "objective": "Clean up a corrupted file with sed to reveal the flag.",
       "run": [
-        "cd ~/mission6",
-        "cat message.b64"
+        "cd ~/mission8",
+        "cat message.txt"
       ],
       "ref": [
         [
@@ -265,51 +265,60 @@
           "print a file on the screen"
         ],
         [
-          "base64 --help",
-          "list everything base64 can do"
+          "sed 's/old/new/g' FILE",
+          "replace every 'old' with 'new'"
+        ],
+        [
+          "sed --help",
+          "list everything sed can do"
         ]
       ],
       "notes": [
-        "It looks like gibberish, but it is not encrypted. It is <b>encoded</b> with base64: a way of writing any data using only letters, digits, <code>+</code>, <code>/</code> and <code>=</code>.",
-        "There is no secret key. Anyone can decode it."
+        "<code>message.txt</code> is corrupted: the same <b>junk string</b> was wedged all through the flag. <code>cat</code> it and you will see the flag with garbage packed between every character.",
+        "<code>sed</code> is Linux's stream editor. Its substitute command, <code>sed 's/old/new/g'</code>, replaces every copy of <code>old</code> with <code>new</code>. Replace the junk with <b>nothing</b> (an empty <code>new</code>) to delete it.",
+        "Spot the junk string first, then strip every copy to read the flag."
       ],
       "hints": [
-        "Letters, digits and an <code>=</code> at the end: that's <b>base64</b>. Read <code>base64 --help</code> and look for the option that <b>decodes</b>.",
-        "<code>base64 -d message.b64</code> turns it back into normal text."
+        "Find the junk string that repeats in <code>message.txt</code> - it is wedged between every character of the flag. Then read <code>sed --help</code> for the <b>substitute</b> command.",
+        "<code>sed 's/JUNK//g' message.txt</code> replaces every copy of the junk with nothing. Use the exact junk string you spotted."
       ]
     },
     {
-      "title": "Layer cake",
+      "title": "Forge the key",
       "level": "Hard",
       "points": 400,
       "hintCost": 20,
-      "objective": "Peel back every layer of encoding to reveal the flag.",
+      "objective": "Pull fields out of a table with awk, save them, and forge the flag.",
       "run": [
         "cd ~/mission9",
-        "cat cake.b64"
+        "cat records.txt"
       ],
       "ref": [
         [
-          "base64 -d FILE",
-          "decode a base64 file"
+          "awk '{print $3}' FILE",
+          "print the 3rd field of every line"
         ],
         [
-          "A | base64 -d",
-          "decode the output of A"
+          "awk '/word/{print $3}' FILE",
+          "only lines that contain 'word'"
         ],
         [
-          "cat FILE",
-          "print a file on the screen"
+          "A > FILE",
+          "save the output of A into FILE"
+        ],
+        [
+          "forge FILE",
+          "build the flag from a file of parts"
         ]
       ],
       "notes": [
-        "You decoded base64 in the last mission. This message was encoded, then the result was encoded <b>again</b>, and again. Nobody wrote down how many layers there are.",
-        "Copying each result into the next command works, but it is slow. A pipe (<code>|</code>) can feed one <code>base64 -d</code> straight into the next. Keep adding layers until you see the flag."
+        "<code>records.txt</code> is an access table with three columns: <code>user role token</code>. Three rows have the role <b>admin</b>, and their tokens, in order, are the three parts of the flag.",
+        "<code>awk</code> pulls columns out of text. <code>awk '/admin/{print $3}' records.txt</code> prints the token (the 3rd field) of every admin row. Save those parts to a file with <code>&gt;</code>.",
+        "Then run the little assembler, <code>forge</code>, on that file: it builds the flag from the parts you saved."
       ],
       "hints": [
-        "Decode once with <code>base64 -d cake.b64</code>. Still looks like base64? Then there is another layer underneath.",
-        "Pipe one decode into the next: <code>base64 -d cake.b64 | base64 -d</code>. Press the Up arrow and add another <code>| base64 -d</code> each time.",
-        "There are 4 to 6 layers. Stop when the output starts with <code>Flag:</code>. Garbage symbols mean you decoded once too many: remove the last pipe."
+        "<code>awk '/admin/{print $3}' records.txt</code> prints the token (3rd field) of every admin row. There are three, in order.",
+        "Save them to a file, then forge the flag:  <code>awk '/admin/{print $3}' records.txt &gt; keys.txt</code>  then  <code>forge keys.txt</code>."
       ]
     },
     {
@@ -332,48 +341,47 @@
           "show the lines that contain TEXT"
         ],
         [
-          "cut --help",
-          "pull one field out of a line"
-        ],
-        [
-          "base64 -d",
-          "decode base64"
+          "cut -d= -f4",
+          "pull the 4th =-separated field"
         ],
         [
           "chmod +x FILE",
           "make a file runnable"
+        ],
+        [
+          "./FILE",
+          "run a script"
         ]
       ],
       "notes": [
         "The final mission uses <b>everything</b> you have learned. The flag was split into three pieces, and each one is hidden a different way. <code>README.txt</code> tells you where each piece is.",
         "Put the pieces together in order, joined with dashes: <code>CYBA{piece1-piece2-piece3}</code>.",
-        "There are no new commands here. <code>find</code>, <code>grep</code>, <code>cut</code>, <code>base64</code>, <code>chmod</code> and pipes are all you need."
+        "There are no new commands here. <code>find</code>, <code>grep</code>, <code>cut</code>, <code>chmod</code> and pipes are all you need."
       ],
       "hints": [
         "<b>Piece 1:</b> hidden names start with a dot. <code>find vault -name \".*\" -type f</code> lists every hidden file in the tree. <code>cat</code> each one: the decoys say so.",
-        "<b>Piece 2:</b> <code>grep</code> the intruder's name in <code>auth.log</code>. The token is everything after <code>token=</code>. Decode it with <code>echo TOKEN | base64 -d</code>.",
+        "<b>Piece 2:</b> <code>grep</code> the intruder's name in <code>auth.log</code>. The token is everything after <code>token=</code>; <code>cut -d= -f4</code> pulls it out.",
         "<b>Piece 3:</b> <code>unlock.sh</code> is locked, just like Mission 7: <code>chmod +x unlock.sh</code>, then <code>./unlock.sh</code>.",
         "Join the three 6-character values with dashes, in order: <code>CYBA{piece1-piece2-piece3}</code>. Leave out the words \"piece 1:\"."
       ]
     }
   ];
-  const WARMUP = {"title": "Warm-up", "level": "Warm-up", "points": 50, "objective": "Read the CTF orientation in the terminal with cat.", "run": ["cat orientation.txt"], "ref": [["cat FILE", "print a file on the screen"], ["clear", "clear the screen"]], "notes": ["Get comfortable before the clock starts. Your <b>home folder</b> holds <code>orientation.txt</code>: how a CTF works, what a flag looks like, scoring and the rules.", "<code>cat</code> prints a file on the screen. Click the terminal, type <code>cat orientation.txt</code> and press Enter. The warm-up flag is at the bottom.", "Submit it for <b>50 bonus points</b>, or skip the warm-up. The competition clock starts when you begin Mission 1."], "hints": ["The flag is on the last line of <code>orientation.txt</code> in your home folder. Type <code>cat orientation.txt</code>, press Enter, then copy the flag into <code>submit</code>."], "hintCost": 0};
-  const WARMUP2 = {"title": "Speed drills", "level": "Warm-up", "points": 50, "objective": "Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and Linux-style copy and paste.", "run": ["cd ~/speed", "cat README.txt"], "ref": [["Tab", "finish a file or command name for you"], ["up arrow", "bring back your last command"], ["Ctrl+C", "stop a running command"], ["select, then middle-click", "copy and paste, the Linux way (right-click also pastes)"], ["history", "list the commands you have typed"], ["clear", "clear the screen (or Ctrl+L)"]], "notes": ["Four drills, four pieces of the flag. Each drill needs one terminal skill, and each piece is 4 characters.", "<b>Drill 1, Tab:</b> <code>cd tab</code>, type <code>cat dri</code> and press <b>Tab</b>. The long file name finishes itself.", "<b>Drill 2, up arrow:</b> run <code>again</code> 5 times within 15 seconds. After the first one, press <b>up arrow</b> then Enter.", "<b>Drill 3, Ctrl+C:</b> run <code>runaway</code>. It never stops by itself. Hold <b>Ctrl</b> and press <b>C</b>.", "<b>Drill 4, copy and paste:</b> <code>cd ~/speed/paste</code>, then <code>cat code.txt</code>. <b>Highlight</b> the long code with the mouse or trackpad (that copies it), type <code>pasteit </code> and a space, then <b>middle-click</b> to paste it (<b>right-click</b> also pastes) and press Enter. No Ctrl+C or Ctrl+V needed: in a Linux terminal, selecting is copying and the middle button pastes.", "Put the pieces together in order: <code>submit CYBA{speed-PIECE1PIECE2PIECE3PIECE4}</code>. Paste each piece the same way: highlight it, then middle-click (or right-click)."], "hints": ["Drill 1: in ~/speed/tab type <code>cat dri</code>, then press Tab. Drill 2: type <code>again</code> and Enter, then press the up arrow and Enter four more times, quickly. Drill 3: type <code>runaway</code>, then hold Ctrl and press C. Drill 4: in ~/speed/paste run <code>cat code.txt</code>, highlight the CODE with the mouse, type <code>pasteit </code> then middle-click (or right-click) to paste it. The flag is <code>CYBA{speed-</code> followed by the four pieces in order, then <code>}</code>."], "hintCost": 0, "id": 11};
+  const LEARNED = ["Practiced basic Linux navigation with <code>pwd</code>, <code>cd</code> and <code>ls</code>.", "Read files with <code>cat</code> and made commands explain themselves with <code>--help</code>.", "Found hidden files with <code>ls -a</code> and searched a folder tree with <code>find</code>.", "Searched a 12,000-line log with <code>grep</code>.", "Found the one unique line with <code>sort | uniq -u</code>: chaining commands with pipes.", "Read permissions with <code>ls -l</code> and unlocked a script with <code>chmod +x</code>.", "Cleaned up a corrupted file with <code>sed</code>, and pulled fields out of a table with <code>awk</code>.", "Combined <code>find</code>, <code>grep</code>, <code>cut</code> and <code>chmod</code> to beat the Very Hard Endgame."];
 
   const N = MISSIONS.length;
+  const CFG = window.QUEST_CONFIG || {};
+  const UNIT = CFG.unit || "Mission";          // "Mission" for a CTF, "Warm-up" for the Warm-ups module
+  const UNITS = UNIT.toLowerCase();
+  const UNTIMED = !!CFG.untimed;               // the Warm-ups module has no competition clock
+  const GAME = CFG.game || "CTF";
+  const BOARD_KEY = CFG.board || "cq-ctf-runs";
   const el = (id) => document.getElementById(id);
   const done = new Set();
-  // Two optional, untimed warm-ups worth bonus points: current === -1 shows Warm-up 1 (orientation),
-  // current === -2 shows Warm-up 2 (speed drills). Order in the stepper: W1, W2, then Mission 1.
-  let warm = false, warm2 = false;
-  const WARMS = { "-1": WARMUP, "-2": WARMUP2 };
-  const warmDone = (c) => (c === -1 ? warm : warm2);
-  // Hints cost 5% of the mission's points, charged once per mission, from the panel or the terminal.
+  // Hints cost 5% of the mission's points, charged once per mission (0 = free), from the panel or the terminal.
   const hintsUsed = {};   // mission number -> how many of its hints have been bought
   const hintCost = (n) => (hintsUsed[n] || 0) * MISSIONS[n - 1].hintCost;
   const hintTotal = () => Object.keys(hintsUsed).reduce((t, n) => t + hintCost(Number(n)), 0);
-  // Clock time (ms) of each capture. "Took" is the time since the capture before it
-  // (or since the clock started), so the splits add up to the total.
+  // Clock time (ms) of each capture. "Took" is the time since the capture before it.
   const capturedAt = {};
   const fmt = (ms) => (window.questClock ? window.questClock.fmt(ms) : "");
   const clockAt = (n) => (n in capturedAt ? fmt(capturedAt[n]) : "");
@@ -382,8 +390,8 @@
     const before = Object.values(capturedAt).filter((t) => t < capturedAt[n]);
     return fmt(capturedAt[n] - (before.length ? Math.max(...before) : 0));
   };
-  const MAX = MISSIONS.reduce((t, m) => t + m.points, 0) + WARMUP.points + WARMUP2.points;
-  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0) + (warm ? WARMUP.points : 0) + (warm2 ? WARMUP2.points : 0) - hintTotal();
+  const MAX = MISSIONS.reduce((t, m) => t + m.points, 0);
+  const score = () => [...done].reduce((t, n) => t + MISSIONS[n - 1].points, 0) - hintTotal();
   const scoreEl = el("score"), scorePts = el("score-pts");
   const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const TROPHY = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd54a"/><stop offset="1" stop-color="#f5a300"/></linearGradient></defs><path fill="url(#g)" d="M17 5h30v5h11v8c0 8-6 14-14 15a15 15 0 0 1-9 8.6V48h9v6H20v-6h9v-6.4A15 15 0 0 1 20 33C12 32 6 26 6 18v-8h11zm-5 11v2c0 4 2.5 7.5 6.5 8.6A30 30 0 0 1 17 16zm40 0h-5a30 30 0 0 1-1.5 10.6C54.5 25.5 52 22 52 18z"/><rect x="18" y="54" width="28" height="5" rx="1.5" fill="#d98a00"/><path fill="#fff6c9" d="M32 12l3 6.1 6.7 1-4.9 4.7 1.2 6.7L32 27.3l-6 3.2 1.2-6.7-4.9-4.7 6.7-1z"/></svg>';
@@ -393,28 +401,24 @@
     scorePts.textContent = score();
     if (bump) { scoreEl.classList.remove("bump"); void scoreEl.offsetWidth; scoreEl.classList.add("bump"); }
     const fc = el("flags-count"), fs = el("flags-stat"), fl = el("flags-label");
-    if (fc) fc.innerHTML = done.size === N ? "All " + N + " flags" : done.size + '<span class="of"> / ' + N + "</span>";
-    if (fl) fl.textContent = done.size === N ? "Captured!" : "Flags Captured";
+    const noun = UNTIMED ? "" : " flags";
+    if (fc) fc.innerHTML = done.size === N ? "All " + N + noun : done.size + '<span class="of"> / ' + N + "</span>";
+    if (fl) fl.textContent = done.size === N ? (UNTIMED ? "Done!" : "Captured!") : (UNTIMED ? "Completed" : "Flags Captured");
     if (fs) fs.classList.toggle("all", done.size === N);
   }
-  // The stepper: a check in a green circle for each captured mission, a ring for the current one.
+  // The stepper: a check in a green circle for each captured step, a ring for the current one.
   function paintSteps(cur) {
     const r = reachable();
-    dots.querySelectorAll(".warm-btn").forEach((w) => {
-      const c = Number(w.dataset.c), ok = warmDone(c);
-      w.className = "step-btn warm-btn" + (ok ? " ok" : "") + (cur === c ? " here" : "");
-      w.querySelector(".step-dot").innerHTML = ok ? CHECK : "W" + -c;
-    });
-    dots.querySelectorAll(".step-btn:not(.warm-btn)").forEach((d, i) => {
+    dots.querySelectorAll(".step-btn").forEach((d, i) => {
       const ok = done.has(i + 1);
       d.className = "step-btn" + (ok ? " ok" : "") + (i === cur ? " here" : "");
       d.querySelector(".step-dot").innerHTML = ok ? CHECK : String(i + 1);
       d.disabled = !(i <= r || done.size === N);
       d.setAttribute("aria-current", i === cur ? "step" : "false");
     });
-    dots.querySelectorAll(".step-bar:not(.warm-bar)").forEach((b, i) => b.classList.toggle("ok", done.has(i + 1) && done.has(i + 2)));
+    dots.querySelectorAll(".step-bar").forEach((b, i) => b.classList.toggle("ok", done.has(i + 1) && done.has(i + 2)));
   }
-  let current = -1;
+  let current = 0;
   let runner = null;
 
   const article = el("mission");
@@ -426,7 +430,7 @@
   const body = document.querySelector(".guide-body");
 
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-  // Missions you can open: every captured one, plus the first one not yet captured.
+  // Steps you can open: every captured one, plus the first one not yet captured.
   const reachable = () => { let i = 0; while (i < N - 1 && done.has(i + 1)) i++; return i; };
 
   const lvlClass = (l) => l.toLowerCase().replace(/\s+/g, "-");
@@ -443,47 +447,47 @@
     return Promise.resolve();
   }
 
-  // The hint box: hints bought so far, then the price of the next one.
-  function hintHtml(m, n, isWarm) {
-    const have = isWarm ? m.hints.length : hintsUsed[n] || 0, total = m.hints.length;
-    const label = isWarm ? 'Need a hint? <span class="hint-cost free">free</span>'
+  // The hint box: hints bought so far, then the price of the next one (free when hintCost is 0).
+  function hintHtml(m, n) {
+    const free = !m.hintCost;
+    const have = hintsUsed[n] || 0, total = m.hints.length;
+    const label = free ? 'Need a hint? <span class="hint-cost free">free</span>'
       : have ? "Hints " + have + " of " + total + ' <span class="hint-cost">−' + have * m.hintCost + " pts</span>"
       : "Need a hint? " + '<span class="hint-cost">' + total + (total > 1 ? " hints, " : " hint, ") + "−" + m.hintCost + " pts each</span>";
-    let body = m.hints.slice(0, have).map((h, k) => '<div class="hint-step">' + (isWarm ? "" : "<b>Hint " + (k + 1) + ".</b> ") + h + "</div>").join("");
-    if (!isWarm && have < total)
-      body += "<p>" + (have ? "Want more direction? " : "") + "Hint " + (have + 1) + " costs <b>" + m.hintCost + " points</b>: 5% of this mission's " + m.points +
-        ". Each hint is charged once, here or with <code>hint " + n + " --show</code> in the terminal.</p>" +
-        '<button type="button" class="btn hint-buy">Show hint ' + (have + 1) + " of " + total + " (−" + m.hintCost + " pts)</button>";
-    return '<details class="hint fold"' + (have && !isWarm ? " open" : "") + '><summary><span class="c-ico">' + ICON.bulb + "</span>" + label +
+    let body = m.hints.slice(0, have).map((h, k) => '<div class="hint-step">' + (total > 1 ? "<b>Hint " + (k + 1) + ".</b> " : "") + h + "</div>").join("");
+    if (have < total)
+      body += "<p>" + (have ? "Want more direction? " : "") + "Hint " + (have + 1) + (free ? " is free." : " costs <b>" + m.hintCost + " points</b>: 5% of this " + UNITS + "'s " + m.points +
+        ". Each hint is charged once,") + (free ? " Reveal it here, or type " : " here or with ") + "<code>hint " + n + (free ? "" : " --show") + "</code> in the terminal.</p>" +
+        '<button type="button" class="btn hint-buy">Show hint ' + (have + 1) + " of " + total + (free ? "" : " (−" + m.hintCost + " pts)") + "</button>";
+    return '<details class="hint fold"' + (have ? " open" : "") + '><summary><span class="c-ico">' + ICON.bulb + "</span>" + label +
       '<span class="chev" aria-hidden="true"></span></summary><div>' + body + "</div></details>";
   }
 
   function render() {
-    const isWarm = current < 0;
-    const m = isWarm ? WARMS[current] : MISSIONS[current];
-    const n = isWarm ? (current === -1 ? 0 : WARMUP2.id) : current + 1;
-    const ok = isWarm ? warmDone(current) : done.has(n);
-    count.textContent = isWarm ? "Warm-up " + -current + " of 2 · optional, untimed" : "Mission " + n + " of " + N;
+    const m = MISSIONS[current];
+    const n = current + 1;
+    const ok = done.has(n);
+    count.textContent = UNIT + " " + n + " of " + N + (UNTIMED ? " · optional" : "");
     const rows = m.run.map((c) =>
       '<div class="cmd-row"><code class="cmd"><span class="run-prompt" aria-hidden="true">$</span>' + esc(c) + "</code>" +
       '<button class="mini copy" type="button" data-cmd="' + esc(c) + '" aria-label="Copy ' + esc(c) + '">' + ICON.copy + "<span>Copy</span></button></div>").join("");
-    const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], [isWarm ? "hint " + n : "hint " + n, isWarm ? "a free nudge" : "a nudge (costs 5%)"]]);
+    const ref = m.ref.concat([["submit CYBA{...}", "check your flag"], ["hint " + n, m.hintCost ? "a nudge (costs 5%)" : "a free nudge"]]);
     article.innerHTML =
       '<div class="title-row"><h2>' + m.title + '</h2><span class="level ' + lvlClass(m.level) + '">' + m.level + '</span>' +
-        '<span class="pts-pill">' + ICON.pts + (isWarm ? "+" + m.points + " bonus" : m.points + " pts") + "</span>" +
-        (isWarm ? '<span class="untimed">Untimed</span>' : "") + "</div>" +
+        '<span class="pts-pill">' + ICON.pts + m.points + " pts</span>" +
+        (UNTIMED ? '<span class="untimed">Untimed</span>' : "") + "</div>" +
       '<div class="objective"><span class="c-ico">' + ICON.target + "</span><p><b>Objective</b>" + esc(m.objective) + "</p></div>" +
       '<section class="card start">' + head("term", "Start Here", "Type these commands in the terminal to begin.") + '<div class="cmd-rows">' + rows + "</div></section>" +
-      '<section class="card ref">' + head("book", "Quick Reference", "Common commands you'll use in this mission.") +
+      '<section class="card ref">' + head("book", "Quick Reference", "Common commands you'll use here.") +
         '<table class="ref-table"><tr><th>Command</th><th>What it does</th></tr>' + ref.map(([c, d]) => "<tr><td><code>" + esc(c) + "</code></td><td>" + esc(d) + "</td></tr>").join("") + "</table></section>" +
-      '<section class="card notes">' + head("info", "Mission Notes") + m.notes.map((p) => "<p>" + p + "</p>").join("") + "</section>" +
+      '<section class="card notes">' + head("info", UNIT + " Notes") + m.notes.map((p) => "<p>" + p + "</p>").join("") + "</section>" +
       (ok
         ? '<section class="card captured">' + '<span class="c-ico big">' + TROPHY + '</span><div><h3>Flag Captured <span class="pts">+' + m.points + " points</span></h3>" +
-          (isWarm ? "<p>Bonus points banked. The clock starts when you begin Mission 1.</p></div></section>"
+          (UNTIMED ? "<p>Nice work. Open the next one, or jump into a CTF when you're ready.</p></div></section>"
             : "<p>This flag took <b class=\"captured-at\">" + took(n) + "</b>; the clock read <b class=\"captured-at\">" + clockAt(n) + "</b> when you submitted it.</p></div></section>")
         : '<section class="card submit-card">' + head("flag", "Found the flag?", "Worth " + m.points + " points. Type <code>submit</code>, a space, then paste the whole flag:") +
           "<pre>submit CYBA{word-1a2b3c4d}</pre></section>") +
-hintHtml(m, n, isWarm);
+hintHtml(m, n);
     const buy = article.querySelector(".hint-buy");
     if (buy) buy.addEventListener("click", () => window.questGuide.hintUsed(n, (hintsUsed[n] || 0) + 1));
     article.querySelectorAll(".copy").forEach((b) => b.addEventListener("click", () => {
@@ -492,20 +496,16 @@ hintHtml(m, n, isWarm);
         setTimeout(() => { b.classList.remove("copied"); b.querySelector("span").textContent = "Copy"; }, 1400);
       }, () => {});
     }));
-    state.textContent = isWarm ? (ok ? "Bonus captured. Ready when you are." : "Optional. The clock waits until Mission 1.")
-      : ok ? "Flag captured. Next mission unlocked." : "Capture this flag to unlock the next mission.";
+    state.textContent = ok ? "Flag captured. Next " + UNITS + " unlocked." : "Capture this flag to unlock the next " + UNITS + ".";
     state.className = ok ? "m-state ok" : "m-state";
-    prev.disabled = current === -1;
-    next.disabled = !ok && !isWarm;
-    next.innerHTML = current === -1 ? (ok ? "Next: speed drills &rarr;" : "Skip to speed drills &rarr;")
-      : current === -2 ? (ok ? "Start Mission 1 &rarr;" : "Skip warm-ups &rarr;")
-      : current === N - 1 ? "Finish &rarr;" : "Next mission &rarr;";
+    prev.disabled = current === 0;
+    next.disabled = !ok;
+    next.innerHTML = current === N - 1 ? "Finish &rarr;" : "Next " + UNITS + " &rarr;";
     paintSteps(current);
     body.scrollTop = 0;
   }
 
   // ---- leaderboard: finished runs saved in this browser (best score, then fastest) ----
-  const BOARD_KEY = "cq-linux-ctf-runs";
   const loadRuns = () => { try { return JSON.parse(localStorage.getItem(BOARD_KEY) || "[]"); } catch (e) { return []; } };
   let thisRun = null;
   function saveRun() {
@@ -517,11 +517,12 @@ hintHtml(m, n, isWarm);
     let runs = loadRuns();
     if (thisRun && !runs.some((r) => r.when === thisRun.when)) runs.push(thisRun);
     runs.sort((x, y) => y.score - x.score || x.ms - y.ms);
+    const timeCol = UNTIMED ? "" : '<td class="num">Time</td>';
     const rows = runs.slice(0, 8).map((r, i) => '<tr' + (thisRun && r.when === thisRun.when ? ' class="me"' : "") + '><td class="rk">' + (i + 1) + "</td><td>" +
       new Date(r.when).toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + new Date(r.when).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) +
-      (thisRun && r.when === thisRun.when ? ' <span class="you">this run</span>' : "") + '</td><td class="num">' + r.score + ' pts</td><td class="num">' + fmt(r.ms) + "</td></tr>").join("");
+      (thisRun && r.when === thisRun.when ? ' <span class="you">this run</span>' : "") + '</td><td class="num">' + r.score + ' pts</td>' + (UNTIMED ? "" : '<td class="num">' + fmt(r.ms) + "</td>") + "</tr>").join("");
     return '<div class="card board-card" id="board-card"><h3><span class="h-ico">' + ICON.cup.replace('stroke="currentColor"', 'stroke="#f5a623"') + "</span>Leaderboard</h3>" +
-      '<table class="times"><tr class="head"><td>#</td><td>Run</td><td class="num">Points</td><td class="num">Time</td></tr>' + rows + "</table>" +
+      '<table class="times"><tr class="head"><td>#</td><td>Run</td><td class="num">Points</td>' + timeCol + "</tr>" + rows + "</table>" +
       '<p class="small">Best runs on this computer. Replay to add another. A class-wide leaderboard comes with CyberQuest.</p></div>';
   }
   const boardBtn = el("board");
@@ -532,38 +533,29 @@ hintHtml(m, n, isWarm);
     el("board-card").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  const LEARNED = [
-    "Practiced basic Linux navigation with <code>pwd</code>, <code>cd</code> and <code>ls</code>.",
-    "Read files with <code>cat</code> and made commands explain themselves with <code>--help</code>.",
-    "Found hidden files with <code>ls -a</code> and searched a folder tree with <code>find</code>.",
-    "Searched a 12,000-line log with <code>grep</code>.",
-    "Found the one unique line with <code>sort | uniq -u</code>: chaining commands with pipes.",
-    "Read permissions with <code>ls -l</code> and unlocked a script with <code>chmod +x</code>.",
-    "Decoded base64, even several layers deep, and learned that encoding is not encryption.",
-    "Combined <code>find</code>, <code>grep</code>, <code>cut</code>, <code>base64</code> and <code>chmod</code> to beat the Very Hard Endgame.",
-  ];
-
   function finish() {
-    const total = window.questClock ? window.questClock.text() : "";
+    const total = UNTIMED ? "" : (window.questClock ? window.questClock.text() : "");
     saveRun();
     count.textContent = "";
+    const title = UNTIMED ? "Warm-ups Complete" : "Quest Complete";
+    const blurb = UNTIMED
+      ? "Nice work — you finished all " + N + " warm-ups and banked <b>" + score() + " points</b>. You're ready: pick a CTF from the home page."
+      : "Great job! You captured all " + N + " flags and completed the " + GAME + " in <b>" + total + "</b>.";
+    const timeCols = UNTIMED ? "" : '<td class="num">Took</td><td class="num">Time</td>';
     article.innerHTML =
       '<div class="complete"><span class="confetti" aria-hidden="true">' + "<i></i>".repeat(12) + "</span>" +
         '<span class="trophy">' + TROPHY + "</span>" +
-        "<div><h2>Quest Complete</h2><p>Great job! You captured all " + N + " flags and completed the Linux CTF in <b>" + total + "</b>.</p></div></div>" +
-      '<div class="card sc"><h3><span class="h-ico">' + ICON.chart + "</span>Mission Scorecard</h3><table class=\"times\">" +
-        '<tr class="head"><td></td><td>#</td><td>Mission</td><td class="num">Points</td><td class="num">Took</td><td class="num">Time</td></tr>' +
-        [[warm, "W1", "Warm-up: orientation", WARMUP], [warm2, "W2", "Warm-up: speed drills", WARMUP2]].map(([ok, k, t, w]) =>
-          '<tr><td class="ck">' + (ok ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + k + "</td><td>" + t + ' <span class="dim">(bonus)</span></td><td class="num">' +
-          (ok ? "+" + w.points + " pts" : '<span class="dim">skipped</span>') + '</td><td class="num dim"></td><td class="num"></td></tr>').join("") +
-        MISSIONS.map((m, i) => '<tr><td class="ck">' + (done.has(i + 1) ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + (i + 1) + "</td><td>" + m.title + '</td><td class="num">' + (done.has(i + 1) ? m.points : 0) + " pts" + (hintCost(i + 1) ? '<span class="hint-cost">−' + hintCost(i + 1) + (hintsUsed[i + 1] > 1 ? " hints" : " hint") + "</span>" : "") + '</td><td class="num dim">' + took(i + 1) + '</td><td class="num">' + clockAt(i + 1) + "</td></tr>").join("") +
-        '<tr class="total"><td></td><td></td><td>Total</td><td class="num">' + score() + ' pts</td><td class="num"></td><td class="num">' + total + "</td></tr></table>" +
-        '<p class="small"><b>Took</b>: time since your previous flag. <b>Time</b>: the clock when you submitted.</p></div>' +
+        "<div><h2>" + title + "</h2><p>" + blurb + "</p></div></div>" +
+      '<div class="card sc"><h3><span class="h-ico">' + ICON.chart + "</span>" + UNIT + " Scorecard</h3><table class=\"times\">" +
+        '<tr class="head"><td></td><td>#</td><td>' + UNIT + '</td><td class="num">Points</td>' + timeCols + "</tr>" +
+        MISSIONS.map((m, i) => '<tr><td class="ck">' + (done.has(i + 1) ? '<span class="tick">' + CHECK + "</span>" : "") + '</td><td class="rk">' + (i + 1) + "</td><td>" + m.title + '</td><td class="num">' + (done.has(i + 1) ? m.points : 0) + " pts" + (hintCost(i + 1) ? '<span class="hint-cost">−' + hintCost(i + 1) + (hintsUsed[i + 1] > 1 ? " hints" : " hint") + "</span>" : "") + "</td>" + (UNTIMED ? "" : '<td class="num dim">' + took(i + 1) + '</td><td class="num">' + clockAt(i + 1) + "</td>") + "</tr>").join("") +
+        '<tr class="total"><td></td><td></td><td>Total</td><td class="num">' + score() + ' pts</td>' + (UNTIMED ? "" : '<td class="num"></td><td class="num">' + total + "</td>") + "</tr></table>" +
+        (UNTIMED ? "" : '<p class="small"><b>Took</b>: time since your previous flag. <b>Time</b>: the clock when you submitted.</p>') + "</div>" +
       '<div class="card learned"><h3><span class="h-ico">' + ICON.bulb + "</span>What you learned</h3><ul>" + LEARNED.map((t) => '<li><span class="tick blue">' + CHECK + "</span><span>" + t + "</span></li>").join("") + "</ul></div>";
     state.textContent = "";
     state.className = "m-state ok";
     next.disabled = false;
-    next.innerHTML = '<span class="b-ico">' + ICON.replay + "</span>Replay Quest";
+    next.innerHTML = '<span class="b-ico">' + ICON.replay + "</span>" + (UNTIMED ? "Start over" : "Replay Quest");
     next.classList.add("replay");
     prev.hidden = true;
     if (boardBtn) boardBtn.hidden = false;
@@ -574,38 +566,28 @@ hintHtml(m, n, isWarm);
   }
 
   function unfinish() { next.classList.remove("replay"); prev.hidden = false; if (boardBtn) boardBtn.hidden = true; el("guide-foot").classList.remove("finished"); }
-  prev.addEventListener("click", () => {
-    if (current === -1) return;
-    current = current === -2 ? -1 : current === 0 ? -2 : Math.min(current, N) - 1; unfinish(); render();
-  });
+  prev.addEventListener("click", () => { if (current > 0 && current <= N) { current = Math.min(current, N) - 1; unfinish(); render(); } });
   next.addEventListener("click", () => {
     if (current === N) { location.reload(); return; }
-    if (current === -1) { current = -2; render(); return; }  // on to Warm-up 2
-    if (current === -2) { current = 0; render(); return; }   // skip or leave the warm-ups: the clock can start now
     if (current === N - 1) { if (done.size === N) finish(); return; }
     if (done.has(current + 1)) { current++; render(); }
   });
 
   if (el("score-max")) el("score-max").textContent = MAX;
   showScore(false);
-  dots.innerHTML = '<button type="button" class="step-btn warm-btn" data-c="-1" title="Warm-up 1: orientation (optional, +' + WARMUP.points + ' bonus, untimed)"><span class="step-dot">W1</span><span class="step-num">W1</span></button><span class="step-bar warm-bar" aria-hidden="true"></span>' +
-    '<button type="button" class="step-btn warm-btn" data-c="-2" title="Warm-up 2: speed drills (optional, +' + WARMUP2.points + ' bonus, untimed)"><span class="step-dot">W2</span><span class="step-num">W2</span></button><span class="step-bar warm-bar" aria-hidden="true"></span>' + MISSIONS.map((m, i) => (i ? '<span class="step-bar" aria-hidden="true"></span>' : "") +
-    '<button type="button" class="step-btn" title="Mission ' + (i + 1) + ': ' + m.title + ' (' + m.level + ', ' + m.points + ' pts)"><span class="step-dot">' + (i + 1) + '</span><span class="step-num">' + (i + 1) + "</span></button>").join("");
-  dots.querySelectorAll(".step-btn:not(.warm-btn)").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; unfinish(); render(); } }));
-  dots.querySelectorAll(".warm-btn").forEach((w) => w.addEventListener("click", () => { current = Number(w.dataset.c); unfinish(); render(); }));
+  dots.innerHTML = MISSIONS.map((m, i) => (i ? '<span class="step-bar" aria-hidden="true"></span>' : "") +
+    '<button type="button" class="step-btn" title="' + UNIT + " " + (i + 1) + ': ' + m.title + ' (' + m.level + ', ' + m.points + ' pts)"><span class="step-dot">' + (i + 1) + '</span><span class="step-num">' + (i + 1) + "</span></button>").join("");
+  dots.querySelectorAll(".step-btn").forEach((d, i) => d.addEventListener("click", () => { if (i <= reachable() || done.size === N) { current = i; unfinish(); render(); } }));
   render();
 
   window.questGuide = {
     done(n, at) {
-      if (n === 0 || n === WARMUP2.id) {
-        const fresh = n === 0 ? !warm : !warm2;
-        if (n === 0) warm = true; else warm2 = true;
-        showScore(fresh); if (current < 0) render(); else paintSteps(current); return;
-      }
-      const fresh = !done.has(n); done.add(n); if (typeof at === "number" && !(n in capturedAt)) capturedAt[n] = at; showScore(fresh); if (current < N) render(); },
+      if (!(n >= 1 && n <= N)) return;
+      const fresh = !done.has(n); done.add(n);
+      if (typeof at === "number" && at && !(n in capturedAt)) capturedAt[n] = at;
+      showScore(fresh); if (current < N) render(); },
     setRunner(fn) { runner = fn; },
     current: () => current + 1,
-    warmupOver: () => current >= 0 || (warm && warm2),
     // A hint was bought (k = which tier). Charged once: buying a tier you already have is free.
     hintUsed(n, k) {
       if (!(n >= 1 && n <= N)) return;

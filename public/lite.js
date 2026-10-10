@@ -112,15 +112,12 @@
   // ------------------------------------------------------- build the world
   // Mirrors guest/build-missions: random flags, only SHA-256 kept in /etc/quest.
   const FLAGHASH = {};
-  // Speed drills: this run's three pieces, the "again" counter and the Ctrl+C hook.
-  const SPEED = { p: [], code: "", runs: 0, start: 0 };
-  let interrupt = null;
   async function buildWorld() {
     for (const d of ["bin", "sbin", "etc", "proc", "sys", "dev", "tmp", "home"]) ROOT.kids[d] = mkdir(0o755, "root");
     ROOT.kids.tmp.mode = 0o777;
     ROOT.kids.root = mkdir(0o700, "root");
     ROOT.kids.init = mkfile("#!/bin/sh\n", 0o755, "root");
-    for (const a of APPLETS.concat(["submit", "hint"])) ROOT.kids.bin.kids[a] = mkfile("", 0o755, "root");
+    for (const a of APPLETS.concat(["submit", "hint", "forge"])) ROOT.kids.bin.kids[a] = mkfile("", 0o755, "root");
     put("/dev/null", mkfile("", 0o666, "root"));
     put("/etc/passwd", mkfile("root:x:0:0:root:/root:/bin/sh\nplayer:x:1000:1000:player:/home/player:/bin/sh\n", 0o644, "root"));
     put("/etc/group", mkfile("root:x:0:\nplayer:x:1000:\n", 0o644, "root"));
@@ -146,18 +143,6 @@
     // Home and each mission folder get a README.txt (texts from guest/make-missions.py); 2, 4 and 5 put this run's clue on top.
     const readme = (dir, key, clue) => put(dir + "/README.txt", mkfile((clue ? clue + "\n" : "") + README_TEXT[key], 0o644, USER));
     readme(H, "home");
-    // 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
-    const FW = flag("warmup"); await keep(0, FW);
-    put(H + "/orientation.txt", mkfile(README_TEXT.orientation + "  " + FW + "\n", 0o644, USER));
-    // 11: warm-up 2, speed drills (optional, untimed): Tab, the up arrow, Ctrl+C, copy and paste.
-    SPEED.p = [hex(2), hex(2), hex(2), hex(2)];
-    SPEED.code = hex(6);   // the code students copy with the mouse for drill 4
-    await keep(11, "CYBA{speed-" + SPEED.p.join("") + "}");
-    for (const b of ["again", "runaway", "pasteit"]) ROOT.kids.bin.kids[b] = mkfile("", 0o755, "root");
-    put(H + "/speed", mkdir(0o755, USER));
-    put(H + "/speed/README.txt", mkfile(README_TEXT.speed, 0o644, USER));
-    put(H + "/speed/tab/drill-1-tab-completion-saves-your-fingers-" + hex(4) + ".txt", mkfile("Piece 1: " + SPEED.p[0] + "\nTab finished the name for you. Try it on commands too: type  his  then press Tab.\n", 0o644, USER));
-    put(H + "/speed/paste/code.txt", mkfile("Drill 4: copy and paste, the Linux way.\nSelect the code below with the mouse (or trackpad) to copy it. Then type  pasteit  and a space, paste the code (middle-click, or right-click), and press Enter.\nCODE: " + SPEED.code + "\n", 0o644, USER));
     readme(M1, "1");
 
     // 2: let the cat out of the bag. cat --help shows -n, which numbers lines.
@@ -200,11 +185,13 @@
     put(H + "/mission5/access.log", mkfile(lines.join("\n") + "\n", 0o644, USER));
     readme(H + "/mission5", "5", "An intruder logged in ONCE as:  " + who + "\nTheir token is the flag.\n");
 
-    // 8: base64
-    F = flag("decoded"); await keep(8, F);
+    // 8: find and replace (sed). A junk marker is wedged all through the flag; sed s///g strips it.
+    F = flag("sed"); await keep(8, F);
+    const mk = pick(["QZ", "XK", "ZQ", "VW", "KX", "WJ", "QK", "ZX"]);
+    const corrupted = F.split("").join(mk);
     put(H + "/mission8", mkdir(0o755, USER));
     readme(H + "/mission8", "8");
-    put(H + "/mission8/message.b64", mkfile(b64encode("Decoded! Encoding is not encryption.\nFlag: " + F + "\n", 76), 0o644, USER));
+    put(H + "/mission8/message.txt", mkfile("This file is corrupted: the same junk string was inserted all through the flag below.\nFind the junk, then remove every copy of it to read the flag.\n\nFlag: " + corrupted + "\n", 0o644, USER));
 
     // 6: odd one out. Every fake code appears 2 to 4 times; the flag once (sort | uniq -u).
     F = flag("odd"); await keep(6, F);
@@ -220,19 +207,25 @@
     F = flag("exec"); await keep(7, F);
     put(H + "/mission7", mkdir(0o755, USER));
     readme(H + "/mission7", "7");
-    put(H + "/mission7/.door", mkfile(b64encode("Access granted.\nFlag: " + F + "\n", 76), 0o644, USER));
-    put(H + "/mission7/unlock.sh", mkfile("#!/bin/sh\n# The vault door. It only opens when this file has execute permission.\nbase64 -d ~/mission7/.door\n", 0o644, USER));
+    put(H + "/mission7/.door", mkfile(Array.from("Access granted.  Flag: " + F).reverse().join("") + "\n", 0o644, USER));
+    put(H + "/mission7/unlock.sh", mkfile("#!/bin/sh\n# The vault door. It only opens when this file has execute permission.\nrev ~/mission7/.door\n", 0o644, USER));
 
-    // 9: layer cake. base64 applied 4 to 6 times.
-    F = flag("layers"); await keep(9, F);
-    let cake = "Flag: " + F + "\n";
-    for (let i = 4 + randInt(3); i > 0; i--) cake = b64encode(cake, 76);
+    // 9: forge the key (awk + > + forge). Three "admin" rows hold the flag's three parts, in order.
+    const k1 = hex(2), k2 = hex(2), k3 = hex(2);
+    F = "CYBA{forge-" + k1 + k2 + k3 + "}"; await keep(9, F);
     put(H + "/mission9", mkdir(0o755, USER));
     readme(H + "/mission9", "9");
-    put(H + "/mission9/cake.b64", mkfile(cake, 0o644, USER));
+    const u9 = ["alice", "bob", "carol", "dave", "erin", "frank", "grace", "heidi", "ivan", "judy"];
+    const noiseTok = () => Array.from({ length: 4 }, () => hex(1)).join("").slice(0, 4);
+    const rows9 = [];
+    for (let i = 0; i < 24; i++) rows9.push(pick(u9) + " " + pick(["user", "guest", "viewer"]) + " " + noiseTok());
+    // drop the three admin rows in, keeping k1 before k2 before k3
+    const slots = [1 + randInt(7), 9 + randInt(7), 17 + randInt(6)];
+    [k1, k2, k3].forEach((k, i) => rows9.splice(slots[i] + i, 0, pick(u9) + " admin " + k));
+    put(H + "/mission9/records.txt", mkfile("user role token\n" + rows9.join("\n") + "\n", 0o644, USER));
 
-    // 10: endgame. Three pieces: a hidden file (find), a base64 token in a log (grep, cut,
-    // base64) and a locked script (chmod). The flag is CYBA{piece1-piece2-piece3}.
+    // 10: endgame. Three pieces: a hidden file (find), a token in a log (grep + cut) and a
+    // locked script (chmod + run). The flag is CYBA{piece1-piece2-piece3}.
     const pc1 = hex(3), pc2 = hex(3), pc3 = hex(3);
     F = "CYBA{" + pc1 + "-" + pc2 + "-" + pc3 + "}"; await keep(10, F);
     const M = H + "/mission10", vdirs = [];
@@ -250,14 +243,14 @@
     for (let i = 0; i < 3000; i++) {
       const t = 20 * 3600 + i * 7, stamp = p2s(Math.floor(t / 3600) % 24) + ":" + p2s(Math.floor(t / 60) % 60) + ":" + p2s(t % 60);
       let tok = ""; for (let k = 0; k < 20; k++) tok += B64[randInt(64)];
-      auth[i] = i === hit10 ? stamp + " user=" + intruder + " action=LOGIN_OK token=" + b64encode("piece 2: " + pc2, 0).trim()
+      auth[i] = i === hit10 ? stamp + " user=" + intruder + " action=LOGIN_OK token=" + pc2
         : stamp + " user=" + users[randInt(10)] + " action=" + acts10[randInt(5)] + " token=" + tok;
     }
     put(M + "/auth.log", mkfile(auth.join("\n") + "\n", 0o644, USER));
-    put(M + "/.door", mkfile(b64encode(b64encode("piece 3: " + pc3 + "\n", 76), 76), 0o644, USER));
-    put(M + "/unlock.sh", mkfile("#!/bin/sh\n# The last door. It only opens when this file has execute permission.\nbase64 -d ~/mission10/.door | base64 -d\n", 0o644, USER));
+    put(M + "/.door", mkfile("piece 3: " + pc3 + "\n", 0o644, USER));
+    put(M + "/unlock.sh", mkfile("#!/bin/sh\n# The last door. It only opens when this file has execute permission.\ncat ~/mission10/.door\n", 0o644, USER));
     readme(M, "10", "The flag is CYBA{piece1-piece2-piece3}: three pieces, joined with dashes.\n  Piece 1: in a hidden file somewhere under vault/  (some hidden files are decoys)\n  Piece 2: " + intruder +
-      " logged in once in auth.log. Their token is base64.\n  Piece 3: whatever unlock.sh prints.\n");
+      " logged in once in auth.log. Their token is right after token=.\n  Piece 3: whatever unlock.sh prints.\n");
   }
 
   // --------------------------------------------------------------- the shell
@@ -274,16 +267,13 @@
 "3": "Mission 3: Now you see me   [Easy, 100 points]\n\nObjective: Reveal the hidden files and find the real flag.\n\n  cd ~/mission3\n  ls\n\nThere is a flag in this folder, but plain ls will not show it.\n\nOn Linux, a file whose name starts with a dot is hidden. Watch out: one\nhidden file is a decoy.\n\nUseful commands: ls, cat\nWhen you have the flag: submit CYBA{...}\nStuck? hint 3   (1 hint, 5 points each: 5% of this mission)\n",
 "4": "Mission 4: Needle in the tree   [Medium, 200 points]\n\nObjective: Search a folder tree by file name to find the flag.\n\n  cd ~/mission4\n  cat README.txt\n\nThe archive folder holds about 80 files in 20 folders. Exactly one of\nthem has the file ending named in README.txt, and it holds the flag.\n\nOpening folders one by one is too slow. Let the computer search.\n\nUseful commands: find, cat\nWhen you have the flag: submit CYBA{...}\nStuck? hint 4   (2 hints, 10 points each: 5% of this mission)\n",
 "5": "Mission 5: Search party   [Medium, 200 points]\n\nObjective: Search a huge log for the intruder's line.\n\n  cd ~/mission5\n  cat README.txt\n\naccess.log has 12,000 lines. One intruder logged in exactly once.\n\nTheir token on that line is the flag. Scrolling would take all day.\n\nUseful commands: grep, head, wc\nWhen you have the flag: submit CYBA{...}\nStuck? hint 5   (2 hints, 10 points each: 5% of this mission)\n",
-"6": "Mission 6: Odd one out   [Medium, 200 points]\n\nObjective: Use a pipe to find the only code that appears once.\n\n  cd ~/mission7\n  head codes.txt\n\ncodes.txt holds about 900 flags. Every fake one appears at least twice.\nThe real flag appears exactly once.\n\nReading 900 lines is no fun. Chain two commands with a pipe (|): the\nfirst one sorts the lines so the copies sit next to each other, the\nsecond one finds the line that has no twin.\n\nUseful commands: sort, uniq\nWhen you have the flag: submit CYBA{...}\nStuck? hint 6   (2 hints, 10 points each: 5% of this mission)\n",
-"7": "Mission 7: Permission denied   [Medium, 200 points]\n\nObjective: Unlock a script with chmod and run it.\n\n  cd ~/mission8\n  ls -l\n\nThe flag is behind a locked door: unlock.sh. It is a script, a file full\nof commands that runs when you type ./unlock.sh.\n\nTry it, and Linux will refuse. ls -l shows why: the letters at the start\nof each line are the file's permissions. r means read, w means write and\nx means execute (run). This script has no x.\n\nYou own the file, so you are allowed to change its permissions.\n\nUseful commands: ls, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 7   (2 hints, 10 points each: 5% of this mission)\n",
-"8": "Mission 8: Decoder ring   [Hard, 400 points]\n\nObjective: Decode a base64 message to reveal the flag.\n\n  cd ~/mission6\n  cat message.b64\n\nIt looks like gibberish, but it is not encrypted. It is encoded with\nbase64: a way of writing any data using only letters, digits, +, / and\n=.\n\nThere is no secret key. Anyone can decode it.\n\nUseful command: base64\nWhen you have the flag: submit CYBA{...}\nStuck? hint 8   (2 hints, 20 points each: 5% of this mission)\n",
-"9": "Mission 9: Layer cake   [Hard, 400 points]\n\nObjective: Peel back every layer of encoding to reveal the flag.\n\n  cd ~/mission9\n  cat cake.b64\n\nYou decoded base64 in the last mission. This message was encoded, then\nthe result was encoded again, and again. Nobody wrote down how many\nlayers there are.\n\nCopying each result into the next command works, but it is slow. A pipe\n(|) can feed one base64 -d straight into the next. Keep adding layers\nuntil you see the flag.\n\nUseful command: base64\nWhen you have the flag: submit CYBA{...}\nStuck? hint 9   (3 hints, 20 points each: 5% of this mission)\n",
-"10": "Mission 10: Endgame   [Very Hard, 800 points]\n\nObjective: Recover three hidden pieces and put the final flag together.\n\n  cd ~/mission10\n  cat README.txt\n\nThe final mission uses everything you have learned. The flag was split\ninto three pieces, and each one is hidden a different way. README.txt\ntells you where each piece is.\n\nPut the pieces together in order, joined with dashes:\nCYBA{piece1-piece2-piece3}.\n\nThere are no new commands here. find, grep, cut, base64, chmod and pipes\nare all you need.\n\nUseful commands: find, grep, cut, base64, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 10   (4 hints, 40 points each: 5% of this mission)\n",
-"0": "Mission 0: Warm-up   [optional, 50 bonus points, untimed]\n\nObjective: Read the CTF orientation in the terminal with cat.\n\n  cat orientation.txt\n\nGet comfortable before the clock starts. Your home folder holds\norientation.txt: how a CTF works, what a flag looks like, scoring and\nthe rules.\n\ncat prints a file on the screen. Click the terminal, type cat\norientation.txt and press Enter. The warm-up flag is at the bottom.\n\nSubmit it for 50 bonus points, or skip the warm-up. The competition\nclock starts when you begin Mission 1.\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 0\n",
-"11": "Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]\n\nObjective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and Linux-style copy and paste.\n\n  cd ~/speed\n  cat README.txt\n\nFour drills, four pieces of the flag. Each drill needs one terminal\nskill, and each piece is 4 characters.\n\nDrill 1, Tab: cd tab, type cat dri and press Tab. The long file name\nfinishes itself.\n\nDrill 2, up arrow: run again 5 times within 15 seconds. After the first\none, press up arrow then Enter.\n\nDrill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and\npress C.\n\nDrill 4, copy and paste: cd ~/speed/paste, then cat code.txt. Highlight\nthe long code with the mouse or trackpad (that copies it), type pasteit\nand a space, then middle-click to paste it (right-click also pastes) and\npress Enter. No Ctrl+C or Ctrl+V needed: in a Linux terminal, selecting\nis copying and the middle button pastes.\n\nPut the pieces together in order: submit CYBA{speed-\nPIECE1PIECE2PIECE3PIECE4}. Paste each piece the same way: highlight it,\nthen middle-click (or right-click).\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 11  (free)\n",
-"speed": "Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]\n\nObjective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and Linux-style copy and paste.\n\n  cd ~/speed\n  cat README.txt\n\nFour drills, four pieces of the flag. Each drill needs one terminal\nskill, and each piece is 4 characters.\n\nDrill 1, Tab: cd tab, type cat dri and press Tab. The long file name\nfinishes itself.\n\nDrill 2, up arrow: run again 5 times within 15 seconds. After the first\none, press up arrow then Enter.\n\nDrill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and\npress C.\n\nDrill 4, copy and paste: cd ~/speed/paste, then cat code.txt. Highlight\nthe long code with the mouse or trackpad (that copies it), type pasteit\nand a space, then middle-click to paste it (right-click also pastes) and\npress Enter. No Ctrl+C or Ctrl+V needed: in a Linux terminal, selecting\nis copying and the middle button pastes.\n\nPut the pieces together in order: submit CYBA{speed-\nPIECE1PIECE2PIECE3PIECE4}. Paste each piece the same way: highlight it,\nthen middle-click (or right-click).\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 11  (free)\n"
+"6": "Mission 6: Odd one out   [Medium, 200 points]\n\nObjective: Use a pipe to find the only code that appears once.\n\n  cd ~/mission6\n  head codes.txt\n\ncodes.txt holds about 900 flags. Every fake one appears at least twice.\nThe real flag appears exactly once.\n\nReading 900 lines is no fun. Chain two commands with a pipe (|): the\nfirst one sorts the lines so the copies sit next to each other, the\nsecond one finds the line that has no twin.\n\nUseful commands: sort, uniq\nWhen you have the flag: submit CYBA{...}\nStuck? hint 6   (2 hints, 10 points each: 5% of this mission)\n",
+"7": "Mission 7: Permission denied   [Medium, 200 points]\n\nObjective: Unlock a script with chmod and run it.\n\n  cd ~/mission7\n  ls -l\n\nThe flag is behind a locked door: unlock.sh. It is a script, a file full\nof commands that runs when you type ./unlock.sh.\n\nTry it, and Linux will refuse. ls -l shows why: the letters at the start\nof each line are the file's permissions. r means read, w means write and\nx means execute (run). This script has no x.\n\nYou own the file, so you are allowed to change its permissions.\n\nUseful commands: ls, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 7   (2 hints, 10 points each: 5% of this mission)\n",
+"8": "Mission 8: Find and replace   [Hard, 400 points]\n\nObjective: Clean up a corrupted file with sed to reveal the flag.\n\n  cd ~/mission8\n  cat message.txt\n\nmessage.txt is corrupted: the same junk string was wedged all through\nthe flag. cat it and you will see the flag with garbage packed between\nevery character.\n\nsed is Linux's stream editor. Its substitute command, sed 's/old/new/g',\nreplaces every copy of old with new. Replace the junk with nothing (an\nempty new) to delete it.\n\nSpot the junk string first, then strip every copy to read the flag.\n\nUseful command: sed\nWhen you have the flag: submit CYBA{...}\nStuck? hint 8   (2 hints, 20 points each: 5% of this mission)\n",
+"9": "Mission 9: Forge the key   [Hard, 400 points]\n\nObjective: Pull fields out of a table with awk, save them, and forge the flag.\n\n  cd ~/mission9\n  cat records.txt\n\nrecords.txt is an access table with three columns: user role token.\nThree rows have the role admin, and their tokens, in order, are the\nthree parts of the flag.\n\nawk pulls columns out of text. awk '/admin/{print $3}' records.txt\nprints the token (the 3rd field) of every admin row. Save those parts to\na file with >.\n\nThen run the little assembler, forge, on that file: it builds the flag\nfrom the parts you saved.\n\nUseful commands: awk, forge\nWhen you have the flag: submit CYBA{...}\nStuck? hint 9   (2 hints, 20 points each: 5% of this mission)\n",
+"10": "Mission 10: Endgame   [Very Hard, 800 points]\n\nObjective: Recover three hidden pieces and put the final flag together.\n\n  cd ~/mission10\n  cat README.txt\n\nThe final mission uses everything you have learned. The flag was split\ninto three pieces, and each one is hidden a different way. README.txt\ntells you where each piece is.\n\nPut the pieces together in order, joined with dashes:\nCYBA{piece1-piece2-piece3}.\n\nThere are no new commands here. find, grep, cut, chmod and pipes are all\nyou need.\n\nUseful commands: find, grep, cut, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 10   (4 hints, 40 points each: 5% of this mission)\n"
 };
-  const MISSION_OVERVIEW = "Your missions:\n   0  Warm-up (optional)           Bonus       50 pts  (bonus, untimed)\n  11  Speed drills (optional)      Bonus       50 pts  (bonus, untimed)\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Decoder ring                 Hard       400 pts\n   9  Layer cake                   Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nRead one with: mission 1   (up to 10)\n";
+  const MISSION_OVERVIEW = "Your missions:\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Find and replace             Hard       400 pts\n   9  Forge the key                Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nRead one with: mission 1   (up to 10)\n";
   const HINTS = {
 "1": [
 "Lost? pwd shows where you are and cd .. goes back up one level. Run ls in every folder: the names tell you which folder to cd into next."
@@ -311,41 +301,36 @@
 "chmod +x unlock.sh adds the execute permission. Then run it with ./unlock.sh."
 ],
 "8": [
-"Letters, digits and an = at the end: that's base64. Read base64 --help and look for the option that decodes.",
-"base64 -d message.b64 turns it back into normal text."
+"Find the junk string that repeats in message.txt - it is wedged between every character of the flag. Then read sed --help for the substitute command.",
+"sed 's/JUNK//g' message.txt replaces every copy of the junk with nothing. Use the exact junk string you spotted."
 ],
 "9": [
-"Decode once with base64 -d cake.b64. Still looks like base64? Then there is another layer underneath.",
-"Pipe one decode into the next: base64 -d cake.b64 | base64 -d. Press the Up arrow and add another | base64 -d each time.",
-"There are 4 to 6 layers. Stop when the output starts with Flag:. Garbage symbols mean you decoded once too many: remove the last pipe."
+"awk '/admin/{print $3}' records.txt prints the token (3rd field) of every admin row. There are three, in order.",
+"Save them to a file, then forge the flag:  awk '/admin/{print $3}' records.txt > keys.txt  then  forge keys.txt."
 ],
 "10": [
 "Piece 1: hidden names start with a dot. find vault -name \".*\" -type f lists every hidden file in the tree. cat each one: the decoys say so.",
-"Piece 2: grep the intruder's name in auth.log. The token is everything after token=. Decode it with echo TOKEN | base64 -d.",
+"Piece 2: grep the intruder's name in auth.log. The token is everything after token=; cut -d= -f4 pulls it out.",
 "Piece 3: unlock.sh is locked, just like Mission 7: chmod +x unlock.sh, then ./unlock.sh.",
 "Join the three 6-character values with dashes, in order: CYBA{piece1-piece2-piece3}. Leave out the words \"piece 1:\"."
-],
-"0": "Mission 0: The flag is on the last line of orientation.txt in your home folder. Type cat orientation.txt, press Enter, then copy the flag into submit.",
-"11": "Speed drills: Drill 1: in ~/speed/tab type cat dri, then press Tab. Drill 2: type again and Enter, then press the up arrow and Enter four more times, quickly. Drill 3: type runaway, then hold Ctrl and press C. Drill 4: in ~/speed/paste run cat code.txt, highlight the CODE with the mouse, type pasteit  then middle-click (or right-click) to paste it. The flag is CYBA{speed- followed by the four pieces in order, then }."
+]
 };
   const MISSION_COUNT = 10;
   const README_TEXT = {
-"home": "CyberQuest Linux CTF\n====================\n\nThis file explains the game. Each mission folder has its own README.txt\nwith that mission's instructions. Read one with:  cat README.txt\n\nHow to play\n  1. Go to a mission:    cd ~/mission1\n  2. Look around:        ls\n  3. Read its brief:     cat README.txt     (or type: mission 1)\n  4. Find the flag. It looks like CYBA{word-1a2b3c4d}\n  5. Check it:           submit CYBA{...}\n  6. Stuck?              hint 1   (costs 5% of the mission's points)\n\nMissions\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Decoder ring                 Hard       400 pts\n   9  Layer cake                   Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nFlags change every time the page loads.\n\nNew to CTFs? Warm up first (optional, 50 bonus points):  cat orientation.txt\nThen build speed (optional, 50 more):                   cd ~/speed\n",
-"orientation": "CTF Orientation\n===============\n\nWhat is a CTF?\n  Capture The Flag is a cybersecurity competition. Each mission hides a\n  flag: a secret piece of text. Find it, submit it, and score points.\n\n1. Read a mission's instructions\n  Every mission has its own folder with a README.txt inside:\n    cd ~/mission1          go into the mission's folder\n    cat README.txt         read its instructions\n    cd ~                   come back home\n  Or, from anywhere:  mission 1      (mission alone lists them all)\n\n2. Find the flag\n  A flag looks like this:  CYBA{word-1a2b3c4d}\n  It always starts with CYBA{ and ends with }.\n\n3. Submit the flag\n  Type submit, a space, then the whole flag:\n    submit CYBA{word-1a2b3c4d}\n  Copy it exactly: highlight it with the mouse, then paste with Ctrl+V\n  or a right-click. Do not leave off the CYBA{ or the }.\n\n  What the replies mean:\n    Correct! +100 points                 you captured it\n    Incorrect flag. Keep hunting!        right shape, wrong flag\n    That doesn't look like a flag.       copy the whole thing, CYBA{ to }\n\n4. Stuck?\n  Read the command's built-in help first:  ls --help\n  Then ask for a nudge:  hint 1\n  A hint costs 5% of that mission's points, charged once. hint 1 tells\n  you the price first; hint 1 --show reveals it.\n\nScoring\n  Easy 100    Medium 200    Hard 400    Very Hard 800\n  The most points wins. On a tie, the faster time wins.\n  Hints cost 5% of the mission's points.\n\nThe clock\n  The clock starts when you begin Mission 1 and counts up. It stops\n  when you capture the last flag.\n\nWarm-up: Mission 0  (optional, 50 bonus points, untimed)\n  You just read this file with cat. Now practice step 3: submit the\n  flag below. Or skip it and go to Mission 1.\n  Then try Warm-up 2, speed drills (another 50 bonus points):  cd ~/speed\n\nWarm-up flag:\n",
-"speed": "Warm-up 2: Speed drills   [optional, 50 bonus points, untimed]\n\nObjective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and Linux-style copy and paste.\n\n  cd ~/speed\n  cat README.txt\n\nFour drills, four pieces of the flag. Each drill needs one terminal\nskill, and each piece is 4 characters.\n\nDrill 1, Tab: cd tab, type cat dri and press Tab. The long file name\nfinishes itself.\n\nDrill 2, up arrow: run again 5 times within 15 seconds. After the first\none, press up arrow then Enter.\n\nDrill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and\npress C.\n\nDrill 4, copy and paste: cd ~/speed/paste, then cat code.txt. Highlight\nthe long code with the mouse or trackpad (that copies it), type pasteit\nand a space, then middle-click to paste it (right-click also pastes) and\npress Enter. No Ctrl+C or Ctrl+V needed: in a Linux terminal, selecting\nis copying and the middle button pastes.\n\nPut the pieces together in order: submit CYBA{speed-\nPIECE1PIECE2PIECE3PIECE4}. Paste each piece the same way: highlight it,\nthen middle-click (or right-click).\n\nWhen you have the flag: submit CYBA{...}     Stuck? hint 11  (free)\n",
+"home": "CyberQuest Linux CTF\n====================\n\nThis file explains the game. Each mission folder has its own README.txt\nwith that mission's instructions. Read one with:  cat README.txt\n\nHow to play\n  1. Go to a mission:    cd ~/mission1\n  2. Look around:        ls\n  3. Read its brief:     cat README.txt     (or type: mission 1)\n  4. Find the flag. It looks like CYBA{word-1a2b3c4d}\n  5. Check it:           submit CYBA{...}\n  6. Stuck?              hint 1   (costs 5% of the mission's points)\n\nMissions\n   1  Make your move               Easy       100 pts\n   2  Let the cat out of the bag   Easy       100 pts\n   3  Now you see me               Easy       100 pts\n   4  Needle in the tree           Medium     200 pts\n   5  Search party                 Medium     200 pts\n   6  Odd one out                  Medium     200 pts\n   7  Permission denied            Medium     200 pts\n   8  Find and replace             Hard       400 pts\n   9  Forge the key                Hard       400 pts\n  10  Endgame                      Very Hard  800 pts\n                                             2700 pts\n\nFlags change every time the page loads.\n\nNew to CTFs? Do the Warm-ups module first (on the home page): it covers how a CTF works and the keyboard basics.\n",
 "1": "Mission 1: Make your move   [Easy, 100 points]\n\nObjective: Navigate the file system using basic Linux commands to find the flag.\n\n  cd ~/mission1\n  ls\n\nMoving around is the first real skill on the command line:\n\n  pwd         where am I?\n  ls          what is in this folder?\n  cd NAME     move into a folder\n  cd ..       go back up one level\n  cd ~        go home\n\nA flag is waiting at the end of a trail that starts in ~/mission1.\nNothing on this trail needs opening: the file names are the signposts.\nUse ls to read them and cd to follow them. Some turns are dead ends.\n\nAt the end of the trail, ls shows you the flag itself.\n\nUseful commands: pwd, ls, cd\nWhen you have the flag: submit CYBA{...}\nStuck? hint 1   (1 hint, 5 points each: 5% of this mission)\n",
 "2": "Mission 2: Let the cat out of the bag   [Easy, 100 points]\n\nObjective: Read files with cat, and use --help to number the lines.\n\n  cd ~/mission2\n  cat README.txt\n\ncat prints a file on the screen. You just used it to read README.txt.\n\nThe cat is hiding in bag.txt: 100 lines, and every one looks like a\nflag. Only the line number in README.txt is real. Counting 100 lines by\nhand is how mistakes happen.\n\nAlmost every Linux command can explain itself: type its name, a space,\nthen --help. Ask cat for its help and look for an option that numbers\nthe lines. You will use --help in every mission after this one.\n\nUseful command: cat\nWhen you have the flag: submit CYBA{...}\nStuck? hint 2   (1 hint, 5 points each: 5% of this mission)\n",
 "3": "Mission 3: Now you see me   [Easy, 100 points]\n\nObjective: Reveal the hidden files and find the real flag.\n\n  cd ~/mission3\n  ls\n\nThere is a flag in this folder, but plain ls will not show it.\n\nOn Linux, a file whose name starts with a dot is hidden. Watch out: one\nhidden file is a decoy.\n\nUseful commands: ls, cat\nWhen you have the flag: submit CYBA{...}\nStuck? hint 3   (1 hint, 5 points each: 5% of this mission)\n",
 "4": "Mission 4: Needle in the tree   [Medium, 200 points]\n\nObjective: Search a folder tree by file name to find the flag.\n\n  cd ~/mission4\n  cat README.txt\n\nThe archive folder holds about 80 files in 20 folders. Exactly one of\nthem has the file ending named in README.txt, and it holds the flag.\n\nOpening folders one by one is too slow. Let the computer search.\n\nUseful commands: find, cat\nWhen you have the flag: submit CYBA{...}\nStuck? hint 4   (2 hints, 10 points each: 5% of this mission)\n",
 "5": "Mission 5: Search party   [Medium, 200 points]\n\nObjective: Search a huge log for the intruder's line.\n\n  cd ~/mission5\n  cat README.txt\n\naccess.log has 12,000 lines. One intruder logged in exactly once.\n\nTheir token on that line is the flag. Scrolling would take all day.\n\nUseful commands: grep, head, wc\nWhen you have the flag: submit CYBA{...}\nStuck? hint 5   (2 hints, 10 points each: 5% of this mission)\n",
-"6": "Mission 6: Odd one out   [Medium, 200 points]\n\nObjective: Use a pipe to find the only code that appears once.\n\n  cd ~/mission7\n  head codes.txt\n\ncodes.txt holds about 900 flags. Every fake one appears at least twice.\nThe real flag appears exactly once.\n\nReading 900 lines is no fun. Chain two commands with a pipe (|): the\nfirst one sorts the lines so the copies sit next to each other, the\nsecond one finds the line that has no twin.\n\nUseful commands: sort, uniq\nWhen you have the flag: submit CYBA{...}\nStuck? hint 6   (2 hints, 10 points each: 5% of this mission)\n",
-"7": "Mission 7: Permission denied   [Medium, 200 points]\n\nObjective: Unlock a script with chmod and run it.\n\n  cd ~/mission8\n  ls -l\n\nThe flag is behind a locked door: unlock.sh. It is a script, a file full\nof commands that runs when you type ./unlock.sh.\n\nTry it, and Linux will refuse. ls -l shows why: the letters at the start\nof each line are the file's permissions. r means read, w means write and\nx means execute (run). This script has no x.\n\nYou own the file, so you are allowed to change its permissions.\n\nUseful commands: ls, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 7   (2 hints, 10 points each: 5% of this mission)\n",
-"8": "Mission 8: Decoder ring   [Hard, 400 points]\n\nObjective: Decode a base64 message to reveal the flag.\n\n  cd ~/mission6\n  cat message.b64\n\nIt looks like gibberish, but it is not encrypted. It is encoded with\nbase64: a way of writing any data using only letters, digits, +, / and\n=.\n\nThere is no secret key. Anyone can decode it.\n\nUseful command: base64\nWhen you have the flag: submit CYBA{...}\nStuck? hint 8   (2 hints, 20 points each: 5% of this mission)\n",
-"9": "Mission 9: Layer cake   [Hard, 400 points]\n\nObjective: Peel back every layer of encoding to reveal the flag.\n\n  cd ~/mission9\n  cat cake.b64\n\nYou decoded base64 in the last mission. This message was encoded, then\nthe result was encoded again, and again. Nobody wrote down how many\nlayers there are.\n\nCopying each result into the next command works, but it is slow. A pipe\n(|) can feed one base64 -d straight into the next. Keep adding layers\nuntil you see the flag.\n\nUseful command: base64\nWhen you have the flag: submit CYBA{...}\nStuck? hint 9   (3 hints, 20 points each: 5% of this mission)\n",
-"10": "Mission 10: Endgame   [Very Hard, 800 points]\n\nObjective: Recover three hidden pieces and put the final flag together.\n\n  cd ~/mission10\n  cat README.txt\n\nThe final mission uses everything you have learned. The flag was split\ninto three pieces, and each one is hidden a different way. README.txt\ntells you where each piece is.\n\nPut the pieces together in order, joined with dashes:\nCYBA{piece1-piece2-piece3}.\n\nThere are no new commands here. find, grep, cut, base64, chmod and pipes\nare all you need.\n\nUseful commands: find, grep, cut, base64, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 10   (4 hints, 40 points each: 5% of this mission)\n"
+"6": "Mission 6: Odd one out   [Medium, 200 points]\n\nObjective: Use a pipe to find the only code that appears once.\n\n  cd ~/mission6\n  head codes.txt\n\ncodes.txt holds about 900 flags. Every fake one appears at least twice.\nThe real flag appears exactly once.\n\nReading 900 lines is no fun. Chain two commands with a pipe (|): the\nfirst one sorts the lines so the copies sit next to each other, the\nsecond one finds the line that has no twin.\n\nUseful commands: sort, uniq\nWhen you have the flag: submit CYBA{...}\nStuck? hint 6   (2 hints, 10 points each: 5% of this mission)\n",
+"7": "Mission 7: Permission denied   [Medium, 200 points]\n\nObjective: Unlock a script with chmod and run it.\n\n  cd ~/mission7\n  ls -l\n\nThe flag is behind a locked door: unlock.sh. It is a script, a file full\nof commands that runs when you type ./unlock.sh.\n\nTry it, and Linux will refuse. ls -l shows why: the letters at the start\nof each line are the file's permissions. r means read, w means write and\nx means execute (run). This script has no x.\n\nYou own the file, so you are allowed to change its permissions.\n\nUseful commands: ls, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 7   (2 hints, 10 points each: 5% of this mission)\n",
+"8": "Mission 8: Find and replace   [Hard, 400 points]\n\nObjective: Clean up a corrupted file with sed to reveal the flag.\n\n  cd ~/mission8\n  cat message.txt\n\nmessage.txt is corrupted: the same junk string was wedged all through\nthe flag. cat it and you will see the flag with garbage packed between\nevery character.\n\nsed is Linux's stream editor. Its substitute command, sed 's/old/new/g',\nreplaces every copy of old with new. Replace the junk with nothing (an\nempty new) to delete it.\n\nSpot the junk string first, then strip every copy to read the flag.\n\nUseful command: sed\nWhen you have the flag: submit CYBA{...}\nStuck? hint 8   (2 hints, 20 points each: 5% of this mission)\n",
+"9": "Mission 9: Forge the key   [Hard, 400 points]\n\nObjective: Pull fields out of a table with awk, save them, and forge the flag.\n\n  cd ~/mission9\n  cat records.txt\n\nrecords.txt is an access table with three columns: user role token.\nThree rows have the role admin, and their tokens, in order, are the\nthree parts of the flag.\n\nawk pulls columns out of text. awk '/admin/{print $3}' records.txt\nprints the token (the 3rd field) of every admin row. Save those parts to\na file with >.\n\nThen run the little assembler, forge, on that file: it builds the flag\nfrom the parts you saved.\n\nUseful commands: awk, forge\nWhen you have the flag: submit CYBA{...}\nStuck? hint 9   (2 hints, 20 points each: 5% of this mission)\n",
+"10": "Mission 10: Endgame   [Very Hard, 800 points]\n\nObjective: Recover three hidden pieces and put the final flag together.\n\n  cd ~/mission10\n  cat README.txt\n\nThe final mission uses everything you have learned. The flag was split\ninto three pieces, and each one is hidden a different way. README.txt\ntells you where each piece is.\n\nPut the pieces together in order, joined with dashes:\nCYBA{piece1-piece2-piece3}.\n\nThere are no new commands here. find, grep, cut, chmod and pipes are all\nyou need.\n\nUseful commands: find, grep, cut, chmod\nWhen you have the flag: submit CYBA{...}\nStuck? hint 10   (4 hints, 40 points each: 5% of this mission)\n"
 };
   const HINT_COST = {"1": 5, "2": 5, "3": 5, "4": 10, "5": 10, "6": 10, "7": 10, "8": 20, "9": 20, "10": 40};
-  const MISSION_POINTS = {"0": 50, "1": 100, "2": 100, "3": 100, "4": 200, "5": 200, "6": 200, "7": 200, "8": 400, "9": 400, "10": 800, "11": 50};
+  const MISSION_POINTS = {"1": 100, "2": 100, "3": 100, "4": 200, "5": 200, "6": 200, "7": 200, "8": 400, "9": 400, "10": 800};
   // End of generated briefs.
 
   // Real BusyBox --help text, so --help reads the same as in the full Linux.
@@ -679,6 +664,55 @@
     async true() { return R(); },
     async false() { return R("", "", 1); },
     async which(args) { return R(args.filter((a) => ROOT.kids.bin.kids[a]).map((a) => "/bin/" + a).join("\n") + (args.length ? "\n" : ""), "", 0); },
+    // sed: lite mode supports the substitute command, s/old/new/[g], on a file or stdin.
+    async sed(args, stdin) {
+      let script = null; const files = [];
+      for (let i = 0; i < args.length; i++) { const a = args[i]; if (a === "-n" || a === "--quiet" || a === "--silent") continue; if (a === "-e") { script = args[++i]; continue; } if (script === null) script = a; else files.push(a); }
+      if (!script) return R("", "Usage: sed 's/old/new/[g]' [FILE]\n", 1);
+      const m = script.match(/^s(.)([\s\S]*?)\1([\s\S]*?)\1(g?)$/);
+      if (!m) return R("", "sed: lite mode supports only the substitute command: s/old/new/[g]\n", 1);
+      const re = new RegExp(m[2].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), m[4] ? "g" : "");
+      const { items, err } = fileInputs(files, stdin, "sed");
+      let out = "";
+      for (const [, d] of items) for (const line of splitLines(d)) out += line.replace(re, m[3]) + "\n";
+      return R(out, err, err ? 1 : 0);
+    },
+    // awk: lite mode supports awk '[/pattern/]{print $N[, $M ...]}' with an optional -F separator.
+    async awk(args, stdin) {
+      let fs = null, prog = null; const files = [];
+      for (let i = 0; i < args.length; i++) { const a = args[i]; if (a === "-F") { fs = args[++i]; continue; } if (a.startsWith("-F")) { fs = a.slice(2); continue; } if (prog === null) prog = a; else files.push(a); }
+      if (!prog) return R("", "Usage: awk [-F sep] '[/pattern/]{print $N}' [FILE]\n", 1);
+      const m = prog.match(/^\s*(?:\/([^\/]*)\/)?\s*\{\s*print\s+(.*?)\s*\}\s*$/);
+      if (!m) return R("", "awk: lite mode supports: awk '[/pattern/]{print $N[, $M]}'\n", 1);
+      let pat = null; try { pat = m[1] !== undefined ? new RegExp(m[1]) : null; } catch (e) { pat = null; }
+      const refs = m[2].split(",").map((r) => r.trim());
+      const { items, err } = fileInputs(files, stdin, "awk");
+      const ofs = fs !== null ? fs : " ";
+      let out = "";
+      for (const [, d] of items) for (const line of splitLines(d)) {
+        if (pat && !pat.test(line)) continue;
+        const f = fs !== null ? line.split(fs) : line.trim().split(/\s+/);
+        const get = (ref) => { if (ref === "$0") return line; const n = Number(ref.replace("$", "")); return Number.isInteger(n) && n >= 1 && f[n - 1] !== undefined ? f[n - 1] : ""; };
+        out += refs.map(get).join(ofs) + "\n";
+      }
+      return R(out, err, err ? 1 : 0);
+    },
+    async rev(args, stdin) {
+      const { items, err } = fileInputs(args, stdin, "rev");
+      let out = "";
+      for (const [, d] of items) for (const line of splitLines(d)) out += Array.from(line).reverse().join("") + "\n";
+      return R(out, err, err ? 1 : 0);
+    },
+    // forge: a little assembler. Reads a file (or stdin) of key parts, one per line, and
+    // builds the flag from them. Students pipe awk output into a file, then run forge on it.
+    async forge(args, stdin) {
+      const { items, err } = fileInputs(args, stdin, "forge");
+      if (err) return R("", err, 1);
+      const parts = [];
+      for (const [, d] of items) for (const line of splitLines(d)) { const t = line.trim(); if (t) parts.push(t); }
+      if (!parts.length) return R("", "forge: no key parts found. Give me a file of parts, one per line.\n", 1);
+      return R("Forging the key from " + parts.length + " parts...\nCYBA{forge-" + parts.join("") + "}\n", "", 0);
+    },
     async sh(args) {
       if (!args.length) return R("", "Lite mode: a nested shell is not available. You are already in one.\n", 1);
       const r = readFile(args[0], "sh");
@@ -690,10 +724,8 @@
     },
     async mission(args) { return R(MISSION_TEXT[args[0]] || MISSION_OVERVIEW); },
     // hint N shows the hints you have and the price of the next; hint N --show buys it.
-    // Each costs 5% of the mission's points, charged once (the page keeps the score). Warm-up hint is free.
+    // Each costs 5% of the mission's points, charged once (the page keeps the score).
     async hint(args) {
-      if (args[0] === "0") return R(HINTS[0] + "\n");
-      if (args[0] === "11" || args[0] === "speed") return R(HINTS[11] + "\n");
       const n = Number(args[0]), list = HINTS[args[0]];
       if (!list) return R("Usage: hint 1   (up to " + MISSION_COUNT + ")\n", "", 1);
       const have = hintsSeen[n] || 0, line = (k) => "Hint " + k + " of " + list.length + ": " + list[k - 1] + "\n";
@@ -706,31 +738,6 @@
       }
       if (have >= list.length) return R(out + "That is every hint for mission " + n + ".\n");
       return R(out + "Hint " + (have + 1) + " of " + list.length + " costs " + HINT_COST[n] + " points (5% of " + MISSION_POINTS[n] + "), charged once.\nTo see it, type:  hint " + n + " --show\n");
-    },
-    async again() {
-      const now = Date.now();
-      if (now - SPEED.start > 15000) { SPEED.runs = 0; SPEED.start = now; }
-      SPEED.runs++;
-      if (SPEED.runs >= 5) { const t = Math.round((now - SPEED.start) / 1000); SPEED.runs = 0; SPEED.start = 0; return R("Run 5 of 5 in " + t + " seconds. Fast fingers!\nPiece 2: " + SPEED.p[1] + "\n"); }
-      return R("Run " + SPEED.runs + " of 5. Press the up arrow, then Enter. (5 runs within 15 seconds)\n");
-    },
-    // runaway: prints until Ctrl+C. Lite mode has no processes, so the terminal's Ctrl+C calls interrupt().
-    async runaway() {
-      if (!term) return R("Still running (1)... press Ctrl+C to stop me\n");
-      let i = 0;
-      const tick = () => write("Still running (" + ++i + ")... press Ctrl+C to stop me\n");
-      tick();
-      const timer = setInterval(tick, 1000);
-      await new Promise((resolve) => { interrupt = resolve; });
-      clearInterval(timer); interrupt = null;
-      return R("^C\nStopped! Ctrl+C interrupts whatever is running.\nPiece 3: " + SPEED.p[2] + "\n");
-    },
-    // pasteit CODE: the copy-and-paste drill. The CODE is long on purpose, so you copy
-    // it with the mouse (highlight, then middle-click or right-click) instead of typing it.
-    async pasteit(args) {
-      if (!args.length) return R("", "pasteit: select the CODE with the mouse, then type  pasteit  and paste it\n", 1);
-      if (args[0] === SPEED.code) return R("Nice paste! Select, then middle-click (or right-click) beats typing.\nPiece 4: " + SPEED.p[3] + "\n");
-      return R("", "pasteit: that is not the code. Highlight the whole CODE and paste the exact value.\n", 1);
     },
     async submit(args) {
       if (!args[0]) return R("Usage: submit CYBA{...}\n", "", 1);
@@ -1013,7 +1020,7 @@
   }
 
   async function onData(data) {
-    if (busy) { if (data === "\x03" && interrupt) interrupt(); return; }
+    if (busy) return;
     // Pasted text can hold several lines: run them one after another.
     if (data.length > 1 && /[\r\n]/.test(data) && !data.startsWith("\x1b")) {
       const parts = data.split(/\r\n|\r|\n/);

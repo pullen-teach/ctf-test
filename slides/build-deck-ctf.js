@@ -22,12 +22,24 @@ const TIER = { warm: MC[1], search: MC[2], logs: MC[3], secrets: MC[4], bonus: A
 const LEVEL = { "Easy": { pts: 100, fill: "E2F5EC", ink: "12704B" }, "Medium": { pts: 200, fill: "FFF4DE", ink: "9A5B00" }, "Hard": { pts: 400, fill: "FDE8EC", ink: "B4233F" }, "Very Hard": { pts: 800, fill: "2A1430", ink: "FF8FB1" } };
 const HEAD = "Arial", BODY = "Calibri", MONO = "Courier New";
 const W = 13.333, H = 7.5, M = 0.6;
-const FOOT = "CyberQuest Academy  ·  Linux CTF";
+const FOOT = "Lockheed Martin CyberQuest® Academy   ·   Linux CTF";
+// Read a PNG asset from disk into a data URI (cached) so the .pptx embeds it.
+function fileImg(rel) { return "image/png;base64," + fs.readFileSync(path.join(__dirname, rel)).toString("base64"); }
+const SHIELD = fileImg("assets/cyberquest-shield.png");
+const DECK = "Linux CTF";
+const PAGES = [];   // slides collected in creation order; page labels stamped once the total is known
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
 pres.title = "CyberQuest Linux CTF: learn the command line, then compete";
 pres.author = "CyberQuest Academy";
+
+// Light slides use a branded master background (muted CyberQuest watermark + footer logo).
+pres.defineSlideMaster({ title: "LIGHT", background: { data: fileImg("assets/bg-light.png") } });
+// Section dividers use the full-strength illustrated scene.
+pres.defineSlideMaster({ title: "SECTION", background: { data: fileImg("assets/bg-section.png") } });
+// The deck title slide uses the deep-blue hero scene.
+pres.defineSlideMaster({ title: "TITLE", background: { data: fileImg("assets/bg-title.png") } });
 
 let slideNo = 0;
 // PowerPoint sections: section("Part 1 · Linux fundamentals") groups every slide after it in the slide sorter.
@@ -36,15 +48,13 @@ function section(title) { pres.addSection({ title }); SECTION = title; }
 // A content slide. tryCmd puts a green "Try it" pill top right: a command students
 // run in their own Linux Quest tab. Every one of them is safe: none solves a mission.
 function newSlide(titleText, notes, tryCmd) {
-  const s = pres.addSlide(SECTION ? { sectionTitle: SECTION } : undefined);
+  const s = pres.addSlide({ masterName: "LIGHT", ...(SECTION ? { sectionTitle: SECTION } : {}) });
   slideNo += 1;
-  s.background = { color: WHITE };
   if (titleText) {
     s.addText(titleText, { x: M, y: 0.42, w: tryCmd ? W - 2 * M - 4.3 : W - 2 * M, h: 0.85, fontFace: HEAD, fontSize: 32, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true, fit: "shrink" });
   }
   if (tryCmd) tryIt(s, tryCmd);
-  s.addText(FOOT, { x: M, y: 7.0, w: 6, h: 0.3, fontFace: BODY, fontSize: 10, color: MUTED, margin: 0, isTextBox: true });
-  s.addText(String(slideNo), { x: W - M - 1, y: 7.0, w: 1, h: 0.3, fontFace: BODY, fontSize: 10, color: MUTED, align: "right", margin: 0, isTextBox: true });
+  PAGES.push({ s, dark: false });   // brand sits in the master's footer; page label stamped at the end
   s.addNotes(notes);
   return s;
 }
@@ -112,26 +122,58 @@ async function iconCircle(s, Icon, x, y, d, bg) {
   s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color: bg } });
   s.addImage({ data: await iconPng(Icon, WHITE), x: x + d * 0.25, y: y + d * 0.25, w: d * 0.5, h: d * 0.5 });
 }
+// Lighten a hex colour toward white by fraction r (0..1): used for soft card tints.
+function tint(hex, r) {
+  const n = parseInt(hex, 16), R = (n >> 16) & 255, G = (n >> 8) & 255, B = n & 255;
+  const m = (v) => Math.round(v + (255 - v) * r).toString(16).padStart(2, "0");
+  return (m(R) + m(G) + m(B)).toUpperCase();
+}
+// An accent-coloured icon dropped into a soft tinted circle (not the solid-fill iconCircle).
+async function iconTintCircle(s, Icon, x, y, d, color) {
+  s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color: tint(color, 0.80) } });
+  s.addImage({ data: await iconPng(Icon, color), x: x + d * 0.27, y: y + d * 0.27, w: d * 0.46, h: d * 0.46 });
+}
+// Decorative mountain + dotted summit trail (top-right of the "How today works" slide).
+let mountainCache = null;
+async function mountainPng() {
+  if (!mountainCache) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 220">
+      <path d="M0 200 L90 120 L150 165 L240 70 L320 150 L380 110 L440 170 L440 220 L0 220 Z" fill="#DCE8F7"/>
+      <path d="M0 220 L70 165 L140 200 L210 140 L300 200 L360 165 L440 210 L440 220 Z" fill="#C4D8F0"/>
+      <path d="M20 205 C120 196 150 172 210 150 C272 127 300 108 360 72" fill="none" stroke="#8FA8CE" stroke-width="4" stroke-dasharray="2 11" stroke-linecap="round"/>
+      <circle cx="70" cy="192" r="8" fill="#2EA66B"/>
+      <circle cx="190" cy="156" r="8" fill="#7448D4"/>
+      <circle cx="300" cy="112" r="8" fill="#D1416B"/>
+      <circle cx="360" cy="72" r="7" fill="#2459D8"/>
+      <rect x="368" y="34" width="4" height="40" rx="2" fill="#2459D8"/>
+      <path d="M372 36 L404 44 L372 55 Z" fill="#2459D8"/>
+    </svg>`;
+    mountainCache = "image/png;base64," + (await sharp(Buffer.from(svg)).resize({ width: 880 }).png().toBuffer()).toString("base64");
+  }
+  return mountainCache;
+}
 
 function darkSlide(notes) {
   const s = pres.addSlide(SECTION ? { sectionTitle: SECTION } : undefined);
   slideNo += 1;
   s.background = { color: TERM };
   s.addText(FOOT, { x: M, y: 7.0, w: 6, h: 0.3, fontFace: BODY, fontSize: 10, color: T_NOTE, margin: 0, isTextBox: true });
-  s.addText(String(slideNo), { x: W - M - 1, y: 7.0, w: 1, h: 0.3, fontFace: BODY, fontSize: 10, color: T_NOTE, align: "right", margin: 0, isTextBox: true });
+  PAGES.push({ s, dark: true });
   s.addNotes(notes);
   return s;
 }
 
 // Section divider: big part number, title, and a one-line terminal "boot" message.
 function divider(part, title, sub, color, cmd, notes) {
-  const s = darkSlide(notes);
-  s.addText(String(part), { x: M, y: 0.9, w: 3.2, h: 3.6, fontFace: HEAD, fontSize: 250, bold: true, color, margin: 0, valign: "middle", isTextBox: true });
-  s.addText("Part " + part + " of 4", { x: 4.3, y: 1.6, w: 8, h: 0.4, fontFace: MONO, fontSize: 16, color: T_NOTE, margin: 0, isTextBox: true });
-  s.addText(title, { x: 4.3, y: 2.05, w: 8.4, h: 1.5, fontFace: HEAD, fontSize: 46, bold: true, color: WHITE, margin: 0, valign: "top", isTextBox: true });
-  s.addText(sub, { x: 4.3, y: 3.65, w: 8.2, h: 1.0, fontFace: BODY, fontSize: 22, color: T_OUT, margin: 0, valign: "top", isTextBox: true });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 5.35, w: W - 2 * M, h: 0.9, fill: { color: "162238" }, rectRadius: 0.1 });
-  s.addText([{ text: "$ ", options: { color: T_PROMPT, bold: true } }, { text: cmd, options: { color: WHITE, bold: true } }], { x: M + 0.35, y: 5.35, w: W - 2 * M - 0.7, h: 0.9, fontFace: MONO, fontSize: 20, valign: "middle", margin: 0, isTextBox: true });
+  // Section header: the full illustrated scene behind, text kept to the clear sky on the left.
+  const s = pres.addSlide({ masterName: "SECTION" });
+  slideNo += 1;
+  s.addText(String(part), { x: M, y: 0.7, w: 2.3, h: 3.4, fontFace: HEAD, fontSize: 230, bold: true, color, margin: 0, valign: "middle", isTextBox: true });
+  s.addText(title, { x: 3.0, y: 0.7, w: 7.6, h: 3.4, fontFace: HEAD, fontSize: 56, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true, fit: "shrink" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 5.55, w: 7.1, h: 0.8, fill: { color: "0E1726" }, rectRadius: 0.1, shadow: { type: "outer", color: "6E86AE", opacity: 0.35, blur: 8, offset: 2, angle: 90 } });
+  s.addText([{ text: "$ ", options: { color: T_PROMPT, bold: true } }, { text: cmd, options: { color: WHITE, bold: true } }], { x: M + 0.3, y: 5.55, w: 6.6, h: 0.8, fontFace: MONO, fontSize: 18, valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
+  PAGES.push({ s, dark: false });
+  s.addNotes(notes);
   return s;
 }
 
@@ -188,15 +230,15 @@ const CONCEPTS = [
   { title: "Learning any command", color: MC[1], missions: "2 and up", cmds: "--help  Tab",
     short: "Every command has the same shape, and every command can explain itself.",
     statement: "Every command has the same shape, and every command can explain itself. Nobody memorises them all.",
-    verbs: [["Shape", "cmd -opt path", "What to do, how to do it, and what to do it to."], ["Ask", "--help", "Every command explains itself. Read the options."], ["Speed up", "Tab  ↑  Ctrl+C", "Type less, fix faster."]] },
+    verbs: [["Shape", "cmd -opt path", "What to do, how to do it, and what to do it to."], ["Ask", "--help  man", "Every command explains itself. man has the full manual."], ["Speed up", "Tab  ↑  Ctrl+C", "Type less, fix faster."]] },
   { title: "Searching", color: MC[3], missions: "4, 5, 6, 10", cmds: "find  grep  |  sort  uniq",
     short: "Too much to read by hand? Search by name or inside files, and chain tools together.",
     statement: "When there is too much to read by hand, let the computer search: by name, or inside files.",
     verbs: [["By name", "find", "Search the whole folder tree for a name."], ["Inside files", "grep", "Print only the lines that contain your word."], ["Chain", "|", "Feed one command's output into the next."]] },
-  { title: "Data and secrets", color: MC[5], missions: "8, 9, 10", cmds: "base64",
-    short: "Some text only looks secret. Encoding is not encryption.",
-    statement: "Some text only looks secret. Encoding changes how data looks; only encryption needs a key.",
-    verbs: [["Encode", "base64", "Rewrite any data as plain letters and digits."], ["Decode", "base64 --help", "Anyone can undo it. No key needed."], ["Encrypt", "a secret key", "The real way to keep something secret."]] },
+  { title: "Text power tools", color: MC[5], missions: "8, 9, 10", cmds: "sed  awk",
+    short: "Reshape text and pull columns apart with sed and awk.",
+    statement: "When text needs cleaning or a column pulled out, sed and awk do it in one line.",
+    verbs: [["Replace", "sed 's/a/b/g'", "Swap or delete text everywhere in a file."], ["Pull a column", "awk '{print $3}'", "Print just the field you need."], ["Save it", "> file", "Send the output into a file to reuse."]] },
 ];
 // A concept opener: number, title, the one-sentence idea, its three verbs, and the missions it powers.
 async function conceptSlide(i, notes) {
@@ -221,7 +263,7 @@ async function conceptSlide(i, notes) {
 
 const MODE = {
   "We do": { color: BLUE, what: "Class calls out each command. Mentor types." },
-  "You do": { color: GREEN, what: "Teams race on the clock. Mentor reveals after." },
+  "You do": { color: GREEN, what: "Students try on their own. Reveal after." },
 };
 
 // ---- the ten missions, in the order the page plays them ----
@@ -238,7 +280,7 @@ const MS = [
     real: "Responders land on unfamiliar servers and have to find their way around by typing.",
     stretch: "From the crate folder, how many  cd ..  get you back to ~/mission1? Check with pwd.",
     answer: "cd town; ls; cd <sign>; cd ..; cd <right place>; cd <a>/<b>; ls",
-    notes: "CLASS CALLS IT OUT. This is the first mission and the first time the clock matters, so keep it upbeat.\n\nAsk before every cd: 'what do the names say?' Folders show in blue in ls; the long dashed names are plain files used as signs. Try cd into a sign on purpose: 'Not a directory' is a great teaching moment.\n\nThe first sign always leads to a dead end on purpose, so the class has to use cd .. . The last step shows that cd can take two folders at once: cd gazebo/crate.\n\nThe flag is a file NAME. Select it in the ls output and paste it after submit.\n\nPlace names are random per computer: park, library, market, harbor, station, arcade; then fountain, gazebo, tunnel, bridge or kiosk; then locker, crate, shed, cellar or toolbox.",
+    notes: "CLASS CALLS IT OUT. This is the first mission, so keep it upbeat and model the whole flow out loud.\n\nAsk before every cd: 'what do the names say?' Folders show in blue in ls; the long dashed names are plain files used as signs. Try cd into a sign on purpose: 'Not a directory' is a great teaching moment.\n\nThe first sign always leads to a dead end on purpose, so the class has to use cd .. . The last step shows that cd can take two folders at once: cd gazebo/crate.\n\nThe flag is a file NAME. Select it in the ls output and paste it after submit.\n\nPlace names are random per computer: park, library, market, harbor, station, arcade; then fountain, gazebo, tunnel, bridge or kiosk; then locker, crate, shed, cellar or toolbox.",
   },
   {
     name: "Let the cat out of the bag", level: "Easy", skill: "cat  --help", mode: "We do", mins: 6,
@@ -262,7 +304,7 @@ const MS = [
     real: "On a suspicious machine, ls -a is one of the first commands an investigator runs.",
     stretch: "Run  ls -a ~  . Which hidden file lives in your home folder?",
     answer: "ls -a;  cat the dot file that is not .old-...",
-    notes: "TEAMS RACE. From here on the clock really matters: teams solve first, and you reveal this walkthrough after most have it.\n\nIf a team is stuck, point them at hint 3, or ask 'what does ls --help say about names that start with a dot?'\n\nThe real file is .treasure, .stash, .secret-notes or .backup-codes; the decoy always starts with .old-.\n\nStretch answer: .profile, the file that sets up the coloured prompt.",
+    notes: "INDEPENDENT. Students try on their own first; reveal this walkthrough after they have had a go, or if the room is stuck.\n\nIf a team is stuck, point them at hint 3, or ask 'what does ls --help say about names that start with a dot?'\n\nThe real file is .treasure, .stash, .secret-notes or .backup-codes; the decoy always starts with .old-.\n\nStretch answer: .profile, the file that sets up the coloured prompt.",
   },
   {
     name: "Needle in the tree", level: "Medium", skill: "find -name", mode: "You do", mins: 6,
@@ -274,7 +316,7 @@ const MS = [
     real: "Responders search whole servers for key and password files that should not be there.",
     stretch: "Type the cat command again, but press Tab after each few letters of the path.",
     answer: "cat README.txt;  find archive -name \"*.<ending>\";  cat <path>",
-    notes: "TEAMS RACE. Worth 200 points: the first Medium.\n\nThe ending is random per computer: .key, .gem or .relic. Teams must read their OWN README.\n\nWhen revealing, read the find command as a sentence: find, starting in archive, things whose name ends in .gem. Keep the quotes around the pattern.\n\nThe long path is the perfect moment for Tab.",
+    notes: "INDEPENDENT. Worth 200 points: the first Medium.\n\nThe ending is random per computer: .key, .gem or .relic. Teams must read their OWN README.\n\nWhen revealing, read the find command as a sentence: find, starting in archive, things whose name ends in .gem. Keep the quotes around the pattern.\n\nThe long path is the perfect moment for Tab.",
   },
   {
     name: "Search party", level: "Medium", skill: "grep", mode: "You do", mins: 6,
@@ -286,7 +328,7 @@ const MS = [
     real: "Security analysts search millions of log lines for one name or address every day.",
     stretch: "Try  grep -c LOGIN_OK access.log  . What does -c change?",
     answer: "cat README.txt;  grep <name> access.log",
-    notes: "TEAMS RACE. If a team runs cat access.log, 12,000 lines blur past: that makes the case for grep. Ctrl+C stops it early.\n\nThe intruder's name is random per computer: nightowl, ghost_fox, zero_cool, red_panda or pixel_wolf.\n\nCopy only the token value, starting at CYBA{ and ending at }.",
+    notes: "INDEPENDENT. If a team runs cat access.log, 12,000 lines blur past: that makes the case for grep. Ctrl+C stops it early.\n\nThe intruder's name is random per computer: nightowl, ghost_fox, zero_cool, red_panda or pixel_wolf.\n\nCopy only the token value, starting at CYBA{ and ending at }.",
   },
   {
     name: "Odd one out", level: "Medium", skill: "sort  uniq  |", mode: "You do", mins: 5,
@@ -298,7 +340,7 @@ const MS = [
     real: "Analysts run sort | uniq -c on logs every day to find the one odd event among millions.",
     stretch: "Try  sort codes.txt | uniq -c | sort -n | head -3  . What does the first column mean?",
     answer: "sort codes.txt | uniq -u",
-    notes: "TEAMS RACE. The first pipe mission. uniq only compares NEIGHBOURING lines, so uniq -u on the unsorted file prints almost everything: a great 'why?' moment.\n\nIf stuck: hint 6 (costs 10 points), or 'what does uniq --help say about unique lines?'\n\nAlso correct: sort codes.txt | uniq -c | sort -n | head -1 shows a count of 1 next to the flag.",
+    notes: "INDEPENDENT. The first pipe mission. uniq only compares NEIGHBOURING lines, so uniq -u on the unsorted file prints almost everything: a great 'why?' moment.\n\nIf stuck: hint 6 (costs 10 points), or 'what does uniq --help say about unique lines?'\n\nAlso correct: sort codes.txt | uniq -c | sort -n | head -1 shows a count of 1 next to the flag.",
   },
   {
     name: "Permission denied", level: "Medium", skill: "ls -l  chmod +x", mode: "You do", mins: 5,
@@ -310,45 +352,89 @@ const MS = [
     real: "Admins fix 'Permission denied' every week; attackers hunt for files whose permissions are too loose.",
     stretch: "Run  ls -l /etc/quest  . Who owns those files? Can you chmod them?",
     answer: "chmod +x unlock.sh;  ./unlock.sh",
-    notes: "TEAMS RACE. Read the permission string in threes: owner, group, everyone. r read, w write, x execute (run).\n\nSome teams will cat unlock.sh and decode its hidden .door file with base64 by hand. That works too: praise it as thinking like an attacker, then ask them to do it the intended way.\n\nStretch answer: root owns them, and player cannot change them (Operation not permitted). That is exactly why the answers are safe.",
+    notes: "INDEPENDENT. Read the permission string in threes: owner, group, everyone. r read, w write, x execute (run).\n\nSome teams will cat unlock.sh and reverse its hidden .door file with rev by hand. That works too: praise it as thinking like an attacker, then ask them to do it the intended way.\n\nStretch answer: root owns them, and player cannot change them (Operation not permitted). That is exactly why the answers are safe.",
   },
   {
-    name: "Decoder ring", level: "Hard", skill: "base64 -d", mode: "You do", mins: 5,
+    name: "Find and replace", level: "Hard", skill: "sed 's/old/new/g'", mode: "You do", mins: 5,
     where: "~/mission8",
-    brief: "message.b64 looks like gibberish. It is not encrypted, only encoded. No password needed, just the right option.",
-    ask: ["Upper case, lower case, digits and an = at the end. Which encoding looks like that?", "Encoded or encrypted: what is the difference?", "How do we find the option that decodes?"],
-    term: ["$ cd ~/mission8", "$ cat message.b64", "RGVjb2RlZCEgRW5jb2RpbmcgaXMgbm90IGVuY3J5cHRpb24u...", "ZTJhNGZ9Cg==", "$ base64 --help", "Usage: base64 [-d] [-w COL] [FILE]", "        -d      Decode data", "$ base64 -d message.b64", "Decoded! Encoding is not encryption.", { hi: "Flag: CYBA{decoded-...}" }, "$ submit CYBA{decoded-...}", "Correct! +400 points"],
-    happened: ["The letters, digits and trailing = gave base64 away.", "--help showed that -d means decode.", "No key was needed, because encoding is not encryption."],
-    real: "Attackers hide commands in base64 hoping nobody looks. Analysts decode first.",
-    stretch: "Encode your first name with  echo NAME | base64  . Can a neighbour decode it?",
-    answer: "base64 -d message.b64",
-    notes: "TEAMS RACE. Worth 400 points: the first Hard. The command is short; recognising base64 and finding -d in the help is the hard part.\n\nAsk again after: did we need a password to undo this? No. So it was never secret. Mission 9 builds straight on this.",
+    brief: "message.txt is corrupted: the same junk string is wedged all through the flag. Spot the junk, then strip every copy with one sed substitution.",
+    ask: ["cat the file. What junk string repeats between the characters?", "What does the s in sed 's/old/new/g' do?", "To delete text, what do you replace it with?"],
+    term: ["$ cd ~/mission8", "$ cat message.txt", "This file is corrupted: the same junk string ...", "Flag: CQZYQZBQZAQZ{QZsQZeQZdQZ-QZ...QZ}", "# the junk is QZ, wedged between every character", "$ sed 's/QZ//g' message.txt", { hi: "Flag: CYBA{sed-...}" }, "$ submit CYBA{sed-...}", "Correct! +400 points"], fs: 12.5,
+    happened: ["cat showed the flag with a junk string packed between every character.", "sed 's/QZ//g' replaced every copy of the junk with nothing.", "An empty replacement is how you delete text with sed."],
+    real: "Analysts clean up noisy logs and dumps with sed constantly: strip markers, fix formats, pull signal from noise.",
+    stretch: "Replace instead of delete: run sed 's/a/@/g' on any file. What changed?",
+    answer: "sed 's/JUNK//g' message.txt   (JUNK is the repeating string)",
+    notes: "INDEPENDENT. Worth 400 points: the first Hard. The skill is sed's substitute command; the puzzle is spotting the junk string first.\n\nThe junk is random per computer (QZ, XK, ...). Students cat the file, identify the junk, then strip it. An empty 'new' - nothing between the last two slashes - deletes it.",
   },
   {
-    name: "Layer cake", level: "Hard", skill: "base64 -d | base64 -d", mode: "You do", mins: 5,
+    name: "Forge the key", level: "Hard", skill: "awk  >  forge", mode: "You do", mins: 6,
     where: "~/mission9",
-    brief: "cake.b64 was base64-encoded, then encoded again, and again: four to six layers, and nobody wrote down how many. Peel them with one pipeline.",
-    ask: ["After one decode it still looks like base64. Now what?", "How can one base64 -d feed the next one?", "How will we know we reached the last layer?"],
-    term: ["$ cd ~/mission9", "$ base64 -d cake.b64", "Vm0wd2QyUXlVWGxWV0d4V1YwZDRWMVl3WkRSWFJteFZVMjA1...", "$ base64 -d cake.b64 | base64 -d", "Vm0weE5HSXlTWGxUV0doVVlteHdUMVpzVW5O...", "# Up arrow, add one more | base64 -d, repeat", "$ base64 -d cake.b64 | base64 -d | base64 -d \\", "    | base64 -d | base64 -d", { hi: "Flag: CYBA{layers-...}" }, "$ submit CYBA{layers-...}", "Correct! +400 points"], fs: 11.5,
-    happened: ["Each base64 -d removed one layer.", "Pipes stacked the decodes: Up arrow plus one more  | base64 -d  was the whole workflow.", "When the output read 'Flag:', no layers were left."],
-    real: "Malware often wraps its payload in several layers of encoding. Analysts peel them one at a time.",
-    stretch: "Make your own:  echo hi | base64 | base64 | base64  . Swap with a team and peel theirs.",
-    answer: "base64 -d cake.b64 | base64 -d | ...  (4 to 6 times)",
-    notes: "TEAMS RACE. Worth 400 points. The number of layers is random (4, 5 or 6), so teams cannot copy each other's command.\n\nThe Up arrow is the star of this mission: bring the last command back, add  | base64 -d , press Enter.\n\nIf the output turns into garbage symbols, they decoded once too many: remove the last pipe.",
+    brief: "records.txt is an access table: user, role, token. The three admin rows hold the flag's three parts, in order. Pull them with awk, save them with >, then forge the flag.",
+    ask: ["Which column is the token: $1, $2 or $3?", "How do you print it only for the admin rows?", "How do you save that output into a file?"],
+    term: ["$ cd ~/mission9", "$ cat records.txt", "user role token", "dave guest 15b8", "ivan admin 5a37", "grace user 4f20", "...", "$ awk '/admin/{print $3}' records.txt > keys.txt", "$ forge keys.txt", "Forging the key...", { hi: "CYBA{forge-5a37...}" }, "$ submit CYBA{forge-...}", "Correct! +400 points"], fs: 12,
+    happened: ["awk '/admin/{print $3}' printed the 3rd field (the token) of every admin row.", "The > saved those three parts into keys.txt.", "forge read the file and assembled the parts into the flag."],
+    real: "awk is the Swiss-army knife for columns: usernames from logs, totals from CSVs, the one field that matters.",
+    stretch: "Print two columns at once: awk '/admin/{print $1, $3}' records.txt. What do you get?",
+    answer: "awk '/admin/{print $3}' records.txt > keys.txt ; forge keys.txt",
+    notes: "INDEPENDENT. Worth 400 points. Three skills in one: awk to pull a column, > to save it, and running a tool (forge) on the file.\n\nThe three admin rows sit in order in the file, so awk prints the parts in the right order; forge just assembles them. Pull the wrong field and forge makes the wrong flag - a good 'check your awk' moment.",
   },
   {
-    name: "Endgame", level: "Very Hard", skill: "find  grep  cut  base64  chmod", mode: "You do", mins: 10,
+    name: "Endgame", level: "Very Hard", skill: "find  grep  cut  chmod", mode: "You do", mins: 10,
     where: "~/mission10",
-    brief: "The final boss. The flag is split into three pieces, each hidden a different way: a hidden file in a folder tree, a base64 token in a log, and a locked script. Assemble CYBA{piece1-piece2-piece3}.",
+    brief: "The final boss. The flag is split into three pieces, each hidden a different way: a hidden file in a folder tree, a token in a log line, and a locked script. Assemble CYBA{piece1-piece2-piece3}.",
     ask: ["Which earlier mission taught the skill for each piece?", "How can we pull just the token out of one log line?", "In which order do the pieces go?"],
-    term: ["$ cd ~/mission10", "$ grep Piece README.txt", "  Piece 2: glitch logged in once in auth.log ...", "$ find vault -name \".*\" -type f", "vault/south/rack-ml4/.stash   (+ 3 decoys)", "$ cat vault/south/rack-ml4/.stash", { hi: "piece 1: 244e32" }, "$ grep glitch auth.log | cut -d= -f4 | base64 -d", { hi: "piece 2: a7fdd6" }, "$ chmod +x unlock.sh && ./unlock.sh", { hi: "piece 3: 917b9b" }, "$ submit CYBA{244e32-a7fdd6-917b9b}", "Correct! +800 points"], fs: 11,
-    happened: ["find listed every hidden file in vault; cat told the real piece from the decoys.", "grep found the intruder's line, cut kept field 4 (the token) and base64 -d decoded it.", "chmod +x unlocked the script, which printed piece 3."],
-    real: "Real incidents are never one trick: responders chain search, logs and decoding to rebuild what happened.",
-    stretch: "When the last flag lands the clock stops. What was your total, and which mission had your biggest Took?",
-    answer: "find vault -name \".*\";  grep NAME auth.log | cut -d= -f4 | base64 -d;  chmod +x unlock.sh",
-    notes: "TEAMS RACE. Worth 800 points: the biggest prize and the only Very Hard mission. Expect only the strongest teams to finish. Points land only for the whole flag, but every piece found is progress worth praising.\n\nCoach piece by piece: 'Which mission taught you hidden files? Searching a log? A locked script?'\n\ncut -d= -f4 means: split the line at every = sign and keep the 4th part, the token. Copying the token by hand into  echo TOKEN | base64 -d  works too.\n\nThe pieces on this slide are an example: every computer has its own.\n\nWhen the last flag lands, the clock stops and the sidebar shows the finish card. Celebrate it.",
+    term: ["$ cd ~/mission10", "$ grep Piece README.txt", "  Piece 2: glitch logged in once in auth.log ...", "$ find vault -name \".*\" -type f", "vault/south/rack-ml4/.stash   (+ 3 decoys)", "$ cat vault/south/rack-ml4/.stash", { hi: "piece 1: 244e32" }, "$ grep glitch auth.log | cut -d= -f4", { hi: "piece 2: a7fdd6" }, "$ chmod +x unlock.sh && ./unlock.sh", { hi: "piece 3: 917b9b" }, "$ submit CYBA{244e32-a7fdd6-917b9b}", "Correct! +800 points"], fs: 11,
+    happened: ["find listed every hidden file in vault; cat told the real piece from the decoys.", "grep found the intruder's line, and cut kept field 4: the token, right after token=.", "chmod +x unlocked the script, which printed piece 3."],
+    real: "Real incidents are never one trick: responders chain search, logs and a quick script to rebuild what happened.",
+    stretch: "The clock stops on your last flag. Which mission took you longest? That is the skill to practise next.",
+    answer: "find vault -name \".*\";  grep NAME auth.log | cut -d= -f4;  chmod +x unlock.sh",
+    notes: "INDEPENDENT. Worth 800 points and the only Very Hard mission - a stretch goal, not an expectation. Few will reach it, and that is fine. Points land only for the whole flag, but every piece found is progress worth praising.\n\nCoach piece by piece: 'Which mission taught you hidden files? Searching a log? A locked script?'\n\ncut -d= -f4 means: split the line at every = sign and keep the 4th part, the token.\n\nThe pieces on this slide are an example: every computer has its own.",
   },
 ];
+
+// One mission as a brief + walkthrough pair. Used for the guided example (missions 1-2)
+// in the main flow and, in the appendix, for the full mission bank. No timing: the
+// process matters more than the clock, and students are not expected to finish them all.
+function missionPair(i) {
+  let s;
+  const c = MS[i], n = i + 1, mode = MODE[c.mode], color = MC[i], L = LEVEL[c.level];
+  s = newSlide(null, "MISSION " + n + " OF " + N + ": " + c.name + "   [" + c.level + ", " + L.pts + " points, " + c.mode + "]\n\n" +
+    "Show the brief first. Read it out loud, then ask the three questions BEFORE anyone types. Take one answer per question; don't confirm or correct yet - predicting, then checking, is where the learning happens.\n\n" + c.notes);
+  chip(s, "Mission " + n + " of " + N, M, 0.48, 2.0, color, WHITE, 14);
+  levelChip(s, c.level, M + 2.15, 0.48, 2.0, 13);
+  trail(s, 7.4, 0.52, 5.33, n);
+  s.addText(c.name, { x: M, y: 1.0, w: W - 2 * M, h: 0.95, fontFace: HEAD, fontSize: 42, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 2.1, w: 7.05, h: 4.4, fill: { color: TERM }, rectRadius: 0.12, shadow: { type: "outer", color: "12213A", opacity: 0.22, blur: 10, offset: 3, angle: 90 } });
+  s.addText("# the brief", { x: M + 0.4, y: 2.3, w: 4, h: 0.4, fontFace: MONO, fontSize: 15, color: T_NOTE, margin: 0, isTextBox: true });
+  s.addText(c.brief, { x: M + 0.4, y: 2.8, w: 6.25, h: 2.25, fontFace: BODY, fontSize: 22, color: WHITE, margin: 0, valign: "top", isTextBox: true });
+  s.addText(c.where, { x: M + 0.4, y: 5.1, w: 6.3, h: 0.35, fontFace: MONO, fontSize: 13, color: T_OUT, margin: 0, isTextBox: true });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 0.4, y: 5.65, w: 3.6, h: 0.55, fill: { color: AMBER }, rectRadius: 0.08 });
+  s.addText([{ text: "Tools: ", options: { fontFace: BODY } }, { text: c.skill, options: { fontFace: MONO, bold: true } }], { x: M + 0.4, y: 5.65, w: 3.6, h: 0.55, fontSize: 13.5, color: INK, align: "center", valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 4.2, y: 5.65, w: 2.45, h: 0.55, fill: { color: "2B3B5C" }, rectRadius: 0.08 });
+  s.addText("+" + L.pts + " points", { x: M + 4.2, y: 5.65, w: 2.45, h: 0.55, fontFace: MONO, fontSize: 16, bold: true, color: T_PROMPT, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  card(s, 7.95, 2.1, 4.78, 3.05);
+  text(s, "Before anyone types", 8.25, 2.25, 4.2, 0.45, { fontFace: HEAD, fontSize: 19, bold: true });
+  bullets(s, c.ask, 8.25, 2.8, 4.25, 2.3, { fontSize: 15.5, paraSpaceAfter: 7 });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.95, y: 5.35, w: 4.78, h: 1.15, fill: { color: mode.color }, rectRadius: 0.1 });
+  s.addText(c.mode, { x: 8.2, y: 5.35, w: 1.7, h: 1.15, fontFace: HEAD, fontSize: 24, bold: true, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
+  s.addText(mode.what, { x: 9.95, y: 5.35, w: 2.6, h: 1.15, fontFace: BODY, fontSize: 13.5, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
+  s = newSlide(null, "WALKTHROUGH " + n + " OF " + N + ": " + c.name + "\n\n" +
+    (c.mode === "You do" ? "Independent mission: reveal this only after students have tried, or when the room is stuck. Not everyone needs to reach it - one captured flag is a win.\n\n" : "Guided mission: solve it live with the class calling out commands, then use this slide to recap.\n\n") +
+    "The slide never shows a real flag: every computer has its own, so students still have to run the commands themselves.\n\n" +
+    "Ask one student to explain the steps in their own words. Offer the stretch question to anyone who finished early.\n\n" + c.notes);
+  chip(s, "Walkthrough " + n + " of " + N, M, 0.48, 2.3, color, WHITE, 14);
+  levelChip(s, c.level, M + 2.45, 0.48, 2.0, 13);
+  trail(s, 7.4, 0.52, 5.33, n);
+  s.addText("Solving " + c.name, { x: M, y: 0.98, w: W - 2 * M, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true });
+  term(s, M, 1.85, 7.35, 4.65, c.term, { fontSize: c.fs || (c.term.length > 8 ? 14 : 16), title: "player@quest" });
+  text(s, "What just happened", 8.25, 1.85, 4.4, 0.4, { fontFace: HEAD, fontSize: 18, bold: true });
+  numbered(s, c.happened, 8.25, 2.4, 4.48, 0.86, color, 14);
+  card(s, 8.25, 5.0, 4.48, 0.82, "FFF4DC");
+  text(s, [{ text: "Real world: ", options: { bold: true } }, { text: c.real }], 8.42, 5.0, 4.16, 0.82, { fontSize: 13, valign: "middle" });
+  card(s, 8.25, 5.92, 4.48, 0.62);
+  text(s, [{ text: "Stretch: ", options: { bold: true, color } }, { text: c.stretch }], 8.42, 5.92, 4.16, 0.62, { fontSize: 12, valign: "middle" });
+  text(s, "Names, line numbers and flags change on every computer.", M, 6.58, 7.35, 0.3, { fontSize: 11, color: MUTED });
+}
 
 async function build() {
   let s;
@@ -358,47 +444,37 @@ async function build() {
   // OPENING
   // ===========================================================================
   section("Opening");
-  s = darkSlide(
+  s = pres.addSlide({ masterName: "TITLE" });
+  slideNo += 1;
+  s.addText("CyberQuest", { x: M, y: 1.5, w: 7.2, h: 1.4, fontFace: HEAD, fontSize: 84, bold: true, color: WHITE, margin: 0, isTextBox: true });
+  s.addText("CTF Foundation: Linux and the command line.\nLearn it, then compete.", { x: M, y: 3.05, w: 6.7, h: 1.3, fontFace: BODY, fontSize: 26, color: "E8EEFF", margin: 0, isTextBox: true });
+  chip(s, "simulated CTF competition", M, 4.55, 3.0, AMBER, INK, 15);
+  s.addText("CyberQuest Academy mentorship session", { x: M, y: 5.12, w: 6.5, h: 0.4, fontFace: BODY, fontSize: 18, bold: true, color: WHITE, margin: 0, isTextBox: true });
+  PAGES.push({ s, dark: true });
+  s.addNotes(
     "Welcome the class and introduce the mentors: name, what you do, and one sentence on how you use a terminal at work.\n\n" +
-    "Promise: 'In the next 90 minutes you will start a Linux computer inside your browser, learn about a dozen commands, then compete for 2,700 points against the clock.'\n\n" +
+    "Promise: 'In this session you will start a real Linux computer inside your browser, learn a handful of commands, and capture a flag the way security pros do.'\n\n" +
     "Before class: the link is written on the 'Open the CTF' slide, and you have watched it reach 'Ready' on a student Chromebook on the school network.");
-  s.addText("CyberQuest", { x: M, y: 1.35, w: 6.6, h: 1.3, fontFace: HEAD, fontSize: 72, bold: true, color: WHITE, margin: 0, isTextBox: true });
-  s.addText("Linux CTF: learn the command line, then compete.", { x: M, y: 2.75, w: 6.3, h: 1.1, fontFace: BODY, fontSize: 28, color: T_OUT, margin: 0, isTextBox: true });
-  chip(s, "simulated CTF competition", M, 4.15, 3.0, AMBER, INK, 15);
-  s.addText("CyberQuest Academy mentorship session", { x: M, y: 4.85, w: 6, h: 0.4, fontFace: BODY, fontSize: 17, bold: true, color: WHITE, margin: 0, isTextBox: true });
-  trail(s, M, 5.85, 6.0, N + 1);
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.3, y: 1.2, w: 5.43, h: 4.95, fill: { color: "162238" }, rectRadius: 0.12, line: { color: "2B3B5C", width: 1 } });
-  ["E5534B", "F5A623", "46D39A"].forEach((c, i) => s.addShape(pres.shapes.OVAL, { x: 7.55 + i * 0.24, y: 1.4, w: 0.14, h: 0.14, fill: { color: c } }));
-  s.addText([
-    { text: P, options: { color: T_PROMPT, bold: true } }, { text: "whoami", options: { color: WHITE, bold: true, breakLine: true } },
-    { text: "player", options: { color: T_OUT, breakLine: true } },
-    { text: P, options: { color: T_PROMPT, bold: true } }, { text: "ls skills/", options: { color: WHITE, bold: true, breakLine: true } },
-    { text: "(empty, for now)", options: { color: T_NOTE, breakLine: true } },
-    { text: " ", options: { breakLine: true } },
-    { text: P, options: { color: T_PROMPT, bold: true } }, { text: "./start-ctf", options: { color: WHITE, bold: true, breakLine: true } },
-    { text: "10 flags hidden, plus a warm-up", options: { color: T_OUT, breakLine: true } },
-    { text: "2,700 points up for grabs", options: { color: T_OUT, breakLine: true } },
-    { text: "clock starts when you type", options: { color: T_OUT, breakLine: true } },
-    { text: "Good luck.", options: { color: AMBER, bold: true } },
-  ], { x: 7.65, y: 1.85, w: 4.8, h: 4.1, fontFace: MONO, fontSize: 18, valign: "top", margin: 0, isTextBox: true, paraSpaceAfter: 3 });
 
   // ---- run of show ----
-  s = newSlide("Today's mission, in four parts",
-    "Walk the timeline so students know the competition is coming and the theory is short.\n\n" +
-    "Timing for 90 minutes: opening 3 min, Part 1 Linux 101 10 min, Part 2 learn 25 min (open the CTF at the start: see the mentor appendix), Part 3 compete 42 min, Part 4 debrief 10 min.\n\n" +
-    "Part 2 teaches the commands in exactly the order the missions need them, so each mission feels like using something you just learned.\n\n" +
-    "If you only have 60 minutes: demo the Try it pills instead of pausing for them, and skip the side quests.");
-  const plan = [["10", "Linux 101", "Where Linux came from, why it is everywhere, and why we type.", MC[0]], ["25", "Learn", "Open the CTF, then a dozen commands in the order the missions use them.", MC[2]], ["42", "Compete", "Ten flags, 2,700 points, one clock. Easiest first.", MC[3]], ["10", "Debrief", "How it stays fair, and where this leads.", MC[4]]];
-  plan.forEach(([min, name, what, color], i) => {
-    const x = M + i * 3.07;
-    card(s, x, 1.7, 2.87, 3.9);
-    s.addText(min, { x: x + 0.25, y: 1.9, w: 1.9, h: 1.15, fontFace: HEAD, fontSize: 58, bold: true, color, margin: 0, isTextBox: true });
-    text(s, "minutes", x + 0.25, 3.05, 1.9, 0.35, { fontSize: 14, color: MUTED });
-    text(s, name, x + 0.25, 3.55, 1.9, 0.5, { fontFace: HEAD, fontSize: 21, bold: true });
-    text(s, what, x + 0.25, 4.1, 1.85, 1.4, { fontSize: 14.5, color: MUTED });
-  });
-  card(s, M, 5.85, W - 2 * M, 0.75, "FFF4DC");
-  text(s, [{ text: "The deal: ", options: { bold: true } }, { text: "nobody is expected to know any of this already. Typing the wrong thing is how everyone learns it." }], M + 0.3, 5.85, W - 2 * M - 0.6, 0.75, { valign: "middle", fontSize: 17 });
+  s = newSlide("How today works",
+    "Set expectations up front. This is a focused one-hour session, not a race to finish every challenge. The goal is that students understand the command line and - most of all - how a CTF actually works: read a challenge, try something, read the output, adjust, capture a flag.\n\n" +
+    "Say it plainly: 'You will NOT finish every mission today, and that is fine. We want you to understand the process and feel confident starting a challenge on your own.'\n\n" +
+    "The arc below is the shape of the hour: short theory, one flag captured together, then you start one yourself, then we reflect.\n\n" +
+    "The deal: nobody is expected to know any of this already. Typing the wrong thing and reading what comes back is how everyone learns it.");
+  const arc = [["Concept", "What a CTF is, and why the command line matters.", MC[0], fa.FaLightbulb], ["Mental model", "How to think about the terminal and any command.", MC[1], fa.FaBrain], ["Tools", "A handful of commands - just what a challenge needs.", MC[2], fa.FaTerminal], ["Guided", "We capture a flag together, step by step.", MC[3], fa.FaMapLocationDot], ["Independent", "You start a challenge yourself. Finishing is optional.", MC[4], fa.FaPersonHiking], ["Reflection", "Why it worked, and where this leads.", GREEN, fa.FaClipboardCheck]];
+  const CW = 3.95, CH = 1.98, GX = 4.19;
+  for (let i = 0; i < arc.length; i++) {
+    const [name, what, color, Icon] = arc[i];
+    const x = M + (i % 3) * GX, y = 1.78 + Math.floor(i / 3) * 2.18;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: CW, h: CH, fill: { color: tint(color, 0.9) }, line: { color: tint(color, 0.68), width: 1 }, rectRadius: 0.12 });
+    s.addShape(pres.shapes.OVAL, { x: x + 0.3, y: y + 0.3, w: 0.56, h: 0.56, fill: { color } });
+    s.addText(String(i + 1), { x: x + 0.3, y: y + 0.3, w: 0.56, h: 0.56, fontFace: HEAD, fontSize: 20, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    text(s, name, x + 1.0, y + 0.3, 2.5, 0.56, { fontFace: HEAD, fontSize: 21, bold: true, color, valign: "middle" });
+    text(s, what, x + 0.32, y + 1.0, 2.35, 0.9, { fontSize: 14.5, color: INK });
+    await iconTintCircle(s, Icon, x + CW - 1.12, y + 0.92, 0.92, color);
+    if (i % 3 < 2) s.addShape(pres.shapes.LINE, { x: x + CW + 0.02, y: y + CH / 2, w: GX - CW - 0.04, h: 0, line: { color: "9AA7BD", width: 2, endArrowType: "triangle" } });
+  }
 
   // ---- what is a CTF ----
   s = newSlide("What is a capture the flag?",
@@ -424,12 +500,30 @@ async function build() {
     if (i < 3) s.addText(">", { x: x + 2.6, y: 5.45, w: 0.47, h: 1.0, fontFace: MONO, fontSize: 24, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
   });
 
+  // ---- the CTF flow (the core activity concept) ----
+  s = newSlide("The flow of every challenge",
+    "This is the single most important idea in the session. Every CTF challenge - and a lot of real security work - runs this same loop. Say it out loud, and point back to it every time the room gets stuck.\n\n" +
+    "The key move is the middle of the loop: you TRY something, CHECK what came back, and ADJUST. Nobody is expected to know the answer up front. Reading the output and adjusting IS the skill.\n\n" +
+    "Capturing the flag is just where the loop ends. The habit of read, try, check, adjust is what students should leave with.");
+  const flow = [["Read", "the challenge", fa.FaBookOpen], ["Observe", "the clues", fa.FaMagnifyingGlass], ["Choose", "a tool", fa.FaScrewdriverWrench], ["Try", "a command", fa.FaTerminal], ["Check", "the output", fa.FaEye], ["Adjust", "if needed", fa.FaArrowsRotate], ["Capture", "the flag", fa.FaFlag], ["Submit", "& reflect", fa.FaCircleCheck]];
+  for (let i = 0; i < flow.length; i++) {
+    const [head, body, Icon] = flow[i];
+    const col = i % 4, row = Math.floor(i / 4);
+    const x = M + col * 3.08, y = 1.65 + row * 2.45, color = MC[i % 6];
+    card(s, x, y, 2.85, 2.2);
+    await iconCircle(s, Icon, x + 0.95, y + 0.25, 0.9, color);
+    text(s, head, x + 0.15, y + 1.28, 2.55, 0.45, { fontFace: HEAD, fontSize: 20, bold: true, align: "center" });
+    text(s, body, x + 0.15, y + 1.72, 2.55, 0.4, { fontSize: 14, color: MUTED, align: "center" });
+    if (col < 3) s.addText(">", { x: x + 2.85, y: y + 0.55, w: 0.23, h: 0.6, fontFace: MONO, fontSize: 20, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  }
+  text(s, "read -> try -> check -> adjust is the loop. Capturing the flag is just where it ends.", M, 6.62, W - 2 * M, 0.35, { fontSize: 13, color: MUTED, align: "center" });
+
   // ===========================================================================
   // PART 1: BOOT UP
   // ===========================================================================
-  section("Part 1 · Linux fundamentals");
-  divider(1, "Linux fundamentals", "Where Linux came from, why it runs nearly everything, and why professionals still drive it with a keyboard.", MC[0], "uname -s   # Linux",
-    "Section break. Eight minutes of story before anyone touches a keyboard. Keep it fast and visual: the point is WHY this matters, not memorising dates.\n\nAsk: 'Who thinks they have used Linux today?' Count hands now, and again at the end of this part.");
+  section("Part 1 · Linux and the command line");
+  divider(1, "Linux and the command line", "Concept and mental model: what Linux is, why professionals drive computers by typing, and the one idea that makes any command make sense.", MC[0], "uname -s   # Linux",
+    "Section break. A short story before anyone touches a keyboard. Keep it fast and visual: the point is WHY this matters, not memorising dates.\n\nAsk: 'Who thinks they have used Linux today?' Count hands now, and again at the end of this part.");
 
   // ---- a brief history ----
   s = newSlide("A brief history of Linux",
@@ -502,6 +596,56 @@ async function build() {
   card(s, 5.3, 5.85, 7.45, 0.6, "E2F5EC");
   text(s, "On a Chromebook right now? You are already using Linux.", 5.55, 5.85, 7, 0.6, { valign: "middle", fontSize: 16, bold: true, color: "0F6A45" });
 
+  // ---- what is the CLI? ----
+  s = newSlide("What is the CLI?",
+    "The one-sentence definition students need before Part 1 gets concrete. Keep it plain and say it slowly.\n\n" +
+    "CLI stands for command-line interface. Instead of pointing and clicking, you type a line of text, press Enter, and the computer answers in text. That is the whole idea. Contrast it live with the GUI they already know: to list what is in a folder, you don't double-click, you type ls and press Enter.\n\n" +
+    "Walk the three beats on the slide: (1) you type a command, a line of words, not clicks; (2) the shell reads that line and does the work, no mouse involved; (3) it prints the answer back as plain text, and a fresh prompt waits for your next line. It is a back-and-forth, like texting the computer.\n\n" +
+    "The takeaway to say out loud: a command is just a short sentence you type to the computer, and the rest of today is learning the words. Everyone can type a sentence, so everyone can do this.\n\n" +
+    "Where it lands for them: the entire CyberQuest CTF is played here. Every mission is solved by typing commands to find a hidden flag. No command today is dangerous, and you can always just try one.");
+  text(s, [{ text: "CLI", options: { bold: true, color: INK } }, { text: " stands for ", options: { color: MUTED } }, { text: "command-line interface", options: { bold: true, color: INK } }, { text: ": you run the computer by typing text commands instead of pointing and clicking.", options: { color: MUTED } }], M, 1.3, W - 2 * M, 0.5, { fontSize: 18 });
+  {
+    const fy = 2.05, fh = 2.52, bw = 3.5, bx = [M, 4.91, 9.22];
+    const beats = [
+      ["1 · YOU TYPE", MC[2], "mono", "ls -l", "a line of words, not clicks"],
+      ["2 · LINUX RUNS IT", MC[3], "icon", fa.FaGears, "the shell reads the line and does the work"],
+      ["3 · IT ANSWERS", MC[0], "out", "notes.txt\nprojects/", "printed back as plain text"],
+    ];
+    // connector lines + icon circles sit behind/over the gaps between boxes
+    const midY = fy + fh / 2;
+    for (const [gi, Icon] of [[0, fa.FaKeyboard], [1, fa.FaReply]]) {
+      const x1 = bx[gi] + bw, x2 = bx[gi + 1], d = 0.74;
+      s.addShape(pres.shapes.LINE, { x: x1 + 0.04, y: midY, w: x2 - x1 - 0.08, h: 0.02, line: { color: LINE, width: 2, dashType: "dash" } });
+      await iconTintCircle(s, Icon, (x1 + x2) / 2 - d / 2, midY - d / 2, d, gi === 0 ? MC[2] : MC[0]);
+    }
+    for (let i = 0; i < beats.length; i++) {
+      const [label, color, kind, body, cap] = beats[i], x = bx[i];
+      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: fy, w: bw, h: fh, fill: { color: WHITE }, line: { color: LINE, width: 1 }, rectRadius: 0.12, shadow: { type: "outer", color: "C7D2E2", opacity: 0.4, blur: 7, offset: 2, angle: 90 } });
+      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x + 0.3, y: fy + 0.26, w: 2.0, h: 0.42, fill: { color: tint(color, 0.82) }, rectRadius: 0.21 });
+      s.addText(label, { x: x + 0.3, y: fy + 0.26, w: 2.0, h: 0.42, fontFace: HEAD, fontSize: 12.5, bold: true, color, align: "center", valign: "middle", margin: 0, isTextBox: true });
+      if (kind === "icon") {
+        await iconTintCircle(s, body, x + bw / 2 - 0.5, fy + 0.8, 1.0, color);
+      } else {
+        s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x + 0.3, y: fy + 0.82, w: bw - 0.6, h: 0.96, fill: { color: TERM }, rectRadius: 0.1 });
+        s.addText([{ text: kind === "mono" ? "$ " : "", options: { color: T_PROMPT, bold: true } }, { text: body, options: { color: kind === "mono" ? T_CMD : T_OUT, bold: kind === "mono" } }], { x: x + 0.3, y: fy + 0.82, w: bw - 0.6, h: 0.96, fontFace: MONO, fontSize: kind === "mono" ? 20 : 14, align: "center", valign: "middle", margin: 0, isTextBox: true });
+      }
+      text(s, cap, x + 0.3, fy + 1.92, bw - 0.6, 0.5, { fontSize: 13.5, color: MUTED, align: "center" });
+    }
+  }
+  {
+    const cy = 4.78, ch = 1.98, cw = 5.95, cards = [
+      [fa.FaKeyboard, MC[2], "What it really means", "A command is just a short sentence you type to the computer. Because it is text, you can save it, repeat it and share it exactly — something you can't do with a trail of clicks."],
+      [fa.FaBolt, MC[0], "Where you'll use it today", "The whole CyberQuest CTF is played at the command line. Every mission is solved by typing commands to track down a hidden flag — and nothing you type today can break anything."],
+    ];
+    for (let i = 0; i < cards.length; i++) {
+      const [Icon, color, head, body] = cards[i], x = M + i * (cw + 0.23);
+      card(s, x, cy, cw, ch);
+      await iconTintCircle(s, Icon, x + 0.32, cy + 0.32, 0.86, color);
+      text(s, head, x + 1.4, cy + 0.3, cw - 1.6, 0.5, { fontSize: 18, bold: true });
+      text(s, body, x + 1.4, cy + 0.84, cw - 1.6, ch - 1.0, { fontSize: 13.5, color: "33425E" });
+    }
+  }
+
   // ---- terminal vs shell ----
   s = newSlide("Terminal, shell, kernel: who does what?",
     "People say 'terminal' and 'shell' as if they were the same thing. They are layers.\n\n" +
@@ -561,28 +705,78 @@ async function build() {
   }
 
   // ---- CLI vs GUI ----
-  s = newSlide("CLI vs GUI",
+  s = newSlide(null,
     "Be fair to the GUI: it is easier to discover, and great for one-off visual work. Professionals use both and pick the right tool.\n\n" +
     "The CLI wins whenever the work is precise, repeated, big, remote or needs to be shared. A command is also documentation: you can paste exactly what you did into a chat or a script.\n\n" +
     "Ask: 'Which column would you want if you had to do this job a thousand times?'");
-  const rows = [["Learning it", "Easy to discover: look around and click", "Learn the words first, then you are fast"],
-    ["Rename 500 files", "500 right-clicks", "One line"],
-    ["Find one line in a huge log", "Scroll, squint, Ctrl+F", "grep finds it in a blink"],
-    ["Repeat yesterday's work", "Remember every click", "Press the Up arrow, or run the script"],
-    ["A server 1,000 miles away", "Needs a remote desktop and a fast link", "Works over a slow text connection"],
-    ["Show someone how you did it", "Screenshots and arrows", "Paste the command"]];
-  const cx = [M, M + 3.3, M + 7.75], cw = [3.2, 4.35, 4.38];
-  [["", INK], ["GUI: point and click", MC[4]], ["CLI: type commands", MC[2]]].forEach(([h, color], j) => {
-    if (h) { s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cx[j], y: 1.6, w: cw[j], h: 0.6, fill: { color }, rectRadius: 0.08 });
-      s.addText(h, { x: cx[j], y: 1.6, w: cw[j], h: 0.6, fontFace: HEAD, fontSize: 18, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true }); }
-  });
-  rows.forEach(([task, gui, cli], i) => {
-    const y = 2.32 + i * 0.7;
-    s.addShape(pres.shapes.RECTANGLE, { x: M, y, w: W - 2 * M, h: 0.62, fill: { color: i % 2 ? WHITE : TINT } });
-    text(s, task, cx[0] + 0.15, y, cw[0] - 0.2, 0.62, { fontSize: 15, bold: true, valign: "middle" });
-    text(s, gui, cx[1] + 0.15, y, cw[1] - 0.2, 0.62, { fontSize: 15, color: MUTED, valign: "middle" });
-    text(s, cli, cx[2] + 0.15, y, cw[2] - 0.2, 0.62, { fontSize: 15, color: i ? GREEN : MUTED, bold: i > 0, valign: "middle" });
-  });
+  const put = async (Icon, color, x, y, d) => s.addImage({ data: await iconPng(Icon, color), x, y, w: d, h: d });
+  s.addText("GUI vs CLI", { x: M, y: 0.2, w: 8, h: 0.72, fontFace: HEAD, fontSize: 40, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true });
+  s.addText("Two ways to interact with a computer", { x: M, y: 0.92, w: 9, h: 0.4, fontFace: BODY, fontSize: 18, color: MUTED, margin: 0, isTextBox: true });
+  const guiC = "2563EB", cliC = "15A05E", pY = 1.42, pH = 3.2, pW = 5.92, gX = M, cX = 6.82;
+  const wY = pY + 1.06, wH = pH - 1.26;
+  // ---- the two panels ----
+  for (const [px, pc, Icon, ttl, sub] of [[gX, guiC, fa.FaArrowPointer, "GUI: point and click", "Use a mouse to interact with windows, icons, and menus."], [cX, cliC, fa.FaTerminal, "CLI: type commands", "Use text commands to tell the computer what to do."]]) {
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: px, y: pY, w: pW, h: pH, fill: { color: pc }, rectRadius: 0.14 });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: px + 0.3, y: pY + 0.24, w: 0.62, h: 0.62, fill: { color: tint(pc, 0.26) }, rectRadius: 0.1 });
+    await put(Icon, WHITE, px + 0.46, pY + 0.4, 0.3);
+    s.addText(ttl, { x: px + 1.08, y: pY + 0.2, w: pW - 1.3, h: 0.44, fontFace: HEAD, fontSize: 22, bold: true, color: WHITE, margin: 0, valign: "middle", isTextBox: true });
+    s.addText(sub, { x: px + 1.08, y: pY + 0.64, w: pW - 1.3, h: 0.36, fontFace: BODY, fontSize: 12, color: "E8EEFF", margin: 0, isTextBox: true });
+  }
+  // ---- GUI window: a little file manager ----
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: gX + 0.22, y: wY, w: pW - 0.44, h: wH, fill: { color: WHITE }, rectRadius: 0.1 });
+  ["E5534B", "F5A623", "46D39A"].forEach((c, i) => s.addShape(pres.shapes.OVAL, { x: gX + 0.42 + i * 0.18, y: wY + 0.16, w: 0.1, h: 0.1, fill: { color: c } }));
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: gX + 0.38, y: wY + 0.42, w: 1.55, h: wH - 0.58, fill: { color: "EEF2F7" }, rectRadius: 0.08 });
+  const sideItems = [["Home", fa.FaHouse, true], ["Documents", fa.FaFileLines, false], ["Pictures", fa.FaImage, false], ["Downloads", fa.FaDownload, false]];
+  for (let i = 0; i < sideItems.length; i++) {
+    const [lbl, Ic, on] = sideItems[i], ry = wY + 0.54 + i * 0.34;
+    if (on) s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: gX + 0.46, y: ry - 0.04, w: 1.4, h: 0.3, fill: { color: "DCE8FB" }, rectRadius: 0.06 });
+    await put(Ic, on ? guiC : "7C8AA3", gX + 0.56, ry + 0.02, 0.17);
+    s.addText(lbl, { x: gX + 0.82, y: ry - 0.04, w: 1.05, h: 0.3, fontFace: BODY, fontSize: 10.5, color: on ? guiC : "3C4A63", bold: on, valign: "middle", margin: 0, isTextBox: true });
+  }
+  const folders = [["School", "4AA3FF"], ["Projects", "F5A623"], ["Photos", "46D39A"]];
+  for (let i = 0; i < folders.length; i++) {
+    const [lbl, fc] = folders[i], fx = gX + 2.2 + i * 1.08;
+    await put(fa.FaFolder, fc, fx, wY + 0.6, 0.6);
+    s.addText(lbl, { x: fx - 0.18, y: wY + 1.24, w: 0.96, h: 0.26, fontFace: BODY, fontSize: 10, color: "3C4A63", align: "center", margin: 0, isTextBox: true });
+  }
+  await put(fa.FaArrowPointer, INK, gX + 3.12, wY + 1.02, 0.26);
+  // ---- CLI window: a terminal ----
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cX + 0.22, y: wY, w: pW - 0.44, h: wH, fill: { color: TERM }, rectRadius: 0.1 });
+  ["E5534B", "F5A623", "46D39A"].forEach((c, i) => s.addShape(pres.shapes.OVAL, { x: cX + 0.42 + i * 0.18, y: wY + 0.16, w: 0.1, h: 0.1, fill: { color: c } }));
+  const G = (t, b) => ({ text: t, options: { color: T_PROMPT, bold: true, breakLine: b } }), Wt = (t, b) => ({ text: t, options: { color: WHITE, bold: true, breakLine: b } }), O = (t, b) => ({ text: t, options: { color: T_OUT, breakLine: b } });
+  s.addText([G("player@quest:~$ ", false), Wt("pwd", true), O("/home/player", true),
+    G("player@quest:~$ ", false), Wt("ls -la", true), O("total 16", true),
+    O("drwxr-xr-x  4 player player 4096 May 10 10:24 .", true), O("drwxr-xr-x  3 player player 4096 May 10 09:18 ..", true),
+    O("-rw-r--r--  1 player player  220 May 10 09:30 notes.txt", true), O("drwxr-xr-x  2 player player 4096 May 10 10:24 projects", false)],
+    { x: cX + 0.42, y: wY + 0.4, w: pW - 0.8, h: wH - 0.5, fontFace: MONO, fontSize: 10.5, valign: "top", margin: 0, isTextBox: true, lineSpacingMultiple: 1.08, fit: "shrink" });
+  // ---- comparison table ----
+  const comp = [[fa.FaHandPointer, MC[2], "How you use it", "Click menus and buttons", "Type commands"],
+    [fa.FaLightbulb, MC[3], "Best for", "Exploring and visual tasks", "Repeating tasks and automation"],
+    [fa.FaStopwatch, MC[0], "Speed", "Good for simple tasks", "Fast once you know commands"],
+    [fa.FaWifi, MC[5], "Remote work", "Needs full desktop view", "Works great over text/SSH"],
+    [fa.FaCode, MC[4], "Example", "Drag files into a folder", "mv report.txt projects/"]];
+  const tY = 4.78, rH = 0.31, lblX = M, gcX = 3.2, gcW = 4.42, ccX = 7.72, ccW = 5.01;
+  for (let i = 0; i < comp.length; i++) {
+    const [Ic, ac, lbl, g, c] = comp[i], y = tY + i * rH;
+    s.addShape(pres.shapes.OVAL, { x: lblX, y: y + 0.01, w: 0.28, h: 0.28, fill: { color: ac } });
+    await put(Ic, WHITE, lblX + 0.07, y + 0.08, 0.14);
+    s.addText(lbl, { x: lblX + 0.4, y, w: 2.7, h: 0.3, fontFace: HEAD, fontSize: 13.5, bold: true, color: INK, valign: "middle", margin: 0, isTextBox: true });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: gcX, y, w: gcW, h: 0.29, fill: { color: "EAF1FC" }, rectRadius: 0.05 });
+    s.addText(g, { x: gcX + 0.18, y, w: gcW - 0.3, h: 0.29, fontFace: BODY, fontSize: 13, color: "33425E", valign: "middle", margin: 0, isTextBox: true });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: ccX, y, w: ccW, h: 0.29, fill: { color: "E6F4EC" }, rectRadius: 0.05 });
+    if (i === comp.length - 1) {
+      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: ccX + 0.16, y: y + 0.02, w: 2.6, h: 0.25, fill: { color: WHITE }, line: { color: "BFE0CC", width: 1 }, rectRadius: 0.05 });
+      s.addText(c, { x: ccX + 0.26, y: y + 0.02, w: 2.5, h: 0.25, fontFace: MONO, fontSize: 11.5, bold: true, color: "15713F", valign: "middle", margin: 0, isTextBox: true });
+    } else {
+      s.addText(c, { x: ccX + 0.18, y, w: ccW - 0.3, h: 0.29, fontFace: BODY, fontSize: 13, color: "1C6B3E", bold: true, valign: "middle", margin: 0, isTextBox: true });
+    }
+  }
+  // ---- takeaway banner ----
+  const bY = 6.46;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: bY, w: W - 2 * M, h: 0.52, fill: { color: "16233C" }, rectRadius: 0.1 });
+  await put(fa.FaBolt, AMBER, M + 0.3, bY + 0.13, 0.26);
+  s.addText([{ text: "GUI is easier to start.  ", options: { color: "7FB2FF", bold: true } }, { text: "CLI is powerful", options: { color: "46D39A", bold: true } }, { text: " when you need speed, repetition, or remote control.", options: { color: WHITE } }],
+    { x: M + 0.8, y: bY, w: W - 2 * M - 1.0, h: 0.52, fontFace: HEAD, fontSize: 17, valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
 
   // ---- performance ----
   s = newSlide("Speed: nothing beats the command line",
@@ -608,35 +802,11 @@ async function build() {
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 5.75, w: W - 2 * M, h: 0.75, fill: { color: TERM }, rectRadius: 0.1 });
   s.addText([{ text: "$ ", options: { color: T_PROMPT } }, { text: "Repeated, big or remote work? The command line is unmatched.", options: { color: WHITE } }], { x: M + 0.35, y: 5.75, w: W - 2 * M - 0.7, h: 0.75, fontFace: MONO, fontSize: 19, bold: true, valign: "middle", margin: 0, isTextBox: true });
 
-  // ---- anatomy of the page ----
-  s = newSlide("Anatomy of the competition page",
-    "A real screenshot from the middle of a game: warm-up and two flags captured, mission 3 open.\n\n" +
-    "Walk the eight parts. The progress track lights one coloured bar per flag. Points, the clock and flags captured sit at the top of the sidebar. The clock waits during the warm-up, starts with Mission 1, counts up and stops at the last flag. The stepper shows a green check for each captured mission. Each mission shows its difficulty and points. Run buttons type the starting commands for you. Next unlocks once the flag is captured.\n\n" +
-    "The most common problem in class is typing before clicking inside the terminal. Say it twice.");
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M - 0.05, y: 1.6, w: 7.3, h: 4.34, fill: { color: WHITE }, rectRadius: 0.06, line: { color: LINE, width: 1.5 }, shadow: { type: "outer", color: "12213A", opacity: 0.15, blur: 10, offset: 3, angle: 90 } });
-  s.addImage({ path: path.join(__dirname, "img", "page.png"), x: M, y: 1.65, w: 7.2, h: 4.235 });
-  const k = 7.2 / 1360, px = (x) => M + x * k, py = (y) => 1.65 + y * k;
-  // Pin positions come from the screenshot script (img/pins.json), so they always match the picture.
-  const P8 = JSON.parse(fs.readFileSync(path.join(__dirname, "img", "pins.json"), "utf8"));
-  const sorted = [[...P8.track, MC[1]], [...P8.points, AMBER], [...P8.clock, BLUE], [...P8.stepper, MC[0]], [...P8.level, MC[4]], [...P8.copy, MC[3]], [...P8.terminal, "56657E"], [...P8.next, MC[2]]];
-  sorted.forEach(([x, y, color], i) => {
-    s.addShape(pres.shapes.OVAL, { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fill: { color }, line: { color: WHITE, width: 2 } });
-    s.addText(String(i + 1), { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fontFace: HEAD, fontSize: 13, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
-  });
-  text(s, "Mid-game: warm-up and missions 1 and 2 captured, mission 3 open.", M, 6.1, 7, 0.35, { fontSize: 12, color: MUTED });
-  const parts8 = [["Progress track", "One coloured bar lights up per flag.", MC[1]], ["Points", "Your score, out of 2,750 with the warm-up.", AMBER], ["Clock", "Starts at Mission 1 and counts up.", BLUE], ["Stepper", "0 is the warm-up; a green check per flag.", MC[0]], ["Level and points", "Easy 100 up to Very Hard 800.", MC[4]], ["Copy buttons", "Copy a starting command, then paste it.", MC[3]], ["Terminal", "Click inside it before you type.", "56657E"], ["Next mission", "Unlocks when the flag is captured.", MC[2]]];
-  parts8.forEach(([head, body, color], i) => {
-    const y = 1.62 + i * 0.6;
-    s.addShape(pres.shapes.OVAL, { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fill: { color } });
-    s.addText(String(i + 1), { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fontFace: HEAD, fontSize: 12, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
-    text(s, [{ text: head + "  ", options: { bold: true, fontSize: 15 } }, { text: body, options: { fontSize: 13, color: MUTED } }], 8.6, y, 4.15, 0.5, { valign: "middle" });
-  });
-
   // ===========================================================================
   // PART 2: LEARN, IN MISSION ORDER
   // ===========================================================================
-  section("Part 2 · Command-line essentials");
-  divider(2, "Command-line essentials", "Open the CTF, then four big ideas and a dozen commands. Each idea powers a mission, and every slide has a Try it.", MC[2], "man linux   # the manual, in 25 minutes",
+  section("Part 2 · The tools");
+  divider(2, "The tools", "Just the commands a challenge needs, grouped into four ideas. In one hour, demo a few live and treat the rest as a reference to pull from - you do not need every slide.", MC[2], "man linux   # the toolkit, grouped",
     "Section break. Tell the class: 'Part 2 is four big ideas. Each one is a set of tools for the competition.'\n\nDemo every command live on the projector. Then give the room 30 seconds to type the green Try it command themselves.\n\nNone of the Try it commands touch the mission folders, so nothing gets spoiled.");
 
   // ---- the four big ideas ----
@@ -645,18 +815,39 @@ async function build() {
     "1. The file system: everything is a file or a folder. You point at them with paths, then move around or look inside.\n" +
     "2. Learning any command: every command has the same shape, and every command can explain itself.\n" +
     "3. Searching: when there is too much to look at by hand, let the computer search by name or inside files.\n" +
-    "4. Data and secrets: some text only looks secret.\n\n" +
+    "4. Text power tools: reshape text and pull columns apart with sed and awk.\n\n" +
     "Each idea is a set of tools the class will need in the competition.");
-  CONCEPTS.forEach((c, i) => {
-    const x = M + i * 3.07;
-    card(s, x, 1.65, 2.87, 4.85);
-    s.addShape(pres.shapes.RECTANGLE, { x, y: 1.65, w: 2.87, h: 0.12, fill: { color: c.color } });
-    s.addShape(pres.shapes.OVAL, { x: x + 0.25, y: 1.98, w: 0.7, h: 0.7, fill: { color: c.color } });
-    s.addText(String(i + 1), { x: x + 0.25, y: 1.98, w: 0.7, h: 0.7, fontFace: HEAD, fontSize: 24, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
-    text(s, c.title, x + 0.25, 2.85, 2.45, 0.8, { fontFace: HEAD, fontSize: 21, bold: true, valign: "top" });
-    text(s, c.short, x + 0.25, 3.7, 2.45, 1.3, { fontSize: 14.5, color: MUTED });
-    mono(s, c.cmds, x + 0.25, 5.05, 2.45, 0.75, { fontSize: 13, color: INK });
-  });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 1.4, w: 1.5, h: 0.12, fill: { color: BLUE }, rectRadius: 0.06 });
+  const ICONS4 = [fa.FaFolderOpen, fa.FaBookOpen, fa.FaMagnifyingGlass, fa.FaScrewdriverWrench];
+  const BW = 2.87, BH = 4.65, BY = 1.9;
+  for (let i = 0; i < CONCEPTS.length; i++) {
+    const c = CONCEPTS[i], color = c.color, x = M + i * 3.07;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: BY, w: BW, h: BH, fill: { color: tint(color, 0.9) }, line: { color: tint(color, 0.66), width: 1 }, rectRadius: 0.12 });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: BY, w: BW, h: 0.16, fill: { color }, rectRadius: 0.06 });
+    // number badge
+    s.addShape(pres.shapes.OVAL, { x: x + 0.26, y: BY + 0.34, w: 0.66, h: 0.66, fill: { color } });
+    s.addText(String(i + 1), { x: x + 0.26, y: BY + 0.34, w: 0.66, h: 0.66, fontFace: HEAD, fontSize: 24, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    // spark lines beside the badge (positive w/h + flipV so PowerPoint accepts the extents)
+    [[1.02, 0.42, 1.2, 0.36], [1.06, 0.6, 1.26, 0.58], [1.0, 0.78, 1.17, 0.82]].forEach(([x1, yy1, x2, yy2]) => {
+      const ya = Math.min(yy1, yy2), h = Math.max(Math.abs(yy2 - yy1), 0.02), up = yy2 < yy1;
+      s.addShape(pres.shapes.LINE, { x: x + x1, y: BY + ya, w: x2 - x1, h, line: { color, width: 2.25 }, flipV: up });
+    });
+    // themed icon in a soft circle, top-right
+    await iconTintCircle(s, ICONS4[i], x + BW - 1.02, BY + 0.3, 0.76, color);
+    // title + description
+    text(s, c.title, x + 0.26, BY + 1.2, 2.4, 0.85, { fontFace: HEAD, fontSize: 20, bold: true, color: INK });
+    text(s, c.short, x + 0.26, BY + 2.08, 2.4, 1.25, { fontSize: 13.5, color: MUTED });
+    // command chips (flow layout)
+    const toks = c.cmds.split(/\s+/).filter(Boolean);
+    let cxp = x + 0.26, cyp = BY + 3.45; const chipH = 0.42, maxX = x + BW - 0.24;
+    for (const tok of toks) {
+      const cwid = Math.max(0.46, tok.length * 0.115 + 0.34);
+      if (cxp + cwid > maxX) { cxp = x + 0.26; cyp += chipH + 0.14; }
+      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cxp, y: cyp, w: cwid, h: chipH, fill: { color: tint(color, 0.82) }, rectRadius: 0.08 });
+      s.addText(tok, { x: cxp, y: cyp, w: cwid, h: chipH, fontFace: MONO, fontSize: 13, bold: true, color, align: "center", valign: "middle", margin: 0, isTextBox: true });
+      cxp += cwid + 0.12;
+    }
+  }
 
   section("Big idea 1 · The file system");
   await conceptSlide(0, "Concept 1: the file system. Say the sentence on the slide out loud and have the class repeat the three verbs: point, move, look.\n\n" +
@@ -773,12 +964,35 @@ async function build() {
   term(s, 7.0, 1.6, 5.7, 4.9, ["$ echo 'echo hello' > hi.sh", "$ ./hi.sh", "-sh: ./hi.sh: Permission denied", "$ ls -l hi.sh", "-rw-r--r--  1 player ... hi.sh", "$ chmod +x hi.sh", "$ ls -l hi.sh", { hi: "-rwxr-xr-x  1 player ... hi.sh" }, "$ ./hi.sh", { hi: "hello" }], { fontSize: 15, title: "permissions" });
 
   section("Big idea 2 · Learning any command");
-  await conceptSlide(1, "Concept 2: learning any command. Nobody memorises every command. Professionals know the shape of a command and how to make it explain itself.\n\n" +
+  await conceptSlide(1, "Concept 2: learning any command. Nobody memorises every command. Professionals know the anatomy of a command and how to make it explain itself.\n\n" +
     "Point back to Concept 1: the arguments of most commands are paths.");
 
-  s = newSlide("The shape of a command",
+  // ---- every command is a conversation (mental model) ----
+  s = newSlide("Every command is a conversation",
+    "The mental model for this whole idea. Students are not casting spells they have to memorise - they are talking to the computer. You ask for something, it answers, and you decide what to ask next.\n\n" +
+    "Read each row left to right: the plain-English question, the command that says it, and the computer's reply. It is the same loop as capturing a flag - ask, read the reply, ask again.\n\n" +
+    "Say it out loud with the class: 'What do I want? ... How do I say that? ... What did it tell me?'\n\n" +
+    "The loop: what do I want, how do I say it, what did it tell me? Then go again. That back-and-forth is the whole skill.");
+  text(s, "You are not memorising magic words - you are talking to the computer. Ask, read the reply, ask again.", M, 1.5, W - 2 * M, 0.5, { fontSize: 18, color: MUTED });
+  const cvCx = [M, 4.4, 8.1], cvCw = [3.5, 3.4, 4.63];
+  [["You ask", MC[1]], ["You type", INK], ["It answers", MC[0]]].forEach(([h, c], j) =>
+    text(s, h, cvCx[j] + 0.1, 2.05, cvCw[j], 0.35, { fontSize: 14, bold: true, color: c }));
+  const convo = [["Where am I?", "pwd", "/home/player"], ["What is in here?", "ls", "town   notes.txt"], ["Read that file", "cat notes.txt", "Welcome, player."]];
+  convo.forEach(([q, cmd, out], i) => {
+    const y = 2.55 + i * 1.3;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cvCx[0], y, w: cvCw[0], h: 1.08, fill: { color: tint(MC[1], 0.88) }, line: { color: tint(MC[1], 0.58), width: 1 }, rectRadius: 0.16 });
+    text(s, '"' + q + '"', cvCx[0] + 0.3, y, cvCw[0] - 0.55, 1.08, { fontSize: 18, bold: true, color: INK, valign: "middle" });
+    s.addText(">", { x: cvCx[0] + cvCw[0], y, w: 0.3, h: 1.08, fontFace: MONO, fontSize: 22, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cvCx[1], y: y + 0.27, w: cvCw[1], h: 0.54, fill: { color: TERM }, rectRadius: 0.1 });
+    s.addText([{ text: "$ ", options: { color: T_PROMPT, bold: true } }, { text: cmd, options: { color: WHITE, bold: true } }], { x: cvCx[1] + 0.22, y: y + 0.27, w: cvCw[1] - 0.35, h: 0.54, fontFace: MONO, fontSize: 15, valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
+    s.addText(">", { x: cvCx[1] + cvCw[1], y, w: 0.3, h: 1.08, fontFace: MONO, fontSize: 22, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: cvCx[2], y, w: cvCw[2], h: 1.08, fill: { color: tint(MC[0], 0.9) }, line: { color: tint(MC[0], 0.6), width: 1 }, rectRadius: 0.16 });
+    s.addText(out, { x: cvCx[2] + 0.3, y, w: cvCw[2] - 0.55, h: 1.08, fontFace: MONO, fontSize: 16, bold: true, color: "0E5A3E", valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
+  });
+
+  s = newSlide("Anatomy of a command",
     "Read the line left to right. Everything before the $ is the prompt. Everything after it is what you type.\n\n" +
-    "Most commands follow the same shape: command, then options (usually starting with a dash), then arguments (what to act on).\n\n" +
+    "Most commands follow the same anatomy: command, then options (usually starting with a dash), then arguments (what to act on).\n\n" +
     "TRY IT: ls -l /home lists /home in the long format. Nothing happens until you press Enter, and Linux is case-sensitive: LS does not work.", "ls -l /home");
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 1.65, w: W - 2 * M, h: 1.5, fill: { color: TERM }, rectRadius: 0.1 });
   const parts = [["player", "46D39A"], ["@", T_OUT], ["quest", "7FB2FF"], [":", T_OUT], ["~", AMBER], ["$ ", T_OUT], ["ls", WHITE], [" -l", "FF8FB1"], [" /home", "7EE0D2"]];
@@ -799,7 +1013,7 @@ async function build() {
     "On a full Linux system, man COMMAND opens the longer manual (q quits). The page's small Linux has --help only.\n\n" +
     "COMES BACK IN: Mission 2 needs it, and the first hint for most missions says 'read the --help'. --help is free; hints are not.", "wc --help");
   term(s, M, 1.6, 7.1, 4.85, ["$ wc --help", "Usage: wc [-cmlwL] [FILE]...", "", "Count lines, words, and bytes for FILEs", "", "        -c      Count bytes", "        -m      Count characters", { hi: "        -l      Count newlines" }, "        -w      Count words", "        -L      Print longest line length"], { fontSize: 15, title: "the command explains itself" });
-  const helpParts = [["Usage line", "The shape of the command. [ ] means optional. FILE... means one or more files.", MC[2]], ["Option list", "One option per line, with what it does. Pick the one that matches your goal.", MC[3]], ["Then try it", "Put the option between the command and the file:  wc -l file", MC[1]]];
+  const helpParts = [["Usage line", "The anatomy of the command. [ ] means optional. FILE... means one or more files.", MC[2]], ["Option list", "One option per line, with what it does. Pick the one that matches your goal.", MC[3]], ["Then try it", "Put the option between the command and the file:  wc -l file", MC[1]]];
   helpParts.forEach(([head, body, color], i) => {
     const y = 1.6 + i * 1.65;
     card(s, 8.0, y, 4.73, 1.45);
@@ -807,6 +1021,29 @@ async function build() {
     text(s, head, 8.35, y + 0.15, 4.2, 0.4, { fontSize: 18, bold: true });
     text(s, body, 8.35, y + 0.58, 4.25, 0.8, { fontSize: 14, color: MUTED });
   });
+
+  // ---- going deeper: man and discovering commands ----
+  s = newSlide("Go deeper: man, and finding new commands",
+    "--help is the quick answer. The manual is the full one, and every full Linux system and every Mac has it.\n\n" +
+    "man grep opens the manual page for grep: what it does, every option, and examples near the bottom. Move with the arrow keys or space, search with / followed by a word, and press q to quit. Say 'q to quit' twice.\n\n" +
+    "Finding a command you have never heard of: apropos rename (the same as man -k rename) searches every manual page's one-line description, so you can search by the job instead of the name. whatis gives one line about a command. tldr (a free extra tool) and explainshell.com show short, real examples.\n\n" +
+    "Our CTF computer is deliberately tiny: it has no manual pages, so man is not there. Inside the CTF, use --help, and list every command with ls /bin (or busybox --list in real-Linux mode).\n\n" +
+    "Takeaway: nobody memorises commands. Professionals know how to find them.", "ls /bin | wc -l");
+  const deeper = [["Read the manual", "man grep", "Every option and examples. Arrows to move, / to search, q to quit.", MC[2], "full Linux & Mac"],
+    ["Search by the job", "apropos rename", "Don't know the name? Search what commands do. Same as man -k.", MC[3], "full Linux & Mac"],
+    ["One line or a few examples", "whatis ls   tldr tar", "A one-line summary, or the most useful examples.", MC[4], "full Linux & Mac"],
+    ["See everything you have", "ls /bin", "Every command on this computer. In the CTF too.", MC[0], "works in the CTF"]];
+  deeper.forEach(([head, cmd, body, color, where], i) => {
+    const y = 1.6 + i * 1.22;
+    card(s, M, y, 6.55, 1.1);
+    s.addShape(pres.shapes.RECTANGLE, { x: M, y, w: 0.1, h: 1.1, fill: { color } });
+    text(s, head, M + 0.3, y + 0.08, 3.3, 0.4, { fontSize: 17, bold: true });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 3.75, y: y + 0.1, w: 2.6, h: 0.42, fill: { color: TERM }, rectRadius: 0.06 });
+    s.addText(cmd, { x: M + 3.75, y: y + 0.1, w: 2.6, h: 0.42, fontFace: MONO, fontSize: 13, bold: true, color: T_CMD, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    text(s, [{ text: body + "  " }, { text: where, options: { bold: true, color: where.includes("CTF") ? GREEN : MUTED } }], M + 0.3, y + 0.55, 6.05, 0.5, { fontSize: 13, color: MUTED });
+  });
+  term(s, 7.4, 1.6, 5.33, 4.85, ["# on a full Linux machine or a Mac:", "$ apropos rename", "mv (1)        - move (rename) files", "rename (1)    - rename multiple files", "$ man mv", "# press q to quit", "", "# in the CTF:", "$ ls /bin | wc -l", { hi: "# hundreds of commands" }, "$ ls /bin | grep sum", "md5sum  sha1sum  sha256sum ..."], { fontSize: 14, title: "discovering commands" });
+  text(s, [{ text: "Online: ", options: { bold: true } }, { text: "explainshell.com explains any command line, part by part. tldr.sh has short examples." }], M, 6.55, W - 2 * M, 0.35, { fontSize: 13, color: MUTED });
 
   // ---- keyboard shortcuts ----
   s = newSlide("Type less, fix faster",
@@ -824,7 +1061,7 @@ async function build() {
   });
   card(s, M, 5.45, W - 2 * M, 1.0);
   await iconCircle(s, fa.FaKeyboard, M + 0.25, 5.6, 0.7, BLUE);
-  text(s, [{ text: "In a race, Tab is speed. ", options: { bold: true } }, { text: "Long paths like archive/charlie/bin-x7q2/k3d9fa.gem take seconds with Tab and a minute without it." }], M + 1.2, 5.45, 10.6, 1.0, { valign: "middle", fontSize: 17 });
+  text(s, [{ text: "Tab is speed. ", options: { bold: true } }, { text: "Long paths like archive/charlie/bin-x7q2/k3d9fa.gem take seconds with Tab and a minute without it." }], M + 1.2, 5.45, 10.6, 1.0, { valign: "middle", fontSize: 17 });
 
   section("Big idea 3 · Searching");
   await conceptSlide(2, "Concept 3: searching. When a folder tree or a file is too big to read by hand, you let the computer search.\n\n" +
@@ -896,24 +1133,23 @@ async function build() {
   text(s, [{ text: "Rule of thumb: ", options: { bold: true } }, { text: "sort first, then uniq. uniq only compares lines that sit next to each other." }], M + 0.3, 5.35, 5.3, 1.1, { valign: "middle", fontSize: 16 });
   term(s, 7.0, 1.6, 5.7, 4.9, ["# an example file", "$ cat snacks.txt", "chips", "apple", "chips", "pear", "apple", "chips", "$ sort snacks.txt | uniq -c", "      2 apple", "      3 chips", "      1 pear", "$ sort snacks.txt | uniq -u", { hi: "pear" }], { fontSize: 14, title: "sort and uniq" });
 
-  section("Big idea 4 · Data and secrets");
-  await conceptSlide(3, "Concept 4: data and secrets. It powers Missions 8, 9 and the Endgame.\n\n" +
-    "Some text only looks secret. Knowing the difference between encoding and encryption is a core security idea.");
+  section("Big idea 4 · Text power tools");
+  await conceptSlide(3, "Concept 4: text power tools. They power Missions 8, 9 and the Endgame.\n\n" +
+    "sed and awk are how professionals reshape text and pull apart data without ever opening an editor.");
 
-  // ---- mission 6: encoding ----
-  s = newSlide("Encoding is not encryption",
-    "A security idea worth one slide. Base64 turns any data into plain letters and digits so it can travel through systems that only handle text. It looks scrambled, but there is no key: anyone can reverse it.\n\n" +
-    "Encryption needs a secret key to undo. Attackers often hide commands in base64 hoping nobody looks; analysts decode it in one command.\n\n" +
-    "Don't show the decode option: finding it with base64 --help is Mission 8. Ask 'how could we find out which option decodes?' and leave it open.\n\n" +
-    "How to recognise base64: a mix of upper case, lower case and digits, sometimes ending in one or two = signs.\n\n" +
-    "COMES BACK IN: Mission 8, Decoder ring; Mission 9, Layer cake; and the Endgame.", "echo hello | base64");
+  // ---- big idea 4: sed and awk ----
+  s = newSlide("Reshape text: sed and awk",
+    "Two tools every Linux user reaches for. sed is a stream editor: its s/old/new/g substitute swaps or deletes text everywhere in one pass. awk pulls columns out of structured text: print $3 prints the third field of each line.\n\n" +
+    "Don't give the exact commands away. Mission 8 is a sed substitution; Mission 9 is awk pulling a column. Ask 'how would you delete something that repeats?' and 'how would you grab just one column?'\n\n" +
+    "Pair them with > (save output to a file) and you can pull data, save it, and feed it to the next tool.\n\n" +
+    "COMES BACK IN: Mission 8, Find and replace (sed); Mission 9, Forge the key (awk); and the Endgame.", "awk '{print $1}' /etc/passwd");
   card(s, M, 1.7, 3.6, 2.2);
-  text(s, "Encoding", M + 0.3, 1.9, 3, 0.45, { fontFace: HEAD, fontSize: 22, bold: true, color: MC[2] });
-  text(s, "A different way to write the same data. No secret. Anyone can undo it.", M + 0.3, 2.45, 3.0, 1.3, { fontSize: 16, color: MUTED });
+  text(s, "sed", M + 0.3, 1.9, 3, 0.45, { fontFace: HEAD, fontSize: 22, bold: true, color: MC[2] });
+  text(s, "The stream editor. s/old/new/g replaces every copy; leave 'new' empty to delete.", M + 0.3, 2.45, 3.0, 1.3, { fontSize: 15.5, color: MUTED });
   card(s, M, 4.15, 3.6, 2.3);
-  text(s, "Encryption", M + 0.3, 4.35, 3, 0.45, { fontFace: HEAD, fontSize: 22, bold: true, color: MC[4] });
-  text(s, "Scrambled with a secret key. Without the key, you cannot read it.", M + 0.3, 4.9, 3.0, 1.3, { fontSize: 16, color: MUTED });
-  term(s, 4.6, 1.6, 8.1, 4.85, ["$ echo hello | base64", "aGVsbG8K", "", "# and back again? which option decodes?", "$ base64 --help   # you know what to do", "", "# that's Mission 8."], { fontSize: 18 });
+  text(s, "awk", M + 0.3, 4.35, 3, 0.45, { fontFace: HEAD, fontSize: 22, bold: true, color: MC[4] });
+  text(s, "The column tool. print $3 prints the 3rd field of every line; add /word/ to filter.", M + 0.3, 4.9, 3.0, 1.3, { fontSize: 15.5, color: MUTED });
+  term(s, 4.6, 1.6, 8.1, 4.85, ["$ cat team.txt", "ada    lead  42", "linus  dev   7", "grace  dev   99", "", "$ sed 's/dev/engineer/g' team.txt   # replace text", "$ awk '{print $1}' team.txt         # column 1", "$ awk '/dev/{print $1}' team.txt    # filtered"], { fontSize: 15 });
 
   section("Part 2 · Recap");
   // ---- when stuck ----
@@ -937,9 +1173,9 @@ async function build() {
     "Mentors can flip back to this slide at any time during Part 3.");
   const groups = [
     [0, [["pwd  cd  cd ..", "where am I? move", 1], ["ls  ls -a", "look in folders", "1·3"], ["cat", "look in files", 2], ["ls -l  chmod", "permissions", 7]]],
-    [1, [["--help", "learn any command", 2], ["Tab", "finish names", 4]]],
+    [1, [["--help", "learn any command", 2], ["man  apropos", "the manual; find by job", 0], ["Tab", "finish names", 4]]],
     [2, [["find", "search by name", 4], ["grep", "search inside", 5], ["head  wc  |", "peek, count, chain", 5], ["sort  uniq  cut", "sort, count, slice", 6]]],
-    [3, [["base64 -d", "decode", 8], ["| base64 -d", "peel more layers", 9]]],
+    [3, [["sed 's///g'", "find & replace", 8], ["awk  >  forge", "pull & forge", 9]]],
   ];
   let gy = 1.6;
   groups.forEach(([ci, tools]) => {
@@ -958,96 +1194,31 @@ async function build() {
   // ===========================================================================
   // PART 3: COMPETE
   // ===========================================================================
-  section("Part 3 · Rules and warm-up");
-  divider(3, "The competition", "A warm-up, ten missions, 2,700 points, one clock. Missions 1 and 2 we solve together. Then teams race.", MC[3], "./capture --all   # 10 flags, 2,700 points",
-    "Section break. If students played around while learning, have everyone reload now for a fresh computer, zero points and a clean clock. This is the ONE time a reload is welcome.\n\nPut the CTF on one half of the projector and these slides on the other, or switch between them.\n\nEach mission has two slides: the brief (show it, read it, ask the three questions) and the walkthrough (reveal it after the class has tried).");
+  section("Part 3 · Capture a flag");
+  divider(3, "Capture a flag", "Do it together once, then start one yourself. Finishing is not the goal - understanding how you would approach a challenge is.", MC[3], "./capture   # read, try, check, repeat",
+    "Section break. If students played around while learning, have everyone reload now for a fresh computer and a clean start.\n\nPut the CTF on one half of the projector and these slides on the other, or switch between them.\n\nThe plan: name the flow, capture one flag together, then let students start one on their own. The remaining missions are a bank in the appendix - you are not trying to get through all of them.");
 
-  // ---- scoring ----
-  s = newSlide("How scoring works",
-    "Make the rules of the competition crystal clear before the clock matters.\n\n" +
-    "Points come from difficulty, on CyberQuest's scale: Easy 100, Medium 200, Hard 400, Very Hard 800. Today's ten missions are worth 2,700 in total, plus 50 bonus points for the optional warm-up. Mission 10, the Endgame, is the one Very Hard.\n\n" +
-    "The clock counts UP. It waits during the warm-up, starts at the first keystroke of Mission 1, and stops when you capture the last flag. Nobody gets cut off; the clock just records how long you took.\n\n" +
-    "Ranking: most points wins; on a tie, the faster time wins. Hints cost 5% of the mission's points each (an Easy hint is 5 points, an Endgame hint 40), charged once. Wrong flags cost nothing.\n\n" +
-    "A wrong flag costs nothing. Encourage trying.");
-  const lv = [["Easy", "Missions 1, 2, 3"], ["Medium", "Missions 4 to 7"], ["Hard", "Missions 8, 9"], ["Very Hard", "Mission 10: Endgame"]];
-  lv.forEach(([name, which], i) => {
-    const L = LEVEL[name], x = M + i * 3.07;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.65, w: 2.87, h: 2.0, fill: { color: L.fill }, rectRadius: 0.12 });
-    s.addText(String(L.pts), { x, y: 1.75, w: 2.87, h: 0.95, fontFace: HEAD, fontSize: 48, bold: true, color: L.ink, align: "center", margin: 0, isTextBox: true });
-    s.addText(name.toUpperCase() + "  ·  points", { x, y: 2.7, w: 2.87, h: 0.35, fontFace: BODY, fontSize: 14, bold: true, color: L.ink, align: "center", margin: 0, isTextBox: true });
-    s.addText(which, { x, y: 3.1, w: 2.87, h: 0.35, fontFace: BODY, fontSize: 13, color: name === "Very Hard" ? "F3C6D4" : MUTED, align: "center", margin: 0, isTextBox: true });
-  });
-  const rules = [[fa.FaStopwatch, "The clock counts up", "It starts with Mission 1 and stops at your last flag. Nobody is cut off.", BLUE], [fa.FaTrophy, "Most points wins", "Tie on points? The faster time wins.", AMBER], [fa.FaLightbulb, "Hints cost 5%", "Of that mission's points, per hint, charged once. Wrong flags cost nothing.", GREEN]];
-  for (let i = 0; i < rules.length; i++) {
-    const [Icon, head, body, color] = rules[i];
-    const x = M + i * 4.11;
-    card(s, x, 3.95, 3.9, 2.5);
-    await iconCircle(s, Icon, x + 0.3, 4.15, 0.75, color);
-    text(s, head, x + 1.25, 4.2, 2.55, 0.65, { fontSize: 19, bold: true, valign: "middle" });
-    text(s, body, x + 0.3, 5.1, 3.35, 1.2, { fontSize: 15, color: MUTED });
-  }
-
-  // ---- the capture routine ----
-  s = newSlide("The capture routine, every single time",
-    "This five-step routine is the same for every mission. Drill it now so that the only new thing in each round is the puzzle itself.\n\n" +
-    "Say it together as a class: Read. Go. Hunt. Copy. Submit.\n\n" +
-    "Step 4 trips people up: select the flag in the terminal with the mouse and copy it, including CYBA and both curly braces. On a Chromebook, Ctrl+Shift+V pastes into the terminal.");
-  const routine = [["Read", "the sidebar, or cat README.txt.", fa.FaBookOpen, MC[1]], ["Go", "into the mission folder: Copy, then paste.", fa.FaFolderOpen, MC[2]], ["Hunt", "with the tool that fits the clue.", fa.FaMagnifyingGlass, MC[3]], ["Copy", "the whole flag, CYBA{ to }.", fa.FaCopy, MC[4]], ["Submit", "type submit, paste, Enter. Points!", fa.FaFlag, GREEN]];
-  for (let i = 0; i < routine.length; i++) {
-    const [head, body, Icon, color] = routine[i];
-    const x = M + i * 2.48, w = 2.2;
-    card(s, x, 1.75, w, 3.5);
-    await iconCircle(s, Icon, x + 0.6, 2.0, 1.0, color);
-    text(s, head, x + 0.15, 3.25, w - 0.3, 0.5, { fontFace: HEAD, fontSize: 24, bold: true, align: "center" });
-    text(s, body, x + 0.2, 3.85, w - 0.4, 1.2, { fontSize: 15, color: MUTED, align: "center" });
-    if (i < 4) s.addText(">", { x: x + w, y: 2.2, w: 0.28, h: 0.6, fontFace: MONO, fontSize: 22, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
-  }
-  term(s, M, 5.5, W - 2 * M, 1.0, ["$ submit CYBA{moves-4c8c640b}   # Correct! +100 points"], { fontSize: 18 });
-
-  // ---- the warm-up ----
-  s = newSlide("Mission 0: the warm-up",
-    "Do this together, before the clock matters. It practises the capture routine with zero pressure.\n\n" +
-    "orientation.txt in the home folder explains the game: how to read a mission's instructions (cd into the folder, cat README.txt), what a flag looks like, how to submit it, what the replies mean, and where hints live. Its last line is the warm-up flag.\n\n" +
-    "It is optional and untimed: worth 50 bonus points, and the sidebar has a Skip warm-up button. The clock only starts once a team moves on to Mission 1.\n\n" +
-    "Copying the flag is the real lesson: highlight it with the mouse, paste with Ctrl+V or a right-click, and include CYBA{ and the }.", "cat orientation.txt");
-  numbered(s, [
-    "Type  cat orientation.txt  and read it.",
-    "The warm-up flag is on its last line.",
-    "Highlight it, then  submit  and paste.",
-    "+50 bonus. Or press Skip warm-up.",
-  ], M, 1.8, 5.6, 1.0, MC[0], 18);
-  card(s, M, 5.95, 5.6, 0.6, "E2F5EC");
-  text(s, "Untimed: the clock starts with Mission 1.", M + 0.3, 5.95, 5.2, 0.6, { valign: "middle", fontSize: 16, bold: true, color: "0F6A45" });
-  term(s, 6.7, 1.6, 6.03, 4.95, ["$ cat orientation.txt", "CTF Orientation", "1. Read a mission's instructions", "    cd ~/mission1   then   cat README.txt", "3. Submit the flag", "    submit CYBA{word-1a2b3c4d}", "...", "Warm-up flag:", { hi: "  CYBA{warmup-...}" }, "$ submit CYBA{warmup-...}", "Correct! +50 points"], { fontSize: 14, title: "player@quest" });
-
-  // ---- how rounds work ----
-  s = newSlide("How the competition runs",
-    "Two phases so nobody is left behind.\n\n" +
-    "Missions 1 and 2 are guided ('We do'): the class tells the mentor what to type and everyone captures together. The clock is running, but everyone moves at the same pace.\n\n" +
-    "Missions 3 to 10 are a race ('You do'): teams solve on their own. Show the brief slide, ask the questions, then let them go. Reveal each walkthrough once most teams have the flag, or when the room is stuck.\n\n" +
-    "Mentors walk the room during the race: point at hints, ask questions, don't type for students.");
-  const phases = [["Missions 1–2", "We do", "Guided. The class calls out each command; the mentor types; everyone captures together.", "200 pts", BLUE], ["Missions 3–10", "You do", "The race. Teams solve on their own clock. The walkthrough comes after most teams have it.", "2,500 pts", GREEN]];
-  phases.forEach(([which, mode, body, pts, color], i) => {
-    const x = M + i * 6.17;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.7, w: 5.96, h: 3.2, fill: { color }, rectRadius: 0.14 });
-    s.addText(which, { x: x + 0.4, y: 1.9, w: 4, h: 0.5, fontFace: BODY, fontSize: 18, bold: true, color: "E8EEFF", margin: 0, isTextBox: true });
-    s.addText(mode, { x: x + 0.4, y: 2.4, w: 4, h: 0.9, fontFace: HEAD, fontSize: 44, bold: true, color: WHITE, margin: 0, isTextBox: true });
-    s.addText(body, { x: x + 0.4, y: 3.35, w: 5.1, h: 1.2, fontFace: BODY, fontSize: 16, color: WHITE, margin: 0, valign: "top", isTextBox: true });
-    s.addText(pts, { x: x + 4.0, y: 1.9, w: 1.6, h: 0.5, fontFace: MONO, fontSize: 18, bold: true, color: WHITE, align: "right", margin: 0, isTextBox: true });
-  });
-  const steps5 = [["Read", "the brief out loud"], ["Predict", "which tool, what output"], ["Type", "one command at a time"], ["Capture", "everyone submits"], ["Explain", "in plain words"]];
-  steps5.forEach(([a, b], i) => {
-    const x = M + i * 2.48;
-    card(s, x, 5.2, 2.28, 1.25);
-    text(s, a, x + 0.2, 5.3, 2, 0.45, { fontFace: HEAD, fontSize: 19, bold: true, color: MC[i % 6] });
-    text(s, b, x + 0.2, 5.78, 2, 0.6, { fontSize: 14, color: MUTED });
+  // ---- the learning model (mentor rhythm) ----
+  s = newSlide("How we'll work through it",
+    "Name the teaching loop so the room knows what to expect, and why you keep pausing to ask questions. This is the mentor's rhythm for the guided mission and for every command demo.\n\n" +
+    "Predict is the step people skip. Always ask 'what do you think this will do?' BEFORE running it. A wrong prediction corrected by real output sticks far better than being handed the answer.\n\n" +
+    "Explain closes the loop: a student puts what happened in their own words. If they can explain it, they own it.\n\n" +
+    "Watch for:\n- Ask before you tell - a question beats an answer every time.\n- Always get a prediction before running a command.\n- Let a student explain it back; that's how you know it landed.\n- Guide and connect to real work. Don't type for students.");
+  const model = [["Teach", "name the idea", MC[0]], ["Ask", "a question first", MC[1]], ["Predict", "what will happen?", MC[2]], ["Try", "run the command", MC[3]], ["Explain", "in your words", MC[4]], ["Apply", "on the next one", GREEN]];
+  model.forEach(([a2, b2, color], i) => {
+    const x = M + i * 2.03;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 2.9, w: 1.85, h: 2.55, fill: { color }, rectRadius: 0.12 });
+    s.addText(String(i + 1), { x: x + 0.15, y: 3.05, w: 1.55, h: 0.45, fontFace: HEAD, fontSize: 17, bold: true, color: "FFFFFF", margin: 0, isTextBox: true });
+    s.addText(a2, { x: x + 0.1, y: 3.55, w: 1.65, h: 0.8, fontFace: HEAD, fontSize: 22, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
+    s.addText(b2, { x: x + 0.1, y: 4.45, w: 1.65, h: 0.85, fontFace: BODY, fontSize: 13, color: "FFFFFF", align: "center", valign: "top", margin: 0, isTextBox: true });
+    if (i < 5) s.addText(">", { x: x + 1.83, y: 3.8, w: 0.22, h: 0.8, fontFace: MONO, fontSize: 18, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
   });
 
   // ---- the trail map ----
-  s = newSlide("The trail: ten missions, 2,700 points",
-    "The map of the whole competition. Leave it up for a moment and let students read the names.\n\n" +
-    "Notice the order: the commands appear in the same order we learned them in Part 2.\n\n" +
-    "Suggested pacing: the warm-up together in 3 minutes, missions 1 and 2 together in 12, then the race for missions 3 to 10. Most teams reach Mission 8 or 9 in 35 minutes; the Endgame is for the fastest. Stop the race on time: points and times are already recorded.");
+  s = newSlide("The challenges",
+    "The map of what is available. Leave it up for a moment and let students read the names - but set the expectation: this is a menu, not a to-do list. In one hour, you capture the guided one together and students start one or two on their own.\n\n" +
+    "The commands appear in the same order we met them, so an early mission uses something we just practiced.\n\n" +
+    "Do not frame this as a race to the end. Mission 1 is a great start for everyone; where each student goes next is up to them.");
   MS.forEach((c, i) => {
     const x = M + (i % 5) * 2.45, y = 1.6 + Math.floor(i / 5) * 2.45, color = MC[i];
     card(s, x, y, 2.3, 2.3);
@@ -1059,67 +1230,44 @@ async function build() {
     levelChip(s, c.level, x + 0.18, y + 1.52, 1.95, 10.5);
     mono(s, c.skill, x + 0.18, y + 1.95, 2.0, 0.3, { fontSize: 10, color: MUTED, bold: false });
   });
-  text(s, "Plus Mission 0, the warm-up: optional, untimed, +50 bonus.", M, 6.55, 8, 0.35, { fontSize: 13, color: MUTED });
 
-  // ---- the 10 missions: brief + walkthrough ----
-  for (let i = 0; i < MS.length; i++) {
-    if (i === 0) section("Missions 1–2 · Together");
-    if (i === 2) section("Missions 3–10 · The race");
-    const c = MS[i], n = i + 1, mode = MODE[c.mode], color = MC[i], L = LEVEL[c.level];
-    s = newSlide(null, "MISSION " + n + " OF " + N + ": " + c.name + "   [" + c.level + ", " + L.pts + " points, " + c.mode + ", about " + c.mins + " minutes]\n\n" +
-      "Show this slide first. Read the brief out loud, then ask the three questions BEFORE anyone types. Take one answer per question; do not confirm or correct yet.\n\n" + c.notes);
-    chip(s, "Mission " + n + " of " + N, M, 0.48, 2.0, color, WHITE, 14);
-    levelChip(s, c.level, M + 2.15, 0.48, 2.0, 13);
-    trail(s, 7.4, 0.52, 5.33, n);
-    s.addText(c.name, { x: M, y: 1.0, w: W - 2 * M, h: 0.95, fontFace: HEAD, fontSize: 42, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true });
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 2.1, w: 7.05, h: 4.4, fill: { color: TERM }, rectRadius: 0.12, shadow: { type: "outer", color: "12213A", opacity: 0.22, blur: 10, offset: 3, angle: 90 } });
-    s.addText("# the brief", { x: M + 0.4, y: 2.3, w: 4, h: 0.4, fontFace: MONO, fontSize: 15, color: T_NOTE, margin: 0, isTextBox: true });
-    s.addText(c.brief, { x: M + 0.4, y: 2.8, w: 6.25, h: 2.25, fontFace: BODY, fontSize: 22, color: WHITE, margin: 0, valign: "top", isTextBox: true });
-    s.addText(c.where, { x: M + 0.4, y: 5.1, w: 6.3, h: 0.35, fontFace: MONO, fontSize: 13, color: T_OUT, margin: 0, isTextBox: true });
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 0.4, y: 5.65, w: 3.6, h: 0.55, fill: { color: AMBER }, rectRadius: 0.08 });
-    s.addText([{ text: "Tools: ", options: { fontFace: BODY } }, { text: c.skill, options: { fontFace: MONO, bold: true } }], { x: M + 0.4, y: 5.65, w: 3.6, h: 0.55, fontSize: 13.5, color: INK, align: "center", valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 4.2, y: 5.65, w: 2.45, h: 0.55, fill: { color: "2B3B5C" }, rectRadius: 0.08 });
-    s.addText("+" + L.pts + " points", { x: M + 4.2, y: 5.65, w: 2.45, h: 0.55, fontFace: MONO, fontSize: 16, bold: true, color: T_PROMPT, align: "center", valign: "middle", margin: 0, isTextBox: true });
-    card(s, 7.95, 2.1, 4.78, 3.05);
-    text(s, "Before anyone types", 8.25, 2.25, 4.2, 0.45, { fontFace: HEAD, fontSize: 19, bold: true });
-    bullets(s, c.ask, 8.25, 2.8, 4.25, 2.3, { fontSize: 15.5, paraSpaceAfter: 7 });
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.95, y: 5.35, w: 4.78, h: 1.15, fill: { color: mode.color }, rectRadius: 0.1 });
-    s.addText(c.mode, { x: 8.2, y: 5.35, w: 1.45, h: 1.15, fontFace: HEAD, fontSize: 24, bold: true, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
-    s.addText(mode.what, { x: 9.65, y: 5.35, w: 2.05, h: 1.15, fontFace: BODY, fontSize: 13, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
-    s.addText([{ text: String(c.mins), options: { fontSize: 26, bold: true, breakLine: true } }, { text: "min", options: { fontSize: 12 } }], { x: 11.75, y: 5.35, w: 0.85, h: 1.15, fontFace: HEAD, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  // ---- guided application: capture a flag together (missions 1-2) ----
+  section("Guided application");
+  missionPair(0);
+  missionPair(1);
 
-    s = newSlide(null, "WALKTHROUGH " + n + " OF " + N + ": " + c.name + "\n\n" +
-      (c.mode === "You do" ? "Race mission: reveal this slide only after most teams have the flag, or when the room is stuck.\n\n" : "Guided mission: solve it live with the class calling out commands, then use this slide to recap.\n\n") +
-      "The slide never shows a real flag: every computer has its own, so students still have to run the commands themselves.\n\n" +
-      "Ask one student to explain the three steps in their own words. Offer the stretch question to anyone who finished early.\n\n" + c.notes);
-    chip(s, "Walkthrough " + n + " of " + N, M, 0.48, 2.3, color, WHITE, 14);
-    levelChip(s, c.level, M + 2.45, 0.48, 2.0, 13);
-    trail(s, 7.4, 0.52, 5.33, n + 1);
-    s.addText("Solving " + c.name, { x: M, y: 0.98, w: W - 2 * M, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true });
-    term(s, M, 1.85, 7.35, 4.65, c.term, { fontSize: c.fs || (c.term.length > 8 ? 14 : 16), title: "player@quest" });
-    text(s, "What just happened", 8.25, 1.85, 4.4, 0.4, { fontFace: HEAD, fontSize: 18, bold: true });
-    numbered(s, c.happened, 8.25, 2.4, 4.48, 0.86, color, 14);
-    card(s, 8.25, 5.0, 4.48, 0.82, "FFF4DC");
-    text(s, [{ text: "Real world: ", options: { bold: true } }, { text: c.real }], 8.42, 5.0, 4.16, 0.82, { fontSize: 13, valign: "middle" });
-    card(s, 8.25, 5.92, 4.48, 0.62);
-    text(s, [{ text: "Stretch: ", options: { bold: true, color } }, { text: c.stretch }], 8.42, 5.92, 4.16, 0.62, { fontSize: 12, valign: "middle" });
-    text(s, "Names, line numbers and flags change on every computer.", M, 6.58, 7.35, 0.3, { fontSize: 11, color: MUTED });
-  }
+  // ---- independent application: now you try (optional; missions 3-10 live in the appendix) ----
+  section("Independent application");
+  s = newSlide("Now you try",
+    "This is the heart of the session. Point students at the CTF and let them start a mission on their OWN. Say clearly: you do NOT have to finish, and you do NOT have to do them in order. Pick one that looks interesting and run the loop: read, observe, try, check, adjust.\n\n" +
+    "Walk the room. Ask questions instead of answering them: 'What is the clue telling you?' 'What did the output say?' 'What would you try next?' Resist typing for students.\n\n" +
+    "The remaining missions (3-10) are in the mentor appendix as a bank: pull one up if the room wants a nudge, or leave them for self-study. Finishing them is not the goal - confidence starting one is.\n\n" +
+    "Mentor: one flag captured, understood, and explained back beats ten rushed. Celebrate the process, not the leaderboard.");
+  text(s, "Pick a challenge and run the loop. You don't have to finish - starting is the win.", M, 1.55, W - 2 * M, 0.5, { fontSize: 18, color: MUTED });
+  const menu = [["Reveal hidden files", "ls -a", MC[0]], ["Search a folder tree", "find -name", MC[2]], ["Search inside a big log", "grep", MC[3]], ["Unlock a script", "chmod +x", MC[4]], ["Clean up a corrupted file", "sed", "5B6EE1"], ["Chain tools with a pipe", "sort | uniq", "0F9488"]];
+  menu.forEach(([what, cmd, color], i) => {
+    const x = M + (i % 3) * 4.11, y = 2.25 + Math.floor(i / 3) * 1.65;
+    card(s, x, y, 3.9, 1.4);
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 0.12, h: 1.4, fill: { color } });
+    text(s, what, x + 0.35, y + 0.22, 3.4, 0.6, { fontSize: 16.5, bold: true });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x + 0.35, y: y + 0.82, w: 2.2, h: 0.42, fill: { color: TERM }, rectRadius: 0.08 });
+    s.addText(cmd, { x: x + 0.35, y: y + 0.82, w: 2.2, h: 0.42, fontFace: MONO, fontSize: 13, bold: true, color: T_PROMPT, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  });
 
-  section("Part 3 · After the race");
+    section("Part 3 · Wrapping up");
   // ---- side quests ----
-  s = newSlide("Side quests: for teams that finish early",
-    "No flags and no points: the answer is a number or a name, and teams compare out loud. Perfect for teams that finish the race early.\n\n" +
+  s = newSlide("Side quests: for anyone who wants more",
+    "No flags and no points: the answer is a number or a name, and students compare out loud. Good for anyone curious to keep going - entirely optional.\n\n" +
     "Answers:\n" +
     "Count the haystack: find archive -type f | wc -l  gives 81 files; -type d gives 26 folders. Same on every computer.\n" +
     "Who failed most?: grep LOGIN_FAIL access.log | cut -d' ' -f2 | sort | uniq -c | sort -n | tail -3. Different on every computer; ties happen.\n" +
     "Head count: cut -d' ' -f2 access.log | sort -u | wc -l gives 11 (ten users plus the intruder).\n" +
-    "Swap secrets: echo meet at the gym | base64, write it on paper, swap with a neighbour, decode with echo ... | base64 -d.");
+    "Swap secrets: echo meet at the gym | rev, write it on paper, swap with a neighbour, and rev it back.");
   const side = [
     ["Count the haystack", "~/mission4", "How many files did find search through? How many folders?", "find archive -type f | wc -l"],
     ["Who failed most?", "~/mission5", "Which user has the most LOGIN_FAIL lines? Build it one pipe at a time.", "grep · cut · sort · uniq -c"],
     ["Head count", "~/mission5", "How many different user names appear in access.log?", "cut -d' ' -f2 · sort -u · wc -l"],
-    ["Swap secrets", "anywhere", "Encode a message, write it on paper, swap with the next team, decode theirs.", "echo ... | base64"],
+    ["Swap secrets", "anywhere", "Reverse a message, write it on paper, swap with the next team, reverse theirs back.", "echo ... | rev"],
   ];
   side.forEach(([name, where, brief, tools], i) => {
     const x = M + (i % 2) * 6.17, y = 1.65 + Math.floor(i / 2) * 2.45;
@@ -1131,28 +1279,12 @@ async function build() {
   });
 
   // ---- read your scorecard ----
-  s = newSlide("Read your scorecard",
-    "When the last flag lands, the clock stops and the sidebar turns into the finish screen.\n\n" +
-    "Walk the scorecard. Points per mission and the total. 'Took' is how long each flag took since the previous one: the biggest Took shows where you got stuck. 'Time' is the clock reading when you submitted.\n\n" +
-    "Ask: 'Which mission had your biggest Took? Why?' That is the skill to practise next.\n\n" +
-    "Then the replay challenge: Replay quest builds a brand-new computer with new flags. Can you beat your time? Write the best times on the board.\n\n" +
-    "The times in this screenshot are an example.");
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 0.25, y: 1.55, w: 3.1, h: 4.52, fill: { color: WHITE }, rectRadius: 0.06, line: { color: LINE, width: 1.5 }, shadow: { type: "outer", color: "12213A", opacity: 0.15, blur: 10, offset: 3, angle: 90 } });
-  s.addImage({ path: path.join(__dirname, "img", "sidebar-finish.png"), x: M + 0.3, y: 1.6, w: 3.0, h: 3.0 * 752 / 512 });
-  const sc = [["Points", "2,700 for all ten flags, 2,750 with the warm-up.", AMBER], ["Took", "Time since your previous flag. Your biggest Took is where you got stuck.", BLUE], ["Time", "The clock when you submitted each flag.", MC[3]], ["Replay quest", "A brand-new computer, new flags, a fresh clock. Beat your time.", GREEN]];
-  sc.forEach(([head, body, color], i) => {
-    const y = 1.65 + i * 1.2;
-    card(s, 4.6, y, 8.13, 1.05);
-    s.addShape(pres.shapes.RECTANGLE, { x: 4.6, y, w: 0.12, h: 1.05, fill: { color } });
-    text(s, head, 4.95, y + 0.12, 2.2, 0.8, { fontSize: 20, bold: true, valign: "middle" });
-    text(s, body, 7.1, y + 0.12, 5.4, 0.8, { fontSize: 16, color: MUTED, valign: "middle" });
-  });
 
   // ===========================================================================
   // PART 4: DEBRIEF
   // ===========================================================================
-  section("Part 4 · Debrief");
-  divider(4, "Debrief", "How the game stays fair, what you just did, who gets paid to do it, and how to keep going.", MC[4], "echo \"$(whoami) leveled up\"",
+  section("Part 4 · Reflection");
+  divider(4, "Reflection", "Why it worked, what you actually did, who gets paid to do this, and where to go next.", MC[4], "echo \"$(whoami) leveled up\"",
     "Section break. Applaud the fastest teams, and also the team that got unstuck the most times.\n\nFun closer: have everyone type the command on this slide. $(whoami) runs whoami and drops its answer into the sentence.");
 
   // ---- can you cheat ----
@@ -1177,9 +1309,10 @@ async function build() {
 
   // ---- how submit works ----
   s = newSlide("How does submit know you're right?",
-    "At start-up the CTF makes eleven random flags (ten missions and the warm-up), saves only their SHA-256 fingerprints in /etc/quest, and throws the flags away. submit fingerprints your guess and compares. A match means correct, and the points land.\n\n" +
+    "At start-up the CTF makes ten random flags (one per mission), saves only their SHA-256 fingerprints in /etc/quest, and throws the flags away. submit fingerprints your guess and compares. A match means correct, and the points land.\n\n" +
     "A hash function turns any input into a fixed 64-character fingerprint. Same input, same fingerprint; change one letter and it changes completely; and it only works one way.\n\n" +
-    "Good websites store passwords the same way. If attackers steal the database they get fingerprints, not passwords. (Real systems also add a random 'salt' and use deliberately slow hashes.)", "echo hello | sha256sum");
+    "Good websites store passwords the same way. If attackers steal the database they get fingerprints, not passwords. (Real systems also add a random 'salt' and use deliberately slow hashes.)\n\n" +
+    "Same trick, real world: good websites store a fingerprint of your password, not the password. That is why 'forgot password' resets it instead of emailing it.", "echo hello | sha256sum");
   const flowRow = (y, guess, hash, ok) => {
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y, w: 3.4, h: 1.0, fill: { color: TINT }, rectRadius: 0.1 });
     text(s, "your guess", M + 0.2, y + 0.1, 3, 0.3, { fontSize: 12, color: MUTED });
@@ -1204,14 +1337,12 @@ async function build() {
     await iconCircle(s, Icon, x + 0.2, 4.55, 0.7, color);
     text(s, head, x + 1.05, 4.4, 2.75, 1.0, { fontSize: 15.5, bold: true, valign: "middle" });
   }
-  card(s, M, 5.6, W - 2 * M, 0.85, "FFF4DC");
-  text(s, [{ text: "Same trick, real world: ", options: { bold: true } }, { text: "good websites store a fingerprint of your password, not the password. That is why 'forgot password' resets it instead of emailing it." }], M + 0.3, 5.6, W - 2 * M - 0.6, 0.85, { fontSize: 15, valign: "middle" });
 
   // ---- skill passport ----
   s = newSlide("Your skill passport",
     "A visual receipt for the session, in mission order. Each stamp is a tool the class used today.\n\n" +
     "Ask students to count the stamps they earned. Anyone with ten or more did a full beginner Linux lab in one session.");
-  const stamps = [["pwd", 1], ["ls", 1], ["cd  cd ..", 1], ["cat", 2], ["--help", 2], ["ls -a", 3], ["Tab", 3], ["find", 4], ["grep", 5], ["head  wc -l", 5], ["|", 6], ["sort  uniq", 6], ["ls -l", 7], ["chmod +x", 7], ["base64 -d", 8], ["| base64 -d", 9], ["cut", 10], ["sha256sum", 0]];
+  const stamps = [["pwd", 1], ["ls", 1], ["cd  cd ..", 1], ["cat", 2], ["--help", 2], ["ls -a", 3], ["Tab", 3], ["find", 4], ["grep", 5], ["head  wc -l", 5], ["|", 6], ["sort  uniq", 6], ["ls -l", 7], ["chmod +x", 7], ["sed", 8], ["awk", 9], ["cut", 10], ["sha256sum", 0]];
   stamps.forEach(([cmd, n], i) => {
     const x = M + (i % 6) * 2.04, y = 1.65 + Math.floor(i / 6) * 1.6, color = n ? MC[n - 1] : MUTED;
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 1.88, h: 1.42, fill: { color: WHITE }, rectRadius: 0.12, line: { color, width: 2.5, dashType: "dash" } });
@@ -1224,7 +1355,7 @@ async function build() {
   s = newSlide("What you just did is the job",
     "Connect the missions to real work. Ask the questions on the right and let students answer before you do.\n\n" +
     "Mentors: share one real story (unclassified and non-sensitive) of using these commands at work.");
-  const jobs = [[fa.FaFolderOpen, "cd, ls and ls -a", "Finding your way around an unfamiliar server, hidden files included", MC[0]], [fa.FaMagnifyingGlass, "find and grep", "Searching servers and logs for the one line that shows an intruder", MC[3]], [fa.FaBookOpen, "--help", "Learning a new tool in minutes, without anyone teaching you", MC[1]], [fa.FaFingerprint, "base64 -d and sha256sum", "Decoding hidden text and checking fingerprints", MC[4]]];
+  const jobs = [[fa.FaFolderOpen, "cd, ls and ls -a", "Finding your way around an unfamiliar server, hidden files included", MC[0]], [fa.FaMagnifyingGlass, "find and grep", "Searching servers and logs for the one line that shows an intruder", MC[3]], [fa.FaBookOpen, "--help", "Learning a new tool in minutes, without anyone teaching you", MC[1]], [fa.FaScrewdriverWrench, "sed and awk", "Cleaning up messy data and pulling out the fields that matter", MC[4]]];
   for (let i = 0; i < jobs.length; i++) {
     const [Icon, cmd, job, color] = jobs[i];
     const y = 1.7 + i * 1.2;
@@ -1255,6 +1386,38 @@ async function build() {
   // MENTOR APPENDIX
   // ===========================================================================
   section("Mentor appendix");
+
+  s = darkSlide("Mentor appendix: reference for whoever runs the room — the page layout, how flags work under the hood, how to open the CTF, the answer key, and fixes for the usual snags. Not student-facing.");
+  s.addText("Mentor", { x: M, y: 1.5, w: 11, h: 1.0, fontFace: HEAD, fontSize: 40, bold: true, color: T_NOTE, margin: 0, isTextBox: true });
+  s.addText("Appendix", { x: M, y: 2.35, w: 11, h: 1.6, fontFace: HEAD, fontSize: 92, bold: true, color: WHITE, margin: 0, isTextBox: true });
+  s.addText("The page layout, the mechanics, the answer key, and what to do when things go wrong.", { x: M, y: 4.15, w: 10.5, h: 1.0, fontFace: BODY, fontSize: 22, color: T_OUT, margin: 0, valign: "top", isTextBox: true });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 5.35, w: W - 2 * M, h: 0.9, fill: { color: "162238" }, rectRadius: 0.1 });
+  s.addText([{ text: "$ ", options: { color: T_PROMPT, bold: true } }, { text: "man mentor   # for the person running the room", options: { color: WHITE, bold: true } }], { x: M + 0.35, y: 5.35, w: W - 2 * M - 0.7, h: 0.9, fontFace: MONO, fontSize: 20, valign: "middle", margin: 0, isTextBox: true });
+
+  // ---- anatomy of the page ----
+  s = newSlide("Anatomy of the competition page",
+    "A real screenshot from the middle of a game: the first two flags captured, mission 3 open.\n\n" +
+    "Walk the eight parts. The progress track lights one coloured bar per flag. Points, the clock and flags captured sit at the top of the sidebar. The clock starts on your first keystroke in Mission 1, counts up and stops at the last flag. The stepper shows a green check for each captured mission. Each mission shows its difficulty and points. Run buttons type the starting commands for you. Next unlocks once the flag is captured.\n\n" +
+    "The most common problem in class is typing before clicking inside the terminal. Say it twice.");
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M - 0.05, y: 1.6, w: 7.3, h: 4.34, fill: { color: WHITE }, rectRadius: 0.06, line: { color: LINE, width: 1.5 }, shadow: { type: "outer", color: "12213A", opacity: 0.15, blur: 10, offset: 3, angle: 90 } });
+  s.addImage({ path: path.join(__dirname, "img", "page.png"), x: M, y: 1.65, w: 7.2, h: 4.235 });
+  const k = 7.2 / 1360, px = (x) => M + x * k, py = (y) => 1.65 + y * k;
+  // Pin positions come from the screenshot script (img/pins.json), so they always match the picture.
+  const P8 = JSON.parse(fs.readFileSync(path.join(__dirname, "img", "pins.json"), "utf8"));
+  const sorted = [[...P8.track, MC[1]], [...P8.points, AMBER], [...P8.clock, BLUE], [...P8.stepper, MC[0]], [...P8.level, MC[4]], [...P8.copy, MC[3]], [...P8.terminal, "56657E"], [...P8.next, MC[2]]];
+  sorted.forEach(([x, y, color], i) => {
+    s.addShape(pres.shapes.OVAL, { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fill: { color }, line: { color: WHITE, width: 2 } });
+    s.addText(String(i + 1), { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fontFace: HEAD, fontSize: 13, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  });
+  text(s, "Mid-game: missions 1 and 2 captured, mission 3 open.", M, 6.1, 7, 0.35, { fontSize: 12, color: MUTED });
+  const parts8 = [["Progress track", "One coloured bar lights up per flag.", MC[1]], ["Points", "Your score, out of 2,700.", AMBER], ["Clock", "Starts at Mission 1 and counts up.", BLUE], ["Stepper", "A green check per captured flag.", MC[0]], ["Level and points", "Easy 100 up to Very Hard 800.", MC[4]], ["Copy buttons", "Copy a starting command, then paste it.", MC[3]], ["Terminal", "Click inside it before you type.", "56657E"], ["Next mission", "Unlocks when the flag is captured.", MC[2]]];
+  parts8.forEach(([head, body, color], i) => {
+    const y = 1.62 + i * 0.6;
+    s.addShape(pres.shapes.OVAL, { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fill: { color } });
+    s.addText(String(i + 1), { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fontFace: HEAD, fontSize: 12, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    text(s, [{ text: head + "  ", options: { bold: true, fontSize: 15 } }, { text: body, options: { fontSize: 13, color: MUTED } }], 8.6, y, 4.15, 0.5, { valign: "middle" });
+  });
+
   s = newSlide("Mentor appendix: set-up before class",
     "THIS SLIDE IS FOR MENTORS. Skip it when presenting to students, or hide it.\n\n" +
     "The page is the ctf-test project on GitLab. Its .gitlab-ci.yml has a 'pages' job that publishes the public/ folder whenever the default branch changes. Set Settings > General > Visibility > Pages to Everyone, or students get a GitLab sign-in page.\n\n" +
@@ -1277,7 +1440,7 @@ async function build() {
     "The CyberQuest Linux CTF is our own page, hosted free on GitLab Pages. When it loads, it starts a small but real Linux computer inside the tab.\n\n" +
     "How: a program called v86 pretends to be a PC, using a browser feature called WebAssembly. That pretend PC boots a real Linux kernel, and a toolkit called BusyBox provides the commands.\n\n" +
     "Some school and work browsers switch WebAssembly off. Then the page starts lite mode instead: a simulated shell with the same ten missions and the same commands. Students barely notice the difference.\n\n" +
-    "Everything runs on the student's own device. Every page load hides ten new random flags (plus the warm-up), which is why reloading resets your progress.");
+    "Everything runs on the student's own device. Every page load hides ten new random flags, which is why reloading resets your progress.");
   const lq = [[fa.FaTerminal, "A real terminal", "A Linux shell with standard commands, running in your tab.", MC[1]], [fa.FaFlag, "Ten missions", "2,700 points, easiest first. New random flags on every page load.", MC[3]], [fa.FaLaptop, "Nothing to install", "One link. No accounts. Works on Chromebooks, laptops and desktops.", MC[4]]];
   for (let i = 0; i < lq.length; i++) {
     const [Icon, head, body, color] = lq[i];
@@ -1310,7 +1473,7 @@ async function build() {
   s.addText("your-group.gitlab.io/...", { x: 8.1, y: 2.55, w: 4.23, h: 1.5, fontFace: MONO, fontSize: 20, bold: true, color: AMBER, align: "center", valign: "middle", margin: 0, isTextBox: true });
   s.addText("Type it exactly. One computer per pair.", { x: 7.7, y: 4.2, w: 5.03, h: 0.4, fontFace: BODY, fontSize: 14, color: T_NOTE, align: "center", margin: 0, isTextBox: true });
   card(s, 7.7, 5.15, 5.03, 1.3, "FFF4DC");
-  text(s, [{ text: "Don't type yet! ", options: { bold: true } }, { text: "The clock waits for Mission 1. The warm-up is untimed, so explore freely." }], 8.0, 5.15, 4.5, 1.3, { valign: "middle", fontSize: 15 });
+  text(s, [{ text: "Don't type yet! ", options: { bold: true } }, { text: "The clock starts on your first keystroke in Mission 1 — explore the page freely first." }], 8.0, 5.15, 4.5, 1.3, { valign: "middle", fontSize: 15 });
 
   // ---- the conversation loop ----
   s = newSlide("Mentor appendix: every command is a conversation",
@@ -1350,11 +1513,11 @@ async function build() {
     "FOR MENTORS. Hide this slide when presenting.\n\n" +
     "Flags are random on every page load and the CTF keeps only fingerprints, so there is no list of flags: play each mission yourself before class.\n\n" +
     "Fixed side-quest answers: Count the haystack is 81 files and 26 folders; Head count is 11.");
-  const key = [["0", "Warm-up", "cat orientation.txt;  submit the flag on its last line", "Bonus · 50", MUTED]].concat(MS.map((c, i) => [String(i + 1), c.name, c.answer, c.level + " · " + LEVEL[c.level].pts, MC[i]])).concat([
+  const key = [].concat(MS.map((c, i) => [String(i + 1), c.name, c.answer, c.level + " · " + LEVEL[c.level].pts, MC[i]])).concat([
     ["+", "Count the haystack", "find archive -type f | wc -l  (81);  -type d  (26)", "side quest", MUTED],
     ["+", "Who failed most?", "grep LOGIN_FAIL access.log | cut -d' ' -f2 | sort | uniq -c | sort -n", "side quest", MUTED],
     ["+", "Head count", "cut -d' ' -f2 access.log | sort -u | wc -l  (11)", "side quest", MUTED],
-    ["+", "Swap secrets", "echo <text> | base64;   echo <code> | base64 -d", "side quest", MUTED],
+    ["+", "Swap secrets", "echo <text> | rev;   then rev it back", "side quest", MUTED],
   ]);
   key.forEach(([n, name, ans, lvl, color], i) => {
     const RH = 0.33, y = 1.45 + i * RH;
@@ -1378,13 +1541,50 @@ async function build() {
     ["\"Incorrect flag\"", "Copy the whole flag, CYBA{ to }, with no extra spaces. Flags from another computer never work."],
     ["Page was reloaded by accident", "New computer, new flags, points and clock reset. The second run is fast."],
     ["Screen flooded with text, or stuck", "Ctrl+C stops a command. q quits less. clear wipes the screen."],
-    ["The clock didn't start", "It waits during the warm-up. It starts at the first keystroke after the warm-up is captured or skipped."],
+    ["The clock didn't start", "It starts at the first keystroke in the terminal, once you begin Mission 1."],
   ];
   fixes.forEach(([problem, fix], i) => {
     const x = M + (i % 2) * 6.17, y = 1.6 + Math.floor(i / 2) * 1.24;
     card(s, x, y, 5.96, 1.1);
     text(s, problem, x + 0.25, y + 0.1, 5.5, 0.35, { fontSize: 14.5, bold: true, color: RED });
     text(s, fix, x + 0.25, y + 0.45, 5.5, 0.6, { fontSize: 12.5, color: INK });
+  });
+
+  // ---- facilitation cheatsheet (mentor-facing) ----
+  s = newSlide("Running this in one hour",
+    "The mentor-facing summary. If you remember one thing: protect the CORE and treat everything else as flexible. A student who understands the flow and captured one flag has had a great session, even if you skipped half the slides.\n\nPacing is flexible by design. Quick room? Demo more commands or let students start a second mission. Slow room? Do fewer command demos and spend the time on the guided capture and reflection.\n\nUse the discussion prompts to keep it a conversation, not a lecture.");
+  const cols = [["Core - always do", ["What a CTF is + the flag", "The flow of every challenge", "A few command demos, live", "Capture Mission 1 together", "Let students start one on their own", "Reflect: what you did, why it matters"]],
+                ["Flexible - if there is time", ["Full Linux history, CLI vs GUI", "Every command slide", "Missions 3-10 (the mission bank)", "Side quests", "Reading the scorecard", "How submit works under the hood"]]];
+  cols.forEach(([head, items], i) => {
+    const x = M + i * 6.17;
+    card(s, x, 1.6, 5.95, 3.55);
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.6, w: 5.95, h: 0.12, fill: { color: i ? "9AA7BC" : GREEN } });
+    text(s, head, x + 0.35, 1.85, 5.3, 0.5, { fontFace: HEAD, fontSize: 20, bold: true, color: i ? MUTED : "0F6A45" });
+    bullets(s, items, x + 0.35, 2.5, 5.3, 2.5, { fontSize: 15.5, paraSpaceAfter: 6 });
+  });
+  card(s, M, 5.35, W - 2 * M, 1.15, "FFF4DC");
+  text(s, [{ text: "Discussion prompts:  ", options: { bold: true } }, { text: "“Who thinks they've used Linux today?”   “Why would a company pay someone to find hidden things?”   “What is the clue telling you?”   “What did the output say - what would you try next?”" }], M + 0.3, 5.35, W - 2 * M - 0.6, 1.15, { valign: "middle", fontSize: 15 });
+
+  // ---- mission bank: missions 3-10 (reference, not a checklist) ----
+  section("Mentor appendix · Mission bank");
+  s = newSlide("Mission bank: missions 3-10",
+    "A reference bank, not a checklist. Missions 1 and 2 are the guided example in the main deck; these eight are here for independent work and self-study.\n\nPull one up when a student wants a nudge on a mission they chose, or share the deck afterward. In a one-hour session you will not show most of these live - and that's the point.\n\nEach mission has a brief (the clue and three questions) and a walkthrough (one correct path). Flags differ on every computer, so walkthroughs are safe to show.");
+  text(s, "Each has a brief (clue + questions) and a walkthrough (one path). Pull up whatever a student needs.", M, 2.0, W - 2 * M, 0.6, { fontSize: 18, color: MUTED });
+  MS.slice(2).forEach((c, i) => {
+    const x = M + (i % 4) * 3.08, y = 2.9 + Math.floor(i / 4) * 1.75;
+    card(s, x, y, 2.85, 1.5);
+    s.addShape(pres.shapes.OVAL, { x: x + 0.25, y: y + 0.25, w: 0.5, h: 0.5, fill: { color: MC[i + 2] } });
+    s.addText(String(i + 3), { x: x + 0.25, y: y + 0.25, w: 0.5, h: 0.5, fontFace: HEAD, fontSize: 15, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    text(s, c.name, x + 0.9, y + 0.22, 1.85, 0.6, { fontSize: 14, bold: true, valign: "middle" });
+    levelChip(s, c.level, x + 0.25, y + 0.9, 1.75, 9.5);
+    mono(s, c.skill, x + 2.05, y + 0.92, 0.7, 0.3, { fontSize: 9, color: MUTED, bold: false, fit: "shrink" });
+  });
+  for (let i = 2; i < MS.length; i++) missionPair(i);
+
+  // Stamp page labels now that the total is known: "Linux CTF · n / total", bottom-right.
+  const TOTAL = PAGES.length;
+  PAGES.forEach(({ s, dark }, idx) => {
+    s.addText(DECK + "   ·   " + (idx + 1) + " / " + TOTAL, { x: W - M - 3.4, y: 7.0, w: 3.4, h: 0.3, fontFace: BODY, fontSize: 10, color: dark ? T_NOTE : MUTED, align: "right", valign: "middle", margin: 0, isTextBox: true });
   });
 
   const out = path.join(__dirname, "CyberQuest-Linux-CTF.pptx");

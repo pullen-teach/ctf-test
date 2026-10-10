@@ -1,0 +1,13 @@
+CyberQuest Warm-ups
+===================
+
+Two quick warm-ups to get you ready for a CTF. Both are optional, both
+are untimed, and the hints are free.
+
+  1  Orientation     how a CTF works; submit your first flag   50 pts
+  2  Speed drills    Tab, up arrow, Ctrl+C, copy and paste      50 pts
+
+Read one with:  mission 1   (or mission 2)
+Start here:     cat orientation.txt
+
+When you're ready, pick a CTF from the home page.

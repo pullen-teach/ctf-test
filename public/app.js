@@ -10,12 +10,16 @@
   const meter = document.getElementById("meter-fill");
   const started = performance.now();
   const done = new Set();
-  const TOTAL = 10;
+  const QCFG = window.QUEST_CONFIG || {};
+  const TOTAL = QCFG.missions || 10;
+  // Untimed modules (the Warm-ups) have no competition clock.
+  const UNTIMED = !!QCFG.untimed;
 
   // Competition clock: counts up from the first key typed in the terminal (or the
   // first Run button) and stops when every flag is captured. It never cuts anyone off.
   const clockEl = document.getElementById("clock");
   const clockText = document.getElementById("clock-time");
+  if (UNTIMED && clockEl) clockEl.style.display = "none";
   let clockStart = null, clockStop = null, clockTimer = null;
   function fmt(ms) {
     const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60;
@@ -24,10 +28,9 @@
   }
   const elapsed = () => (clockStart === null ? 0 : (clockStop ?? performance.now()) - clockStart);
   function tick() { clockText.textContent = fmt(elapsed()); }
-  // The warm-up (mission 0) is untimed: the clock waits until it is captured or skipped.
+  // The clock starts on the first key typed in a timed CTF. Untimed modules have no clock.
   function startClock() {
-    if (clockStart !== null) return;
-    if (window.questGuide && !window.questGuide.warmupOver()) return;
+    if (UNTIMED || clockStart !== null) return;
     clockStart = performance.now();
     clockEl.classList.add("running");
     const lab = document.getElementById("clock-label"); if (lab) lab.textContent = "Elapsed Time";
@@ -200,13 +203,13 @@
   });
 
   function markDone(n) {
-    if (n === 0 || n > TOTAL) { window.questGuide.done(n, 0); return; }   // warm-ups: bonus points, not among the TOTAL flags
     if (done.has(n)) return;
     done.add(n);
     if (done.size === TOTAL) stopClock();
-    window.questGuide.done(n, window.questClock.elapsed());
+    window.questGuide.done(n, UNTIMED ? 0 : window.questClock.elapsed());
     document.querySelector('.step[data-n="' + n + '"]')?.classList.add("done");
-    setStatus(done.size === TOTAL ? "All " + TOTAL + " flags captured" : done.size + " of " + TOTAL + " flags");
+    const word = UNTIMED ? " done" : " flags";
+    setStatus(done.size === TOTAL ? (UNTIMED ? "All " + TOTAL + " done" : "All " + TOTAL + " flags captured") : done.size + " of " + TOTAL + word);
     if (done.size === TOTAL) document.body.classList.add("won");
   }
 

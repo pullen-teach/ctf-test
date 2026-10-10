@@ -13,6 +13,16 @@ R=/usr/share/quest
 # clue on top, then the mission brief
 clue() { { printf "$2"; echo; cat "$R/$1.txt"; } > "$H/mission$1/README.txt"; }
 keep() { printf '%s' "$2" | sha256sum | cut -d' ' -f1 > "$Q/$1"; }
+# forge: a little assembler. Reads a file of key parts (one per line) and builds the flag.
+cat > /bin/forge <<'FORGE'
+#!/bin/sh
+if [ -z "$1" ]; then echo "Usage: forge FILE"; exit 1; fi
+parts=$(tr -d ' \t\r\n' < "$1")
+if [ -z "$parts" ]; then echo "forge: no key parts found. Give me a file of parts, one per line." >&2; exit 1; fi
+echo "Forging the key..."
+echo "CYBA{forge-$parts}"
+FORGE
+chmod 755 /bin/forge
 
 # 1: make your move. Signpost file names (read with ls) lead to a file named after the flag.
 F=$(flag moves); keep 1 "$F"
@@ -33,47 +43,6 @@ for f in "$M1/start-here--go-into-town" \
   : > "$f"
 done
 cp "$R/home.txt" "$H/README.txt"
-# 0: warm-up (optional, untimed). Its flag is the last line of the CTF orientation.
-F=$(flag warmup); keep 0 "$F"
-{ cat "$R/orientation.txt"; echo "  $F"; } > "$H/orientation.txt"
-
-# 11: warm-up 2, speed drills (optional, untimed). Four 4-character pieces, one per drill:
-# Tab completes a long file name, the up arrow repeats "again", Ctrl+C stops "runaway",
-# and the mouse copies a code into "pasteit".
-p1=$(hex | cut -c1-4); p2=$(hex | cut -c1-4); p3=$(hex | cut -c1-4); p4=$(hex | cut -c1-4)
-code=$(hex)$(hex | cut -c1-4)
-keep 11 "CYBA{speed-$p1$p2$p3$p4}"
-S="$H/speed"; mkdir -p "$S/tab" "$S/paste"
-cp "$R/speed.txt" "$S/README.txt"
-printf 'Piece 1: %s\nTab finished the name for you. Try it on commands too: type  his  then press Tab.\n' "$p1" > "$S/tab/drill-1-tab-completion-saves-your-fingers-$(hex).txt"
-printf 'Drill 4: copy and paste, the Linux way.\nSelect the code below with the mouse (or trackpad) to copy it. Then type  pasteit  and a space, paste the code (middle-click, or right-click), and press Enter.\nCODE: %s\n' "$code" > "$S/paste/code.txt"
-cat > /bin/again <<AGAIN
-#!/bin/sh
-# again: run me 5 times within 15 seconds. The up arrow brings back your last command.
-f=/tmp/.again; now=\$(date +%s); set -- \$(cat "\$f" 2>/dev/null); n=\${1:-0}; start=\${2:-0}
-if [ \$((now - start)) -gt 15 ]; then n=0; start=\$now; fi
-n=\$((n + 1)); echo "\$n \$start" > "\$f"
-if [ \$n -ge 5 ]; then rm -f "\$f"; echo "Run 5 of 5 in \$((now - start)) seconds. Fast fingers!"; echo "Piece 2: $p2"; exit 0; fi
-echo "Run \$n of 5. Press the up arrow, then Enter. (5 runs within 15 seconds)"
-AGAIN
-cat > /bin/runaway <<RUNAWAY
-#!/bin/sh
-# runaway: prints forever until you press Ctrl+C.
-trap 'echo; echo "Stopped! Ctrl+C interrupts whatever is running."; echo "Piece 3: $p3"; exit 0' INT
-# (sleep returns at once in this tiny kernel, so wait for the uptime clock to tick instead)
-tick() { read u _ < /proc/uptime; t=\${u%.*}; while read u _ < /proc/uptime && [ "\${u%.*}" = "\$t" ]; do :; done; }
-i=0
-while true; do i=\$((i + 1)); echo "Still running (\$i)... press Ctrl+C to stop me"; tick; done
-RUNAWAY
-cat > /bin/pasteit <<PASTEIT
-#!/bin/sh
-# pasteit CODE: the copy-and-paste drill. Highlight the long CODE with the mouse and
-# paste it (middle-click, or right-click) rather than typing it.
-if [ -z "\$1" ]; then echo "pasteit: select the CODE with the mouse, then type  pasteit  and paste it" >&2; exit 1; fi
-if [ "\$1" = "$code" ]; then echo "Nice paste! Select, then middle-click (or right-click) beats typing."; echo "Piece 4: $p4"; exit 0; fi
-echo "pasteit: that is not the code. Highlight the whole CODE and paste the exact value." >&2; exit 1
-PASTEIT
-chmod 755 /bin/again /bin/runaway /bin/pasteit
 cp "$R/1.txt" "$M1/README.txt"
 
 # 2: let the cat out of the bag. cat --help shows -n, which numbers lines.
@@ -132,11 +101,13 @@ awk -v who="$who" -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
 }' > "$H/mission5/access.log"
 clue 5 "An intruder logged in ONCE as:  $who\nTheir token is the flag.\n"
 
-# 8: base64
-F=$(flag decoded); keep 8 "$F"
+# 8: find and replace (sed). A junk marker is wedged all through the flag; sed s///g strips it.
+F=$(flag sed); keep 8 "$F"
 mkdir -p "$H/mission8"
 cp "$R/8.txt" "$H/mission8/README.txt"
-printf 'Decoded! Encoding is not encryption.\nFlag: %s\n' "$F" | base64 > "$H/mission8/message.b64"
+mk=$(pick QZ XK ZQ VW KX WJ QK ZX)
+corrupt=$(printf '%s' "$F" | sed "s/./&$mk/g")
+printf 'This file is corrupted: the same junk string was inserted all through the flag below.\nFind the junk, then remove every copy of it to read the flag.\n\nFlag: %s\n' "$corrupt" > "$H/mission8/message.txt"
 
 # 6: odd one out. Every fake code appears 2 to 4 times; the flag once (sort | uniq -u).
 F=$(flag odd); keep 6 "$F"
@@ -155,19 +126,25 @@ awk -v flag="$F" -v seed="$(hex | cut -c1-6)" 'BEGIN {
 # 7: permission denied. unlock.sh has no execute bit until the student adds it (chmod +x).
 F=$(flag exec); keep 7 "$F"
 mkdir -p "$H/mission7"; cp "$R/7.txt" "$H/mission7/README.txt"
-printf 'Access granted.\nFlag: %s\n' "$F" | base64 > "$H/mission7/.door"
-printf '#!/bin/sh\n# The vault door. It only opens when this file has execute permission.\nbase64 -d ~/mission7/.door\n' > "$H/mission7/unlock.sh"
+printf 'Access granted.  Flag: %s\n' "$F" | rev > "$H/mission7/.door"
+printf '#!/bin/sh\n# The vault door. It only opens when this file has execute permission.\nrev ~/mission7/.door\n' > "$H/mission7/unlock.sh"
 chmod 644 "$H/mission7/unlock.sh"
 
-# 9: layer cake. base64 applied 4 to 6 times.
-F=$(flag layers); keep 9 "$F"
+# 9: forge the key (awk + > + forge). Three admin rows hold the flag's three parts, in order.
+k1=$(hex | cut -c1-4); k2=$(hex | cut -c1-4); k3=$(hex | cut -c1-4)
+F="CYBA{forge-$k1$k2$k3}"; keep 9 "$F"
 mkdir -p "$H/mission9"; cp "$R/9.txt" "$H/mission9/README.txt"
-printf 'Flag: %s\n' "$F" > "$H/mission9/cake.b64"
-n=$(awk -v s="$(hex | cut -c1-6)" 'BEGIN { srand(("0x" s) + 0); print 4 + int(rand() * 3) }')
-i=0; while [ "$i" -lt "$n" ]; do base64 "$H/mission9/cake.b64" > "$H/mission9/.t" && mv "$H/mission9/.t" "$H/mission9/cake.b64"; i=$((i + 1)); done
+awk -v k1="$k1" -v k2="$k2" -v k3="$k3" -v seed="$(hex | cut -c1-6)" 'BEGIN {
+  srand(("0x" seed) + 0); split("alice bob carol dave erin frank grace heidi ivan judy", u, " "); split("user guest viewer", ro, " ")
+  for (i = 1; i <= 24; i++) { t = ""; for (k = 0; k < 4; k++) t = t substr("0123456789abcdef", 1 + int(rand() * 16), 1); L[i] = u[1 + int(rand() * 10)] " " ro[1 + int(rand() * 3)] " " t }
+  q1 = 2 + int(rand() * 7); q2 = q1 + 2 + int(rand() * 7); q3 = q2 + 2 + int(rand() * 7)
+  A[q1] = u[1 + int(rand() * 10)] " admin " k1; A[q2] = u[1 + int(rand() * 10)] " admin " k2; A[q3] = u[1 + int(rand() * 10)] " admin " k3
+  print "user role token"
+  j = 0; for (i = 1; i <= 27; i++) { if (i in A) print A[i]; else { j++; print L[j] } }
+}' > "$H/mission9/records.txt"
 
-# 10: endgame. Three pieces: a hidden file (find), a base64 token in a log (grep, cut,
-# base64) and a locked script (chmod). The flag is CYBA{piece1-piece2-piece3}.
+# 10: endgame. Three pieces: a hidden file (find), a token in a log (grep + cut) and a
+# locked script (chmod + run). The flag is CYBA{piece1-piece2-piece3}.
 p1=$(hex | cut -c1-6); p2=$(hex | cut -c1-6); p3=$(hex | cut -c1-6)
 F="CYBA{$p1-$p2-$p3}"; keep 10 "$F"
 M="$H/mission10"; mkdir -p "$M"
@@ -185,7 +162,7 @@ BEGIN {
   for (i = 1; i <= 3; i++) { f = d[1 + int(rand() * nd)] "/" HN[i]; print "Nothing here. Keep looking." > f; close(f) }
   f = d[1 + int(rand() * nd)] "/" HN[4]; print "piece 1: " p1 > f; close(f)
 }'
-tok=$(printf 'piece 2: %s' "$p2" | base64)
+tok="$p2"
 awk -v who="$who" -v tok="$tok" -v seed="$(hex | cut -c1-6)" 'BEGIN {
   srand(("0x" seed) + 0); split("alice bob carol dave erin frank grace heidi ivan judy", u, " ")
   split("LOGIN_OK LOGIN_FAIL SUDO SSH_KEY LOGOUT", a, " ")
@@ -199,10 +176,10 @@ awk -v who="$who" -v tok="$tok" -v seed="$(hex | cut -c1-6)" 'BEGIN {
     printf "%s user=%s action=%s token=%s\n", stamp, u[1 + int(rand() * 10)], a[1 + int(rand() * 5)], s
   }
 }' > "$M/auth.log"
-printf 'piece 3: %s\n' "$p3" | base64 | base64 > "$M/.door"
-printf '#!/bin/sh\n# The last door. It only opens when this file has execute permission.\nbase64 -d ~/mission10/.door | base64 -d\n' > "$M/unlock.sh"
+printf 'piece 3: %s\n' "$p3" > "$M/.door"
+printf '#!/bin/sh\n# The last door. It only opens when this file has execute permission.\ncat ~/mission10/.door\n' > "$M/unlock.sh"
 chmod 644 "$M/unlock.sh"
-clue 10 "The flag is CYBA{piece1-piece2-piece3}: three pieces, joined with dashes.\n  Piece 1: in a hidden file somewhere under vault/  (some hidden files are decoys)\n  Piece 2: $who logged in once in auth.log. Their token is base64.\n  Piece 3: whatever unlock.sh prints.\n"
+clue 10 "The flag is CYBA{piece1-piece2-piece3}: three pieces, joined with dashes.\n  Piece 1: in a hidden file somewhere under vault/  (some hidden files are decoys)\n  Piece 2: $who logged in once in auth.log. Their token is right after token=.\n  Piece 3: whatever unlock.sh prints.\n"
 
 chmod 755 "$Q"; chmod 644 "$Q"/*
 chown -R 1000:1000 "$H"

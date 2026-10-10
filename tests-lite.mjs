@@ -41,17 +41,18 @@ const f3 = (await run("cat ~/mission4/" + p4)).match(/CYBA\{[^}]+\}/)[0];
 console.log("count files/dirs:", (await run("cd ~/mission4; find archive -type f | wc -l; find archive -type d | wc -l; cd ~")).replace(/\n/g, " "));
 const who = (await run("cat ~/mission5/README.txt")).match(/as:\s+(\S+)/)[1];
 const f4 = (await run("grep " + who + " ~/mission5/access.log")).match(/CYBA\{[^}]+\}/)[0];
-const f5 = (await run("base64 -d ~/mission8/message.b64")).match(/CYBA\{[^}]+\}/)[0];
+const m8msg = await run("cat ~/mission8/message.txt"); const m8mk = m8msg.match(/Flag: (\S+)/)[1].slice(1, 3);
+const f5 = (await run("sed 's/" + m8mk + "//g' ~/mission8/message.txt")).match(/CYBA\{[^}]+\}/)[0];
 const f6 = (await run("sort ~/mission6/codes.txt | uniq -u")).trim();
 console.log("locked:", (await run("~/mission7/unlock.sh")).trim());
 const f7 = (await run("chmod +x ~/mission7/unlock.sh; ~/mission7/unlock.sh")).match(/CYBA\{[^}]+\}/)[0];
-let f8b = null;
-for (let k = 1; k < 9 && !f8b; k++) { const m = (await run("base64 -d ~/mission9/cake.b64" + " | base64 -d".repeat(k - 1))).match(/CYBA\{[^}]+\}/); if (m) { f8b = m[0]; console.log("layers:", k); } }
+await run("awk '/admin/{print $3}' ~/mission9/records.txt > /tmp/keys.txt");
+const f8b = (await run("forge /tmp/keys.txt")).match(/CYBA\{[^}]+\}/)[0];
 const r10 = await run("cat ~/mission10/README.txt");
 const w10 = r10.match(/Piece 2: (\S+)/)[1];
 let pc1 = null;
 for (const p of (await run("find ~/mission10/vault -name '.*' -type f")).trim().split("\n")) { const m = (await run("cat " + p)).match(/piece 1: (\w+)/); if (m) pc1 = m[1]; }
-const pc2 = (await run("grep 'user=" + w10 + " ' ~/mission10/auth.log | cut -d= -f4 | base64 -d")).match(/piece 2: (\w+)/)[1];
+const pc2 = (await run("grep 'user=" + w10 + " ' ~/mission10/auth.log | cut -d= -f4")).trim();
 const pc3 = (await run("cd ~/mission10; chmod +x unlock.sh; ./unlock.sh; cd ~")).match(/piece 3: (\w+)/)[1];
 const f9 = "CYBA{" + pc1 + "-" + pc2 + "-" + pc3 + "}";
 console.log("new flags:", f6, f7, f8b, f9);

@@ -1,0 +1,20 @@
+#!/bin/sh
+# hint N   the warm-up hints are free: they print straight away.
+case "$1" in
+  1) cat <<'EOF'
+The flag is on the last line of orientation.txt in your home folder.
+Type cat orientation.txt, press Enter, then copy the flag into submit.
+EOF
+  ;;
+  2) cat <<'EOF'
+Drill 1: in ~/speed/tab type cat dri, then press Tab.
+Drill 2: type again and Enter, then press the up arrow and Enter four
+more times, quickly.
+Drill 3: type runaway, then hold Ctrl and press C.
+Drill 4: in ~/speed/paste run cat code.txt, highlight the CODE with the
+mouse, type pasteit  then middle-click (or right-click) to paste it.
+The flag is CYBA{speed- followed by the four pieces in order, then }.
+EOF
+  ;;
+  *) echo "Usage: hint 1   (or hint 2)"; exit 1 ;;
+esac

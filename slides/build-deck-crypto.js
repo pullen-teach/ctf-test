@@ -22,7 +22,10 @@ const TIER = { warm: MC[1], search: MC[2], logs: MC[3], secrets: MC[4], bonus: A
 const LEVEL = { "Easy": { pts: 100, fill: "E2F5EC", ink: "12704B" }, "Medium": { pts: 200, fill: "FFF4DE", ink: "9A5B00" }, "Hard": { pts: 400, fill: "FDE8EC", ink: "B4233F" }, "Very Hard": { pts: 800, fill: "2A1430", ink: "FF8FB1" } };
 const HEAD = "Arial", BODY = "Calibri", MONO = "Courier New";
 const W = 13.333, H = 7.5, M = 0.6;
-const FOOT = "CyberQuest Academy  ·  Crypto CTF";
+const FOOT = "Lockheed Martin CyberQuest® Academy   ·   Crypto CTF";
+// Read a PNG asset from disk into a data URI (cached) so the .pptx embeds it.
+function fileImg(rel) { return "image/png;base64," + fs.readFileSync(path.join(__dirname, rel)).toString("base64"); }
+const SHIELD = fileImg("assets/cyberquest-shield.png");
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
@@ -43,7 +46,8 @@ function newSlide(titleText, notes, tryCmd) {
     s.addText(titleText, { x: M, y: 0.42, w: tryCmd ? W - 2 * M - 4.3 : W - 2 * M, h: 0.85, fontFace: HEAD, fontSize: 32, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true, fit: "shrink" });
   }
   if (tryCmd) tryIt(s, tryCmd);
-  s.addText(FOOT, { x: M, y: 7.0, w: 6, h: 0.3, fontFace: BODY, fontSize: 10, color: MUTED, margin: 0, isTextBox: true });
+  s.addImage({ data: SHIELD, x: M, y: 6.92, w: 0.3 * 66 / 87, h: 0.3 });
+  s.addText(FOOT, { x: M + 0.34, y: 7.0, w: 6.5, h: 0.3, fontFace: BODY, fontSize: 9.5, color: MUTED, valign: "middle", margin: 0, isTextBox: true });
   s.addText(String(slideNo), { x: W - M - 1, y: 7.0, w: 1, h: 0.3, fontFace: BODY, fontSize: 10, color: MUTED, align: "right", margin: 0, isTextBox: true });
   s.addNotes(notes);
   return s;
@@ -111,6 +115,36 @@ async function iconPng(Icon, color) {
 async function iconCircle(s, Icon, x, y, d, bg) {
   s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color: bg } });
   s.addImage({ data: await iconPng(Icon, WHITE), x: x + d * 0.25, y: y + d * 0.25, w: d * 0.5, h: d * 0.5 });
+}
+// Lighten a hex colour toward white by fraction r (0..1): used for soft card tints.
+function tint(hex, r) {
+  const n = parseInt(hex, 16), R = (n >> 16) & 255, G = (n >> 8) & 255, B = n & 255;
+  const m = (v) => Math.round(v + (255 - v) * r).toString(16).padStart(2, "0");
+  return (m(R) + m(G) + m(B)).toUpperCase();
+}
+// An accent-coloured icon dropped into a soft tinted circle.
+async function iconTintCircle(s, Icon, x, y, d, color) {
+  s.addShape(pres.shapes.OVAL, { x, y, w: d, h: d, fill: { color: tint(color, 0.80) } });
+  s.addImage({ data: await iconPng(Icon, color), x: x + d * 0.27, y: y + d * 0.27, w: d * 0.46, h: d * 0.46 });
+}
+// Decorative mountain + dotted summit trail (top-right of the "How today works" slide).
+let mountainCache = null;
+async function mountainPng() {
+  if (!mountainCache) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 220">
+      <path d="M0 200 L90 120 L150 165 L240 70 L320 150 L380 110 L440 170 L440 220 L0 220 Z" fill="#DCE8F7"/>
+      <path d="M0 220 L70 165 L140 200 L210 140 L300 200 L360 165 L440 210 L440 220 Z" fill="#C4D8F0"/>
+      <path d="M20 205 C120 196 150 172 210 150 C272 127 300 108 360 72" fill="none" stroke="#8FA8CE" stroke-width="4" stroke-dasharray="2 11" stroke-linecap="round"/>
+      <circle cx="70" cy="192" r="8" fill="#2EA66B"/>
+      <circle cx="190" cy="156" r="8" fill="#7448D4"/>
+      <circle cx="300" cy="112" r="8" fill="#D1416B"/>
+      <circle cx="360" cy="72" r="7" fill="#2459D8"/>
+      <rect x="368" y="34" width="4" height="40" rx="2" fill="#2459D8"/>
+      <path d="M372 36 L404 44 L372 55 Z" fill="#2459D8"/>
+    </svg>`;
+    mountainCache = "image/png;base64," + (await sharp(Buffer.from(svg)).resize({ width: 880 }).png().toBuffer()).toString("base64");
+  }
+  return mountainCache;
 }
 
 function darkSlide(notes) {
@@ -183,7 +217,7 @@ function forMission(s, nums) {
 // ---- Part 2 of the crypto deck: the codebreaker's toolkit, in mission order ----
 const MODE = {
   "We do": { color: BLUE, what: "Class calls out each command. Mentor types." },
-  "You do": { color: GREEN, what: "Teams race on the clock. Mentor reveals after." },
+  "You do": { color: GREEN, what: "Students try on their own. Reveal after." },
 };
 
 // ---- the ten crypto missions, in the order the page plays them ----
@@ -322,7 +356,7 @@ async function build() {
   section("Opening");
   s = darkSlide(
     "Welcome the class and introduce the mentors: name, what you do, and one sentence on where you meet cryptography at work.\n\n" +
-    "Promise: 'In the next 90 minutes you will learn how secret codes work, how codebreakers crack them, then compete for 2,700 points against the clock.'\n\n" +
+    "Promise: 'In this session you will learn how secret codes work, how codebreakers think, and crack a cipher the way security pros do.'\n\n" +
     "Before class: the Crypto CTF link is written on the 'Open the CTF' slide in the appendix, and you have watched it reach 'Ready' on a student Chromebook on the school network.");
   s.addText("CyberQuest", { x: M, y: 1.35, w: 6.6, h: 1.3, fontFace: HEAD, fontSize: 72, bold: true, color: WHITE, margin: 0, isTextBox: true });
   s.addText("Crypto CTF: crack the codes, then compete.", { x: M, y: 2.75, w: 6.3, h: 1.1, fontFace: BODY, fontSize: 28, color: T_OUT, margin: 0, isTextBox: true });
@@ -338,28 +372,34 @@ async function build() {
     { text: "Welcome, codebreaker.", options: { color: T_PROMPT, bold: true, breakLine: true } },
     { text: " ", options: { breakLine: true } },
     { text: P, options: { color: T_PROMPT, bold: true } }, { text: "./start-ctf", options: { color: WHITE, bold: true, breakLine: true } },
-    { text: "10 ciphers, plus a warm-up", options: { color: T_OUT, breakLine: true } },
+    { text: "10 ciphers", options: { color: T_OUT, breakLine: true } },
     { text: "2,700 points up for grabs", options: { color: T_OUT, breakLine: true } },
     { text: "Good luck.", options: { color: AMBER, bold: true } },
   ], { x: 7.65, y: 1.85, w: 4.8, h: 4.1, fontFace: MONO, fontSize: 18, valign: "top", margin: 0, isTextBox: true, paraSpaceAfter: 3 });
 
   // ---- run of show ----
-  s = newSlide("Today's mission, in four parts",
-    "Walk the timeline so students know the competition is coming and the theory is short.\n\n" +
-    "Timing for 90 minutes: opening 3 min, Part 1 Crypto fundamentals 10 min, Part 2 the codebreaker's toolkit 25 min (open the Crypto CTF at the start: see the mentor appendix), Part 3 compete 42 min, Part 4 debrief 10 min.\n\n" +
-    "Part 2 teaches the tools in exactly the order the missions need them.\n\n" +
-    "Students who played the Linux CTF will recognise the page. Nobody needs to have played it first: every command is taught here.");
-  const plan = [["10", "Crypto 101", "Where secret codes came from, and the three ways to hide data.", MC[0]], ["25", "Toolkit", "Open the CTF, then the codebreaker's tools in the order the missions use them.", MC[2]], ["42", "Compete", "Ten ciphers, 2,700 points, one clock. Easiest first.", MC[3]], ["10", "Debrief", "Real crypto vs puzzle crypto, and where this leads.", MC[4]]];
-  plan.forEach(([min, name, what, color], i) => {
-    const x = M + i * 3.07;
-    card(s, x, 1.7, 2.87, 3.9);
-    s.addText(min, { x: x + 0.25, y: 1.9, w: 1.9, h: 1.15, fontFace: HEAD, fontSize: 58, bold: true, color, margin: 0, isTextBox: true });
-    text(s, "minutes", x + 0.25, 3.05, 1.9, 0.35, { fontSize: 14, color: MUTED });
-    text(s, name, x + 0.25, 3.55, 1.9, 0.5, { fontFace: HEAD, fontSize: 21, bold: true });
-    text(s, what, x + 0.25, 4.1, 2.4, 1.4, { fontSize: 14.5, color: MUTED });
-  });
-  card(s, M, 5.85, W - 2 * M, 0.75, "FFF4DC");
-  text(s, [{ text: "The deal: ", options: { bold: true } }, { text: "no maths degree needed. Every cipher today can be cracked with a short command and a good guess." }], M + 0.3, 5.85, W - 2 * M - 0.6, 0.75, { valign: "middle", fontSize: 17 });
+  s = newSlide("How today works",
+    "Set expectations up front. This is a focused, mentor-led session, not a race to finish every cipher. The goal is that students understand how codebreakers think - and most of all, how a CTF actually works: read the challenge, spot the method, try a decoder, read the output, adjust, capture a flag.\n\n" +
+    "Say it plainly: 'You will NOT crack every cipher today, and that is fine. We want you to understand the process and feel confident starting a challenge on your own.'\n\n" +
+    "The arc below is the shape of the session: short theory, one flag cracked together, then you start one yourself, then we reflect.");
+  s.addImage({ data: await mountainPng(), x: 9.55, y: 0.12, w: 3.3, h: 1.65 });
+  const arc = [["Concept", "What a crypto CTF is, and why codes matter.", MC[0], fa.FaLightbulb], ["Mental model", "How codebreakers think: identify, then reverse.", MC[1], fa.FaBrain], ["Tools", "A handful of decoders - just what a cipher needs.", MC[2], fa.FaKey], ["Guided", "We crack a cipher together, step by step.", MC[3], fa.FaMapLocationDot], ["Independent", "You start a cipher yourself. Finishing is optional.", MC[4], fa.FaPersonHiking], ["Reflection", "Why it worked, and where this leads.", GREEN, fa.FaClipboardCheck]];
+  const CW = 3.95, CH = 1.98, GX = 4.19;
+  for (let i = 0; i < arc.length; i++) {
+    const [name, what, color, Icon] = arc[i];
+    const x = M + (i % 3) * GX, y = 1.78 + Math.floor(i / 3) * 2.18;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: CW, h: CH, fill: { color: tint(color, 0.9) }, line: { color: tint(color, 0.68), width: 1 }, rectRadius: 0.12 });
+    s.addShape(pres.shapes.OVAL, { x: x + 0.3, y: y + 0.3, w: 0.56, h: 0.56, fill: { color } });
+    s.addText(String(i + 1), { x: x + 0.3, y: y + 0.3, w: 0.56, h: 0.56, fontFace: HEAD, fontSize: 20, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    text(s, name, x + 1.0, y + 0.3, 2.5, 0.56, { fontFace: HEAD, fontSize: 21, bold: true, color, valign: "middle" });
+    text(s, what, x + 0.32, y + 1.0, 2.35, 0.9, { fontSize: 14.5, color: INK });
+    await iconTintCircle(s, Icon, x + CW - 1.12, y + 0.92, 0.92, color);
+    if (i % 3 < 2) s.addShape(pres.shapes.LINE, { x: x + CW + 0.02, y: y + CH / 2, w: GX - CW - 0.04, h: 0, line: { color: "9AA7BD", width: 2, endArrowType: "triangle" } });
+  }
+  const dy = 1.78 + 2 * 2.18 - 0.08;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: dy, w: W - 2 * M, h: 0.84, fill: { color: "EAF2FD" }, line: { color: "CFE0F6", width: 1 }, rectRadius: 0.1 });
+  await iconTintCircle(s, fa.FaGraduationCap, M + 0.28, dy + 0.17, 0.5, BLUE);
+  text(s, [{ text: "The deal: ", options: { bold: true, color: BLUE } }, { text: "no maths degree needed. Spotting what a cipher is and reading what comes back is how everyone learns this." }], M + 1.0, dy, W - 2 * M - 1.3, 0.84, { valign: "middle", fontSize: 16.5 });
 
   // ---- what is a crypto CTF ----
   s = newSlide("What is a crypto CTF?",
@@ -383,6 +423,24 @@ async function build() {
     s.addText([{ text: a, options: { bold: true, fontSize: 20, breakLine: true } }, { text: b, options: { fontSize: 14 } }], { x, y: 5.45, w: 2.6, h: 1.0, fontFace: BODY, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
     if (i < 3) s.addText(">", { x: x + 2.6, y: 5.45, w: 0.47, h: 1.0, fontFace: MONO, fontSize: 24, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
   });
+
+  // ---- the CTF flow (the core activity concept) ----
+  s = newSlide("The flow of every challenge",
+    "This is the single most important idea in the session. Every CTF challenge - and a lot of real security work - runs this same loop. Say it out loud, and point back to it every time the room gets stuck.\n\n" +
+    "The key move is the middle of the loop: you TRY a decoder, CHECK what came back, and ADJUST. Nobody is expected to know the answer up front. Reading the output and adjusting IS the skill. For crypto, 'Observe the clues' is where you ask: is this base64, hex, a shifted alphabet, a hash?\n\n" +
+    "Capturing the flag is just where the loop ends. The habit of read, try, check, adjust is what students should leave with.");
+  const flow = [["Read", "the challenge", fa.FaBookOpen], ["Observe", "the clues", fa.FaMagnifyingGlass], ["Choose", "a decoder", fa.FaScrewdriverWrench], ["Try", "a command", fa.FaTerminal], ["Check", "the output", fa.FaEye], ["Adjust", "if needed", fa.FaArrowsRotate], ["Capture", "the flag", fa.FaFlag], ["Submit", "& reflect", fa.FaCircleCheck]];
+  for (let i = 0; i < flow.length; i++) {
+    const [head, body, Icon] = flow[i];
+    const col = i % 4, row = Math.floor(i / 4);
+    const x = M + col * 3.08, y = 1.65 + row * 2.45, color = MC[i % 6];
+    card(s, x, y, 2.85, 2.2);
+    await iconCircle(s, Icon, x + 0.95, y + 0.25, 0.9, color);
+    text(s, head, x + 0.15, y + 1.28, 2.55, 0.45, { fontFace: HEAD, fontSize: 20, bold: true, align: "center" });
+    text(s, body, x + 0.15, y + 1.72, 2.55, 0.4, { fontSize: 14, color: MUTED, align: "center" });
+    if (col < 3) s.addText(">", { x: x + 2.85, y: y + 0.55, w: 0.23, h: 0.6, fontFace: MONO, fontSize: 20, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  }
+  text(s, "read -> try -> check -> adjust is the loop. Capturing the flag is just where it ends.", M, 6.62, W - 2 * M, 0.35, { fontSize: 13, color: MUTED, align: "center" });
 
   // ===========================================================================
   // PART 1: CRYPTO FUNDAMENTALS
@@ -476,14 +534,14 @@ async function build() {
 
   // ---- identify what you're looking at ----
   s = newSlide("First, identify what you're looking at",
-    "Half of every crypto CTF is recognising the method. Teach these six fingerprints; students will use this slide all through the race.\n\n" +
+    "Half of every crypto CTF is recognising the method. Teach these six fingerprints; students will lean on this slide all session.\n\n" +
     "Base64: letters, digits, + and /, often ending in = or ==. Length a multiple of 4.\n" +
     "Hex: only 0–9 and a–f, an even number of characters.\n" +
     "Morse: only dots, dashes, spaces and slashes.\n" +
     "Caesar or ROT13: real-looking punctuation and word lengths, nonsense letters. A flag shape like XXXX{...}.\n" +
     "Atbash: same look as Caesar. If caesar all finds nothing, try the mirror.\n" +
     "SHA-256: exactly 64 hex characters.\n\n" +
-    "Leave this slide up during the race if you can.");
+    "Leave this slide up while students work if you can.");
   const ids = [["Base64", "RW5jb2RpbmcgaXMg...==", "Letters, digits, + /, ends in =", "base64 -d", MC[0]], ["Hex", "48657820646563...", "Only 0–9 and a–f", "xxd -r -p", MC[1]], ["Morse", "- .... . / -.-. ---", "Only . - and /", "morse", MC[5]], ["Caesar / ROT13", "Mshn: JFIH{...}", "Word shapes kept, letters wrong", "caesar all | grep", MC[3]], ["Atbash", "Uozt: XBYZ{...}", "Same look; caesar all finds nothing", "tr (flipped)", MC[4]], ["SHA-256", "27662c13440b...(64)", "Exactly 64 hex characters", "hashlines | grep", MC[2]]];
   ids.forEach(([name, sample, tell, tool, color], i) => {
     const x = M + (i % 2) * 6.17, y = 1.6 + Math.floor(i / 2) * 1.65;
@@ -494,29 +552,6 @@ async function build() {
     s.addText(tool, { x: x + 3.1, y: y + 0.15, w: 2.65, h: 0.42, fontFace: MONO, fontSize: 13, bold: true, color: T_PROMPT, align: "center", valign: "middle", margin: 0, isTextBox: true });
     mono(s, sample, x + 0.35, y + 0.65, 5.4, 0.35, { fontSize: 13, color: INK, bold: false });
     text(s, tell, x + 0.35, y + 1.02, 5.4, 0.35, { fontSize: 13.5, color: MUTED });
-  });
-
-  // ---- anatomy of the page ----
-  s = newSlide("Anatomy of the Crypto CTF page",
-    "A real screenshot from the middle of a game: warm-up and three flags captured, Mission 4 (Hail Caesar) open, and the brute force running in the terminal.\n\n" +
-    "Walk the eight parts. It is the same page as the Linux CTF, so students who played that one already know it. The Crypto CTF tag is top left; the 'Linux CTF' link switches games (it starts a new game, so don't click it mid-race).\n\n" +
-    "The most common problem in class is typing before clicking inside the terminal. Say it twice.");
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M - 0.05, y: 1.6, w: 7.3, h: 4.34, fill: { color: WHITE }, rectRadius: 0.06, line: { color: LINE, width: 1.5 }, shadow: { type: "outer", color: "12213A", opacity: 0.15, blur: 10, offset: 3, angle: 90 } });
-  s.addImage({ path: path.join(__dirname, "img-crypto", "page.png"), x: M, y: 1.65, w: 7.2, h: 4.235 });
-  const k = 7.2 / 1360, px = (x) => M + x * k, py = (y) => 1.65 + y * k;
-  const P8 = JSON.parse(fs.readFileSync(path.join(__dirname, "img-crypto", "pins.json"), "utf8"));
-  const sorted = [[...P8.track, MC[1]], [...P8.points, AMBER], [...P8.clock, BLUE], [...P8.stepper, MC[0]], [...P8.level, MC[4]], [...P8.copy, MC[3]], [...P8.terminal, "56657E"], [...P8.next, MC[2]]];
-  sorted.forEach(([x, y, color], i) => {
-    s.addShape(pres.shapes.OVAL, { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fill: { color }, line: { color: WHITE, width: 2 } });
-    s.addText(String(i + 1), { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fontFace: HEAD, fontSize: 13, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
-  });
-  text(s, "Mid-game: warm-up and missions 1 to 3 captured, Mission 4 open.", M, 6.1, 7, 0.35, { fontSize: 12, color: MUTED });
-  const parts8 = [["Progress track", "One coloured bar lights up per flag.", MC[1]], ["Points", "Your score, out of 2,750 with the warm-up.", AMBER], ["Clock", "Starts at Mission 1 and counts up.", BLUE], ["Stepper", "0 is the warm-up; a green check per flag.", MC[0]], ["Level and points", "Easy 100 up to Very Hard 800.", MC[4]], ["Copy buttons", "Copy a starting command, then paste it.", MC[3]], ["Terminal", "Click inside it before you type.", "56657E"], ["Next mission", "Unlocks when the flag is captured.", MC[2]]];
-  parts8.forEach(([head, body, color], i) => {
-    const y = 1.62 + i * 0.6;
-    s.addShape(pres.shapes.OVAL, { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fill: { color } });
-    s.addText(String(i + 1), { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fontFace: HEAD, fontSize: 12, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
-    text(s, [{ text: head + "  ", options: { bold: true, fontSize: 15 } }, { text: body, options: { fontSize: 13, color: MUTED } }], 8.6, y, 4.15, 0.5, { valign: "middle" });
   });
 
   // ===========================================================================
@@ -691,32 +726,9 @@ async function build() {
   // ===========================================================================
   // PART 3: THE COMPETITION
   // ===========================================================================
-  section("Part 3 · Rules and warm-up");
-  divider(3, "The competition", "A warm-up, ten ciphers, 2,700 points, one clock. Missions 1 and 2 we crack together. Then teams race.", MC[3], "./crack --all   # 10 flags, 2,700 points",
-    "Section break. If students played around while learning, have everyone reload now for a fresh computer, zero points and a clean clock. This is the ONE time a reload is welcome.\n\nPut the CTF on one half of the projector and these slides on the other, or switch between them.\n\nEach mission has two slides: the brief (show it, read it, ask the three questions) and the walkthrough (reveal it after the class has tried).");
-
-  // ---- scoring ----
-  s = newSlide("How scoring works",
-    "Points come from difficulty, on CyberQuest's scale: Easy 100, Medium 200, Hard 400, Very Hard 800. The ten missions are worth 2,700, plus 50 bonus points for the optional warm-up. Mission 10, the Vault, is the one Very Hard.\n\n" +
-    "The clock counts UP. It waits during the warm-up, starts with Mission 1, and stops when you capture the last flag.\n\n" +
-    "Ranking: most points wins; on a tie, the faster time wins. Hints cost 5% of the mission's points each, charged once. Wrong flags cost nothing: encourage trying.");
-  const lv = [["Easy", "Missions 1, 2, 3"], ["Medium", "Missions 4 to 7"], ["Hard", "Missions 8, 9"], ["Very Hard", "Mission 10: The vault"]];
-  lv.forEach(([name, which], i) => {
-    const L = LEVEL[name], x = M + i * 3.07;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.65, w: 2.87, h: 2.0, fill: { color: L.fill }, rectRadius: 0.12 });
-    s.addText(String(L.pts), { x, y: 1.75, w: 2.87, h: 0.95, fontFace: HEAD, fontSize: 48, bold: true, color: L.ink, align: "center", margin: 0, isTextBox: true });
-    s.addText(name.toUpperCase() + "  ·  points", { x, y: 2.7, w: 2.87, h: 0.35, fontFace: BODY, fontSize: 14, bold: true, color: L.ink, align: "center", margin: 0, isTextBox: true });
-    s.addText(which, { x, y: 3.1, w: 2.87, h: 0.35, fontFace: BODY, fontSize: 13, color: name === "Very Hard" ? "F3C6D4" : MUTED, align: "center", margin: 0, isTextBox: true });
-  });
-  const rules = [[fa.FaStopwatch, "The clock counts up", "It starts with Mission 1 and stops at your last flag. Nobody is cut off.", BLUE], [fa.FaTrophy, "Most points wins", "Tie on points? The faster time wins.", AMBER], [fa.FaLightbulb, "Hints cost 5%", "Of that mission's points, per hint, charged once. Wrong flags cost nothing.", GREEN]];
-  for (let i = 0; i < rules.length; i++) {
-    const [Icon, head, body, color] = rules[i];
-    const x = M + i * 4.11;
-    card(s, x, 3.95, 3.9, 2.5);
-    await iconCircle(s, Icon, x + 0.3, 4.15, 0.75, color);
-    text(s, head, x + 1.25, 4.2, 2.55, 0.65, { fontSize: 19, bold: true, valign: "middle" });
-    text(s, body, x + 0.3, 5.1, 3.35, 1.2, { fontSize: 15, color: MUTED });
-  }
+  section("Part 3 · Capture a flag");
+  divider(3, "Capture a flag", "Crack one cipher together, then you start one yourself. Finishing every cipher is not the goal - understanding the flow is.", MC[3], "./crack   # read, try, check, adjust",
+    "Section break. This is the heart of the session: students doing it, not watching. Crack Mission 1 together, then hand the keyboard over.\n\nPut the CTF on one half of the projector and these slides on the other, or switch between them.\n\nEach mission has two slides: the brief (show it, read it, ask the three questions) and the walkthrough (reveal it after the class has tried). You will not get through all ten, and that is by design - pick the ones that fit your group.");
 
   // ---- the capture routine ----
   s = newSlide("The codebreaker's routine, every time",
@@ -735,47 +747,29 @@ async function build() {
   }
   term(s, M, 5.5, W - 2 * M, 1.0, ["$ submit CYBA{b64-3c9e01f7}   # Correct! +100 points"], { fontSize: 18 });
 
-  // ---- the warm-up ----
-  s = newSlide("Mission 0: the warm-up",
-    "Do this together, before the clock matters.\n\n" +
-    "orientation.txt in the home folder explains the game: how to read a mission's instructions, what a flag looks like, how to submit it, what the replies mean, how hints work, and a list of the crypto toolkit. Its last line is the warm-up flag.\n\n" +
-    "Optional and untimed: worth 50 bonus points, and the sidebar has a Skip warm-up button. The clock only starts with Mission 1.", "cat orientation.txt");
-  numbered(s, [
-    "Type  cat orientation.txt  and read it.",
-    "Find 'Your crypto toolkit': the tools for today.",
-    "The warm-up flag is on its last line. Submit it.",
-    "+50 bonus. Or press Skip warm-up.",
-  ], M, 1.8, 5.6, 1.0, MC[0], 18);
-  card(s, M, 5.95, 5.6, 0.6, "E2F5EC");
-  text(s, "Untimed: the clock starts with Mission 1.", M + 0.3, 5.95, 5.2, 0.6, { valign: "middle", fontSize: 16, bold: true, color: "0F6A45" });
-  term(s, 6.7, 1.6, 6.03, 4.95, ["$ cat orientation.txt", "CTF Orientation", "...", "Your crypto toolkit", "  base64  xxd  tr  sha256sum", "  caesar  morse  xor  vigenere  hashlines", "  Every one explains itself:  caesar --help", "Warm-up flag:", { hi: "CYBA{warmup-...}" }, "$ submit CYBA{warmup-...}", "Correct! +50 points"], { fontSize: 13.5, title: "player@quest" });
-
-  // ---- how rounds work ----
-  s = newSlide("How the competition runs",
-    "Missions 1 and 2 are guided ('We do'): the class tells the mentor what to type and everyone captures together.\n\n" +
-    "Missions 3 to 10 are a race ('You do'): show the brief slide, ask the questions, then let teams go. Reveal each walkthrough once most teams have the flag, or when the room is stuck.\n\n" +
-    "Mentors walk the room: point at the identify slide and --help, ask questions, don't type for students.");
-  const phases = [["Missions 1–2", "We do", "Guided. The class calls out each command; the mentor types; everyone captures together.", "200 pts", BLUE], ["Missions 3–10", "You do", "The race. Teams crack on their own clock. The walkthrough comes after most teams have it.", "2,500 pts", GREEN]];
-  phases.forEach(([which, mode, body, pts, color], i) => {
-    const x = M + i * 6.17;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.7, w: 5.96, h: 3.2, fill: { color }, rectRadius: 0.14 });
-    s.addText(which, { x: x + 0.4, y: 1.9, w: 4, h: 0.5, fontFace: BODY, fontSize: 18, bold: true, color: "E8EEFF", margin: 0, isTextBox: true });
-    s.addText(mode, { x: x + 0.4, y: 2.4, w: 4, h: 0.9, fontFace: HEAD, fontSize: 44, bold: true, color: WHITE, margin: 0, isTextBox: true });
-    s.addText(body, { x: x + 0.4, y: 3.35, w: 5.1, h: 1.2, fontFace: BODY, fontSize: 16, color: WHITE, margin: 0, valign: "top", isTextBox: true });
-    s.addText(pts, { x: x + 4.0, y: 1.9, w: 1.6, h: 0.5, fontFace: MONO, fontSize: 18, bold: true, color: WHITE, align: "right", margin: 0, isTextBox: true });
+  // ---- the learning model (mentor rhythm) ----
+  s = newSlide("How we'll work through it",
+    "Name the teaching loop so the room knows what to expect, and why you keep pausing to ask questions. This is the mentor's rhythm for the guided cipher and for every decoder demo.\n\n" +
+    "Predict is the step people skip. Always ask 'what do you think this will do?' BEFORE running it. A wrong prediction corrected by real output sticks far better than being handed the answer.\n\n" +
+    "Explain closes the loop: a student puts what happened in their own words. If they can explain it, they own it.");
+  const model = [["Teach", "name the idea", MC[0]], ["Ask", "a question first", MC[1]], ["Predict", "what will happen?", MC[2]], ["Try", "run the command", MC[3]], ["Explain", "in your words", MC[4]], ["Apply", "on the next one", GREEN]];
+  model.forEach(([a2, b2, color], i) => {
+    const x = M + i * 2.03;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.9, w: 1.85, h: 2.4, fill: { color }, rectRadius: 0.12 });
+    s.addText(String(i + 1), { x: x + 0.15, y: 2.02, w: 1.55, h: 0.45, fontFace: HEAD, fontSize: 17, bold: true, color: "FFFFFF", margin: 0, isTextBox: true });
+    s.addText(a2, { x: x + 0.1, y: 2.5, w: 1.65, h: 0.8, fontFace: HEAD, fontSize: 22, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true, fit: "shrink" });
+    s.addText(b2, { x: x + 0.1, y: 3.35, w: 1.65, h: 0.85, fontFace: BODY, fontSize: 13, color: "FFFFFF", align: "center", valign: "top", margin: 0, isTextBox: true });
+    if (i < 5) s.addText(">", { x: x + 1.83, y: 2.7, w: 0.22, h: 0.8, fontFace: MONO, fontSize: 18, bold: true, color: MUTED, align: "center", valign: "middle", margin: 0, isTextBox: true });
   });
-  const steps5 = [["Read", "the brief out loud"], ["Identify", "what kind of code"], ["Predict", "which tool, what output"], ["Crack", "one step at a time"], ["Explain", "in plain words"]];
-  steps5.forEach(([a, b], i) => {
-    const x = M + i * 2.48;
-    card(s, x, 5.2, 2.28, 1.25);
-    text(s, a, x + 0.2, 5.3, 2, 0.45, { fontFace: HEAD, fontSize: 19, bold: true, color: MC[i % 6] });
-    text(s, b, x + 0.2, 5.78, 2, 0.6, { fontSize: 14, color: MUTED });
-  });
+  card(s, M, 4.8, W - 2 * M, 1.7, "FFF4DC");
+  text(s, "Watch for", M + 0.3, 4.95, 5, 0.4, { fontFace: HEAD, fontSize: 17, bold: true });
+  bullets(s, ["Ask before you tell - a question beats an answer every time.", "Always get a prediction before running a decoder.", "Let a student explain it back; that's how you know it landed.", "Guide and connect to real work. Don't type for students."], M + 0.3, 5.4, W - 2 * M - 0.6, 1.05, { fontSize: 14.5, paraSpaceAfter: 3 });
 
   // ---- the trail map ----
-  s = newSlide("The trail: ten ciphers, 2,700 points",
-    "The map of the whole competition. Notice the order follows the toolkit from Part 2, and history runs roughly forward: encodings, then classical ciphers, then hashes and XOR, then keyed ciphers.\n\n" +
-    "Suggested pacing: the warm-up together in 3 minutes, missions 1 and 2 together in 10, then the race. Most teams reach Mission 8 or 9 in 35 minutes; the Vault is for the fastest.");
+  s = newSlide("The challenges",
+    "The map of what is available. Leave it up for a moment and let students read the names - but set the expectation: this is a menu, not a to-do list. In one session, you crack the guided one together and students start one or two on their own.\n\n" +
+    "Notice the order follows the toolkit from Part 2, and history runs roughly forward: encodings, then classical ciphers, then hashes and XOR, then keyed ciphers. An early cipher uses a decoder we just practiced.\n\n" +
+    "Do not frame this as a race to the end. Mission 1 is a great start for everyone; where each student goes next is up to them.");
   MS.forEach((c, i) => {
     const x = M + (i % 5) * 2.45, y = 1.6 + Math.floor(i / 5) * 2.45, color = MC[i];
     card(s, x, y, 2.3, 2.3);
@@ -787,15 +781,12 @@ async function build() {
     levelChip(s, c.level, x + 0.18, y + 1.52, 1.95, 10.5);
     mono(s, c.skill, x + 0.18, y + 1.95, 2.0, 0.3, { fontSize: 10, color: MUTED, bold: false, fit: "shrink" });
   });
-  text(s, "Plus Mission 0, the warm-up: optional, untimed, +50 bonus.", M, 6.55, 8, 0.35, { fontSize: 13, color: MUTED });
 
   // ---- the 10 missions: brief + walkthrough ----
-  for (let i = 0; i < MS.length; i++) {
-    if (i === 0) section("Missions 1–2 · Together");
-    if (i === 2) section("Missions 3–10 · The race");
+  function missionPair(i) {
     const c = MS[i], n = i + 1, mode = MODE[c.mode], color = MC[i], L = LEVEL[c.level];
-    s = newSlide(null, "MISSION " + n + " OF " + N + ": " + c.name + "   [" + c.level + ", " + L.pts + " points, " + c.mode + ", about " + c.mins + " minutes]\n\n" +
-      "Show this slide first. Read the brief out loud, then ask the three questions BEFORE anyone types. Take one answer per question; do not confirm or correct yet.\n\n" + c.notes);
+    let s = newSlide(null, "MISSION " + n + " OF " + N + ": " + c.name + "   [" + c.level + ", " + L.pts + " points, " + c.mode + "]\n\n" +
+      "Show this slide first. Read the brief out loud, then ask the three questions BEFORE anyone types. Take one answer per question; do not confirm or correct yet - predicting, then checking, is where the learning happens.\n\n" + c.notes);
     chip(s, "Mission " + n + " of " + N, M, 0.48, 2.0, color, WHITE, 14);
     levelChip(s, c.level, M + 2.15, 0.48, 2.0, 13);
     trail(s, 7.4, 0.52, 5.33, n);
@@ -812,17 +803,16 @@ async function build() {
     text(s, "Before anyone types", 8.25, 2.25, 4.2, 0.45, { fontFace: HEAD, fontSize: 19, bold: true });
     bullets(s, c.ask, 8.25, 2.8, 4.25, 2.3, { fontSize: 15, paraSpaceAfter: 7 });
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 7.95, y: 5.35, w: 4.78, h: 1.15, fill: { color: mode.color }, rectRadius: 0.1 });
-    s.addText(c.mode, { x: 8.2, y: 5.35, w: 1.45, h: 1.15, fontFace: HEAD, fontSize: 24, bold: true, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
-    s.addText(mode.what, { x: 9.65, y: 5.35, w: 2.05, h: 1.15, fontFace: BODY, fontSize: 13, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
-    s.addText([{ text: String(c.mins), options: { fontSize: 26, bold: true, breakLine: true } }, { text: "min", options: { fontSize: 12 } }], { x: 11.75, y: 5.35, w: 0.85, h: 1.15, fontFace: HEAD, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    s.addText(c.mode, { x: 8.2, y: 5.35, w: 1.7, h: 1.15, fontFace: HEAD, fontSize: 24, bold: true, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
+    s.addText(mode.what, { x: 9.95, y: 5.35, w: 2.6, h: 1.15, fontFace: BODY, fontSize: 13.5, color: WHITE, valign: "middle", margin: 0, isTextBox: true });
 
     s = newSlide(null, "WALKTHROUGH " + n + " OF " + N + ": " + c.name + "\n\n" +
-      (c.mode === "You do" ? "Race mission: reveal this slide only after most teams have the flag, or when the room is stuck.\n\n" : "Guided mission: crack it live with the class calling out commands, then use this slide to recap.\n\n") +
+      (c.mode === "You do" ? "Independent mission: reveal this slide only after students have tried, or when the room is stuck. Not everyone needs to reach it - one cracked cipher is a win.\n\n" : "Guided mission: crack it live with the class calling out commands, then use this slide to recap.\n\n") +
       "The slide never shows a real flag: every computer has its own keys and flags, so students still have to run the commands themselves.\n\n" +
       "Ask one student to explain the three steps in their own words. Offer the stretch question to anyone who finished early.\n\n" + c.notes);
     chip(s, "Walkthrough " + n + " of " + N, M, 0.48, 2.3, color, WHITE, 14);
     levelChip(s, c.level, M + 2.45, 0.48, 2.0, 13);
-    trail(s, 7.4, 0.52, 5.33, n + 1);
+    trail(s, 7.4, 0.52, 5.33, n);
     s.addText("Cracking " + c.name, { x: M, y: 0.98, w: W - 2 * M, h: 0.7, fontFace: HEAD, fontSize: 30, bold: true, color: INK, margin: 0, valign: "middle", isTextBox: true });
     term(s, M, 1.85, 7.35, 4.65, c.term, { fontSize: c.fs || 14, title: "player@quest" });
     text(s, "What just happened", 8.25, 1.85, 4.4, 0.4, { fontFace: HEAD, fontSize: 18, bold: true });
@@ -834,9 +824,33 @@ async function build() {
     text(s, "Keys, keywords and flags change on every computer.", M, 6.58, 7.35, 0.3, { fontSize: 11, color: MUTED });
   }
 
-  section("Part 3 · After the race");
+  // ---- guided application: crack a flag together (missions 1-2) ----
+  section("Guided application");
+  missionPair(0);
+  missionPair(1);
+
+  // ---- independent application: now you try (missions 3-10 live in the appendix bank) ----
+  section("Independent application");
+  s = newSlide("Now you try",
+    "This is the heart of the session. Point students at the CTF and let them start a cipher on their OWN. Say clearly: you do NOT have to finish, and you do NOT have to do them in order. Pick one that looks interesting and run the loop: read, observe, try, check, adjust.\n\n" +
+    "Walk the room. Ask questions instead of answering them: 'What kind of code do you think this is?' 'What did the output say?' 'What would you try next?' Resist typing for students.\n\n" +
+    "The remaining ciphers (3-10) are in the mentor appendix as a bank: pull one up if the room wants a nudge, or leave them for self-study. Finishing them is not the goal - confidence starting one is.");
+  text(s, "Pick a cipher and run the loop. You don't have to finish - starting is the win.", M, 1.55, W - 2 * M, 0.5, { fontSize: 18, color: MUTED });
+  const menu = [["Decode base64 or hex", "base64 -d", MC[0]], ["Shift the alphabet back", "caesar", MC[2]], ["Translate dots and dashes", "morse", MC[3]], ["Brute force every key", "caesar 1..25", MC[4]], ["Crack a keyword cipher", "vigenere", "5B6EE1"], ["Chain decoders with a pipe", "base64 -d | rev", "0F9488"]];
+  menu.forEach(([what, cmd, color], i) => {
+    const x = M + (i % 3) * 4.11, y = 2.25 + Math.floor(i / 3) * 1.65;
+    card(s, x, y, 3.9, 1.4);
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 0.12, h: 1.4, fill: { color } });
+    text(s, what, x + 0.35, y + 0.22, 3.4, 0.6, { fontSize: 16.5, bold: true });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x + 0.35, y: y + 0.82, w: 2.4, h: 0.42, fill: { color: TERM }, rectRadius: 0.08 });
+    s.addText(cmd, { x: x + 0.35, y: y + 0.82, w: 2.4, h: 0.42, fontFace: MONO, fontSize: 12.5, bold: true, color: T_PROMPT, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  });
+  card(s, M, 5.9, W - 2 * M, 0.72, "E2F5EC");
+  text(s, [{ text: "Mentor: ", options: { bold: true, color: "0F6A45" } }, { text: "one cipher cracked, understood, and explained back beats ten rushed. Celebrate the process, not the leaderboard." }], M + 0.3, 5.9, W - 2 * M - 0.6, 0.72, { valign: "middle", fontSize: 16 });
+
+  section("Part 3 · Wrapping up");
   // ---- side quests ----
-  s = newSlide("Side quests: for teams that finish early",
+  s = newSlide("Side quests: for anyone who wants more",
     "No flags and no points: teams compare answers out loud.\n\n" +
     "Letter detective: frequency analysis is how Caesar and substitution ciphers were broken for 1,000 years (al-Kindi, 9th century). In English the most common letter is E. In ~/mission4, fold -w1 message.txt | grep '[a-z]' | sort | uniq -c | sort -n | tail -3 shows the most common cipher letters. Is the top one the shift of E? Usually not: the message is too short. That is the lesson: frequency analysis needs lots of text.\n\n" +
     "Secret notes: encrypt a message with vigenere -e and a keyword, write the ciphertext on paper, and whisper the keyword to the next team.\n\n" +
@@ -864,7 +878,7 @@ async function build() {
     "Replay quest builds a brand-new computer with new keys and new flags. Can you beat your time?\n\nThe times in this screenshot are an example.");
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 0.25, y: 1.55, w: 3.1, h: 4.52, fill: { color: WHITE }, rectRadius: 0.06, line: { color: LINE, width: 1.5 }, shadow: { type: "outer", color: "12213A", opacity: 0.15, blur: 10, offset: 3, angle: 90 } });
   s.addImage({ path: path.join(__dirname, "img-crypto", "sidebar-finish.png"), x: M + 0.3, y: 1.6, w: 3.0, h: 3.0 * 752 / 512 });
-  const sc = [["Points", "2,700 for all ten flags, 2,750 with the warm-up.", AMBER], ["Took", "Time since your previous flag. Your biggest Took is the cipher to practise.", BLUE], ["Time", "The clock when you submitted each flag.", MC[3]], ["Replay quest", "New keys, new flags, a fresh clock. Beat your time.", GREEN]];
+  const sc = [["Points", "2,700 for all ten flags.", AMBER], ["Took", "Time since your previous flag. Your biggest Took is the cipher to practise.", BLUE], ["Time", "The clock when you submitted each flag.", MC[3]], ["Replay quest", "New keys, new flags, a fresh clock. Beat your time.", GREEN]];
   sc.forEach(([head, body, color], i) => {
     const y = 1.65 + i * 1.2;
     card(s, 4.6, y, 8.13, 1.05);
@@ -876,8 +890,8 @@ async function build() {
   // ===========================================================================
   // PART 4: DEBRIEF
   // ===========================================================================
-  section("Part 4 · Debrief");
-  divider(4, "Debrief", "Puzzle crypto vs real crypto, what you just did, who gets paid to do it, and how to keep going.", MC[4], "echo 'Jryy qbar' | tr A-Za-z N-ZA-Mn-za-m",
+  section("Part 4 · Reflection");
+  divider(4, "Reflection", "Puzzle crypto vs real crypto, what you just did, who gets paid to do it, and how to keep going.", MC[4], "echo 'Jryy qbar' | tr A-Za-z N-ZA-Mn-za-m",
     "Section break. Applaud the fastest teams, and also the team that got unstuck the most times.\n\nFun closer: have everyone run the command on this slide. It prints 'Well done'.");
 
   // ---- real vs CTF crypto ----
@@ -952,6 +966,37 @@ async function build() {
   // MENTOR APPENDIX
   // ===========================================================================
   section("Mentor appendix");
+
+  s = darkSlide("Mentor appendix: reference for whoever runs the room — the page layout, how flags work under the hood, how to open the CTF, the answer key, and fixes for the usual snags. Not student-facing.");
+  s.addText("Mentor", { x: M, y: 1.5, w: 11, h: 1.0, fontFace: HEAD, fontSize: 40, bold: true, color: T_NOTE, margin: 0, isTextBox: true });
+  s.addText("Appendix", { x: M, y: 2.35, w: 11, h: 1.6, fontFace: HEAD, fontSize: 92, bold: true, color: WHITE, margin: 0, isTextBox: true });
+  s.addText("The page layout, the mechanics, the answer key, and what to do when things go wrong.", { x: M, y: 4.15, w: 10.5, h: 1.0, fontFace: BODY, fontSize: 22, color: T_OUT, margin: 0, valign: "top", isTextBox: true });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 5.35, w: W - 2 * M, h: 0.9, fill: { color: "162238" }, rectRadius: 0.1 });
+  s.addText([{ text: "$ ", options: { color: T_PROMPT, bold: true } }, { text: "man mentor   # for the person running the room", options: { color: WHITE, bold: true } }], { x: M + 0.35, y: 5.35, w: W - 2 * M - 0.7, h: 0.9, fontFace: MONO, fontSize: 20, valign: "middle", margin: 0, isTextBox: true });
+
+  // ---- anatomy of the page ----
+  s = newSlide("Anatomy of the Crypto CTF page",
+    "A real screenshot from the middle of a game: the first three flags captured, Mission 4 (Hail Caesar) open, and the brute force running in the terminal.\n\n" +
+    "Walk the eight parts. It is the same page as the Linux CTF, so students who played that one already know it. The Crypto CTF tag is top left; the 'Linux CTF' link switches games (it starts a new game, so don't click it mid-race).\n\n" +
+    "The most common problem in class is typing before clicking inside the terminal. Say it twice.");
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M - 0.05, y: 1.6, w: 7.3, h: 4.34, fill: { color: WHITE }, rectRadius: 0.06, line: { color: LINE, width: 1.5 }, shadow: { type: "outer", color: "12213A", opacity: 0.15, blur: 10, offset: 3, angle: 90 } });
+  s.addImage({ path: path.join(__dirname, "img-crypto", "page.png"), x: M, y: 1.65, w: 7.2, h: 4.235 });
+  const k = 7.2 / 1360, px = (x) => M + x * k, py = (y) => 1.65 + y * k;
+  const P8 = JSON.parse(fs.readFileSync(path.join(__dirname, "img-crypto", "pins.json"), "utf8"));
+  const sorted = [[...P8.track, MC[1]], [...P8.points, AMBER], [...P8.clock, BLUE], [...P8.stepper, MC[0]], [...P8.level, MC[4]], [...P8.copy, MC[3]], [...P8.terminal, "56657E"], [...P8.next, MC[2]]];
+  sorted.forEach(([x, y, color], i) => {
+    s.addShape(pres.shapes.OVAL, { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fill: { color }, line: { color: WHITE, width: 2 } });
+    s.addText(String(i + 1), { x: px(x) - 0.2, y: py(y) - 0.2, w: 0.4, h: 0.4, fontFace: HEAD, fontSize: 13, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+  });
+  text(s, "Mid-game: missions 1 to 3 captured, Mission 4 open.", M, 6.1, 7, 0.35, { fontSize: 12, color: MUTED });
+  const parts8 = [["Progress track", "One coloured bar lights up per flag.", MC[1]], ["Points", "Your score, out of 2,700.", AMBER], ["Clock", "Starts at Mission 1 and counts up.", BLUE], ["Stepper", "A green check per captured flag.", MC[0]], ["Level and points", "Easy 100 up to Very Hard 800.", MC[4]], ["Copy buttons", "Copy a starting command, then paste it.", MC[3]], ["Terminal", "Click inside it before you type.", "56657E"], ["Next mission", "Unlocks when the flag is captured.", MC[2]]];
+  parts8.forEach(([head, body, color], i) => {
+    const y = 1.62 + i * 0.6;
+    s.addShape(pres.shapes.OVAL, { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fill: { color } });
+    s.addText(String(i + 1), { x: 8.1, y: y + 0.05, w: 0.36, h: 0.36, fontFace: HEAD, fontSize: 12, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    text(s, [{ text: head + "  ", options: { bold: true, fontSize: 15 } }, { text: body, options: { fontSize: 13, color: MUTED } }], 8.6, y, 4.15, 0.5, { valign: "middle" });
+  });
+
   s = newSlide("Mentor appendix: how the Crypto CTF works",
     "MENTOR READING. The Crypto CTF lives in the same GitLab project as the Linux CTF, in public/crypto/. It reuses the same emulator and page code; only the missions, the tools and the Linux image differ.\n\n" +
     "Real-Linux mode boots v86 with crypto.cpio.gz: BusyBox plus five helper scripts (caesar, morse, xor, vigenere, hashlines) in /bin. Every boot generates random flags, random Caesar shift and XOR key, and a random keyword for missions 9 and 10. Only SHA-256 hashes of the flags are kept, so there is no answer file.\n\n" +
@@ -988,14 +1033,14 @@ async function build() {
   s.addText("your-group.gitlab.io/.../crypto/", { x: 8.1, y: 2.55, w: 4.23, h: 1.5, fontFace: MONO, fontSize: 17, bold: true, color: AMBER, align: "center", valign: "middle", margin: 0, isTextBox: true });
   s.addText("Type it exactly. One computer per pair.", { x: 7.7, y: 4.2, w: 5.03, h: 0.4, fontFace: BODY, fontSize: 14, color: T_NOTE, align: "center", margin: 0, isTextBox: true });
   card(s, 7.7, 5.15, 5.03, 1.3, "FFF4DC");
-  text(s, [{ text: "Don't start yet! ", options: { bold: true } }, { text: "The clock waits for Mission 1. The warm-up is untimed, so explore freely." }], 8.0, 5.15, 4.5, 1.3, { valign: "middle", fontSize: 15 });
+  text(s, [{ text: "Don't start yet! ", options: { bold: true } }, { text: "The clock starts when you open Mission 1 — explore the page freely first." }], 8.0, 5.15, 4.5, 1.3, { valign: "middle", fontSize: 15 });
 
   s = newSlide("Mentor appendix: answer key",
     "FOR MENTORS. Hide this slide when presenting.\n\n" +
     "Flags, shifts, XOR keys and keywords are random on every page load and the CTF keeps only fingerprints, so there is no list of flags: play each mission yourself before class.\n\n" +
     "Mission 9 keywords: FALCON ORCHID JUPITER GLACIER PHOENIX LANTERN COMPASS HARBOR. Mission 10 keyword: one of the 100 words in words.txt.\n\n" +
     "In lite mode $(...) is not supported: type the first 8 characters of the hash instead of $(cut -c1-8 ...).");
-  const key = [["0", "Warm-up", "cat orientation.txt;  submit the flag on its last line", "Bonus · 50", MUTED]].concat(MS.map((c, i) => [String(i + 1), c.name, c.answer, c.level + " · " + LEVEL[c.level].pts, MC[i]])).concat([
+  const key = [].concat(MS.map((c, i) => [String(i + 1), c.name, c.answer, c.level + " · " + LEVEL[c.level].pts, MC[i]])).concat([
     ["+", "Letter detective", "fold -w1 message.txt | grep '[a-z]' | sort | uniq -c | sort -n | tail -3", "side quest", MUTED],
     ["+", "Hash race", "hashlines words.txt | grep '^0' | wc -l   (7)", "side quest", MUTED],
   ]);
@@ -1029,6 +1074,21 @@ async function build() {
     text(s, problem, x + 0.25, y + 0.1, 5.5, 0.35, { fontSize: 14.5, bold: true, color: RED });
     text(s, fix, x + 0.25, y + 0.45, 5.5, 0.6, { fontSize: 12.5, color: INK });
   });
+
+  section("Mentor appendix · Mission bank");
+  s = newSlide("Mission bank: missions 3-10",
+    "A reference bank, not a checklist. Missions 1 and 2 are the guided example in the main deck; these eight are here for independent work and self-study.\n\nPull one up when a student wants a nudge on a cipher they chose, or share the deck afterward. In a one-hour session you will not show most of these live - and that's the point.\n\nEach mission has a brief (the clue and three questions) and a walkthrough (one correct path). Flags differ on every computer, so walkthroughs are safe to show.");
+  text(s, "Each has a brief (clue + questions) and a walkthrough (one path). Pull up whatever a student needs.", M, 2.0, W - 2 * M, 0.6, { fontSize: 18, color: MUTED });
+  MS.slice(2).forEach((c, i) => {
+    const x = M + (i % 4) * 3.08, y = 2.9 + Math.floor(i / 4) * 1.75;
+    card(s, x, y, 2.85, 1.5);
+    s.addShape(pres.shapes.OVAL, { x: x + 0.25, y: y + 0.25, w: 0.5, h: 0.5, fill: { color: MC[i + 2] } });
+    s.addText(String(i + 3), { x: x + 0.25, y: y + 0.25, w: 0.5, h: 0.5, fontFace: HEAD, fontSize: 15, bold: true, color: WHITE, align: "center", valign: "middle", margin: 0, isTextBox: true });
+    text(s, c.name, x + 0.9, y + 0.22, 1.85, 0.6, { fontSize: 14, bold: true, valign: "middle" });
+    levelChip(s, c.level, x + 0.25, y + 0.9, 1.75, 9.5);
+    mono(s, c.skill, x + 2.05, y + 0.92, 0.7, 0.3, { fontSize: 9, color: MUTED, bold: false, fit: "shrink" });
+  });
+  for (let i = 2; i < MS.length; i++) missionPair(i);
 
   const out = path.join(__dirname, "CyberQuest-Crypto-CTF.pptx");
   await pres.writeFile({ fileName: out });

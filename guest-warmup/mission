@@ -1,0 +1,63 @@
+#!/bin/sh
+# mission [N]  prints a warm-up brief, the same text as the panel on the page.
+case "$1" in
+  1) cat <<'EOF'
+Warm-up 1: Orientation   [50 points, untimed]
+
+Objective: Read the CTF orientation and submit your first flag.
+
+  cat orientation.txt
+
+orientation.txt in your home folder explains how a CTF works, what a
+flag looks like, how scoring works and the rules. Read it with cat.
+
+The warm-up flag is on the last line. Submit it:
+  submit CYBA{...}
+
+When you have the flag: submit CYBA{...}
+Stuck? hint 1   (free)
+EOF
+  ;;
+  2) cat <<'EOF'
+Warm-up 2: Speed drills   [50 points, untimed]
+
+Objective: Practise the keys that make you fast: Tab, the up arrow, Ctrl+C, and Linux-style copy and paste.
+
+  cd ~/speed
+  cat README.txt
+
+Four drills, four pieces of the flag. Each drill needs one terminal
+skill, and each piece is 4 characters.
+
+Drill 1, Tab: cd tab, type cat dri and press Tab. The long file name
+finishes itself.
+
+Drill 2, up arrow: run again 5 times within 15 seconds. After the first
+one, press up arrow then Enter.
+
+Drill 3, Ctrl+C: run runaway. It never stops by itself. Hold Ctrl and
+press C.
+
+Drill 4, copy and paste: cd ~/speed/paste, then cat code.txt. Highlight
+the long code with the mouse or trackpad (that copies it), type pasteit
+and a space, then middle-click to paste it (right-click also pastes) and
+press Enter. No Ctrl+C or Ctrl+V needed: in a Linux terminal, selecting
+is copying and the middle button pastes.
+
+Put the pieces together in order: submit CYBA{speed-
+PIECE1PIECE2PIECE3PIECE4}. Paste each piece the same way: highlight it,
+then middle-click (or right-click).
+
+When you have the flag: submit CYBA{...}     Stuck? hint 2  (free)
+EOF
+  ;;
+  *) cat <<'EOF'
+The warm-ups:
+   1  Orientation      Warm-up   50 pts
+   2  Speed drills     Warm-up   50 pts
+                                 100 pts
+
+Read one with: mission 1   (or mission 2)
+EOF
+  ;;
+esac

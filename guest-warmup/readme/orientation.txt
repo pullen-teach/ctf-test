@@ -1,0 +1,47 @@
+CTF Orientation
+===============
+
+What is a CTF?
+  Capture The Flag is a cybersecurity competition. Each challenge hides
+  a flag: a secret piece of text. Find it, submit it, and score points.
+
+1. Read a challenge's instructions
+  Every challenge has a folder with a README.txt inside:
+    cd ~/mission1          go into the folder
+    cat README.txt         read its instructions
+    cd ~                   come back home
+  Or, from anywhere:  mission 1
+
+2. Find the flag
+  A flag looks like this:  CYBA{word-1a2b3c4d}
+  It always starts with CYBA{ and ends with }.
+
+3. Submit the flag
+  Type submit, a space, then the whole flag:
+    submit CYBA{word-1a2b3c4d}
+  Copy it exactly: highlight it with the mouse, then paste with a
+  middle-click or a right-click. Do not leave off the CYBA{ or the }.
+
+  What the replies mean:
+    Correct! +50 points                  you captured it
+    Incorrect flag. Keep hunting!        right shape, wrong flag
+    That doesn't look like a flag.       copy the whole thing, CYBA{ to }
+
+4. Stuck?
+  Read the command's built-in help first:  ls --help
+  Then ask for a nudge:  hint 1   (free in the warm-ups)
+
+Scoring
+  Easy 100    Medium 200    Hard 400    Very Hard 800
+  The most points wins. On a tie, the faster time wins.
+  These warm-ups are untimed and the hints are free.
+
+The clock
+  In a real CTF the clock starts when you open Mission 1 and stops when
+  you capture the last flag. The warm-ups here have no clock.
+
+Warm-up 1 (this one, 50 points)
+  You just read this file with cat. Now practice step 3: submit the
+  flag below. Then try Warm-up 2, speed drills:  cd ~/speed
+
+Warm-up flag:

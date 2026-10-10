@@ -65,7 +65,7 @@ MISSIONS = [
     dict(title="Odd one out", objective="Use a pipe to find the only code that appears once.",
          ref=[("sort FILE", "sort the lines of a file"), ("uniq --help", "list everything uniq can do"),
               ("A | B", "send the output of A into B"), ("wc -l FILE", "count the lines in a file")],
-         level="Medium", run=["cd ~/mission7", "head codes.txt"],
+         level="Medium", run=["cd ~/mission6", "head codes.txt"],
          body=["`codes.txt` holds about 900 flags. Every fake one appears **at least twice**. The real flag appears **exactly once**.",
                "Reading 900 lines is no fun. Chain two commands with a **pipe** (`|`): the first one sorts the lines so the "
                "copies sit next to each other, the second one finds the line that has no twin."],
@@ -76,7 +76,7 @@ MISSIONS = [
     dict(title="Permission denied", objective="Unlock a script with chmod and run it.",
          ref=[("ls -l", "show files with their permissions"), ("chmod --help", "list everything chmod can do"),
               ("./FILE", "run a script in this folder")],
-         level="Medium", run=["cd ~/mission8", "ls -l"],
+         level="Medium", run=["cd ~/mission7", "ls -l"],
          body=["The flag is behind a locked door: `unlock.sh`. It is a **script**, a file full of commands that runs when you type `./unlock.sh`.",
                "Try it, and Linux will refuse. `ls -l` shows why: the letters at the start of each line are the file's "
                "**permissions**. `r` means read, `w` means write and `x` means execute (run). This script has no `x`.",
@@ -84,39 +84,42 @@ MISSIONS = [
          useful=["ls", "chmod"],
          hint="Read the help for `chmod`. You want to **add** (`+`) the e**x**ecute permission (`x`) to `unlock.sh`, then run `./unlock.sh` again.",
          hint_cmd="chmod --help", short="the command to look up is chmod.   Read: chmod --help"),
-    dict(title="Decoder ring", objective='Decode a base64 message to reveal the flag.', ref=[("cat FILE", "print a file on the screen"), ("base64 --help", "list everything base64 can do")],
-         level="Hard", run=["cd ~/mission6", "cat message.b64"],
-         body=["It looks like gibberish, but it is not encrypted. It is **encoded** with base64: a way of writing any data "
-               "using only letters, digits, `+`, `/` and `=`.",
-               "There is no secret key. Anyone can decode it."],
-         useful=["base64"],
-         hint="Read the help for `base64` and look for the option that turns base64 back into normal text.",
-         hint_cmd="base64 --help", short="the command to look up is base64.  Read: base64 --help"),
-    dict(title="Layer cake", objective="Peel back every layer of encoding to reveal the flag.",
-         ref=[("base64 -d FILE", "decode a base64 file"), ("A | base64 -d", "decode the output of A"),
-              ("cat FILE", "print a file on the screen")],
-         level="Hard", run=["cd ~/mission9", "cat cake.b64"],
-         body=["You decoded base64 in the last mission. This message was encoded, then the result was encoded **again**, and again. "
-               "Nobody wrote down how many layers there are.",
-               "Copying each result into the next command works, but it is slow. A pipe (`|`) can feed one `base64 -d` "
-               "straight into the next. Keep adding layers until you see the flag."],
-         useful=["base64"],
-         hint="Start with `base64 -d cake.b64`. Still gibberish? Add `| base64 -d` to the end and run it again. Repeat until it says **Flag**.",
-         hint_cmd=None, short="decode, then pipe into another decode: base64 -d cake.b64 | base64 -d | ..."),
+    dict(title="Find and replace", objective="Clean up a corrupted file with sed to reveal the flag.",
+         ref=[("cat FILE", "print a file on the screen"), ("sed 's/old/new/g' FILE", "replace every 'old' with 'new'"), ("sed --help", "list everything sed can do")],
+         level="Hard", run=["cd ~/mission8", "cat message.txt"],
+         body=["`message.txt` is corrupted: the same **junk string** was wedged all through the flag. `cat` it and you will "
+               "see the flag with garbage packed between every character.",
+               "`sed` is Linux's stream editor. Its substitute command, `sed 's/old/new/g'`, replaces every copy of `old` "
+               "with `new`. Replace the junk with **nothing** (an empty `new`) to delete it.",
+               "Spot the junk string first, then strip every copy to read the flag."],
+         useful=["sed"],
+         hint="Find the repeating junk in `message.txt`, then delete it with an empty replacement: `sed 's/JUNK//g' message.txt`.",
+         hint_cmd="sed --help", short="strip the junk with sed: sed 's/JUNK//g' message.txt"),
+    dict(title="Forge the key", objective="Pull fields out of a table with awk, save them, and forge the flag.",
+         ref=[("awk '{print $3}' FILE", "print the 3rd field of every line"), ("awk '/word/{print $3}' FILE", "only lines that contain 'word'"),
+              ("A > FILE", "save the output of A into FILE"), ("forge FILE", "build the flag from a file of parts")],
+         level="Hard", run=["cd ~/mission9", "cat records.txt"],
+         body=["`records.txt` is an access table with three columns: `user role token`. Three rows have the role **admin**, and "
+               "their tokens, in order, are the three parts of the flag.",
+               "`awk` pulls columns out of text. `awk '/admin/{print $3}' records.txt` prints the token (the 3rd field) of every "
+               "admin row. Save those parts to a file with `>`.",
+               "Then run the little assembler, `forge`, on that file: it builds the flag from the parts you saved."],
+         useful=["awk", "forge"],
+         hint="Pull the admin tokens, save them, then forge:  `awk '/admin/{print $3}' records.txt > keys.txt`  then  `forge keys.txt`.",
+         hint_cmd=None, short="awk '/admin/{print $3}' records.txt > keys.txt ; forge keys.txt"),
     dict(title="Endgame", objective="Recover three hidden pieces and put the final flag together.",
          ref=[("find DIR -name PATTERN", "search a folder tree by name"), ("grep TEXT FILE", "show the lines that contain TEXT"),
-              ("cut --help", "pull one field out of a line"), ("base64 -d", "decode base64"),
-              ("chmod +x FILE", "make a file runnable")],
+              ("cut -d= -f4", "pull the 4th =-separated field"), ("chmod +x FILE", "make a file runnable"), ("./FILE", "run a script")],
          level="Very Hard", run=["cd ~/mission10", "cat README.txt"],
          body=["The final mission uses **everything** you have learned. The flag was split into three pieces, and each one "
                "is hidden a different way. `README.txt` tells you where each piece is.",
                "Put the pieces together in order, joined with dashes: `CYBA{piece1-piece2-piece3}`.",
-               "There are no new commands here. `find`, `grep`, `cut`, `base64`, `chmod` and pipes are all you need."],
-         useful=["find", "grep", "cut", "base64", "chmod"],
+               "There are no new commands here. `find`, `grep`, `cut`, `chmod` and pipes are all you need."],
+         useful=["find", "grep", "cut", "chmod"],
          hint="Take one piece at a time. **Piece 1:** hidden file names start with a dot, so search `vault` for names that match `.*`. "
-              "**Piece 2:** `grep` the intruder's name, then decode their token (`cut` can pull the token out of the line). "
-              "**Piece 3:** you have opened a locked script before.",
-         hint_cmd=None, short="one piece at a time: find (1), grep + cut + base64 (2), chmod (3)."),
+              "**Piece 2:** `grep` the intruder's name, then `cut` the token out of the line (it is right after `token=`). "
+              "**Piece 3:** you have opened a locked script before: `chmod +x`, then run it.",
+         hint_cmd=None, short="one piece at a time: find (1), grep + cut (2), chmod + run (3)."),
 ]
 N = len(MISSIONS)
 
@@ -149,6 +152,16 @@ WARMUP2 = dict(title="Speed drills", level="Warm-up", points=50,
 POINTS = {"Easy": 100, "Medium": 200, "Hard": 400, "Very Hard": 800}
 for _m in MISSIONS: _m["points"] = POINTS[_m["level"]]
 TOTAL_POINTS = sum(m["points"] for m in MISSIONS)
+LEARNED = [
+    "Practiced basic Linux navigation with <code>pwd</code>, <code>cd</code> and <code>ls</code>.",
+    "Read files with <code>cat</code> and made commands explain themselves with <code>--help</code>.",
+    "Found hidden files with <code>ls -a</code> and searched a folder tree with <code>find</code>.",
+    "Searched a 12,000-line log with <code>grep</code>.",
+    "Found the one unique line with <code>sort | uniq -u</code>: chaining commands with pipes.",
+    "Read permissions with <code>ls -l</code> and unlocked a script with <code>chmod +x</code>.",
+    "Cleaned up a corrupted file with <code>sed</code>, and pulled fields out of a table with <code>awk</code>.",
+    "Combined <code>find</code>, <code>grep</code>, <code>cut</code> and <code>chmod</code> to beat the Very Hard Endgame.",
+]
 # Hints, in tiers: each one gives more direction than the last. Each costs 5% of the
 # mission's points, charged once. Easy missions get one hint; harder ones get more.
 HINT_TIERS = {
@@ -163,13 +176,12 @@ HINT_TIERS = {
                     "`uniq -u` prints only the lines that appear exactly once. Put it at the end of the pipe."],
     "Permission denied": ["`ls -l` shows the permissions: there is no `x`, so the script is not allowed to run. Read `chmod --help` to see how to **add** a permission.",
                           "`chmod +x unlock.sh` adds the execute permission. Then run it with `./unlock.sh`."],
-    "Decoder ring": ["Letters, digits and an `=` at the end: that's **base64**. Read `base64 --help` and look for the option that **decodes**.",
-                     "`base64 -d message.b64` turns it back into normal text."],
-    "Layer cake": ["Decode once with `base64 -d cake.b64`. Still looks like base64? Then there is another layer underneath.",
-                   "Pipe one decode into the next: `base64 -d cake.b64 | base64 -d`. Press the Up arrow and add another `| base64 -d` each time.",
-                   "There are 4 to 6 layers. Stop when the output starts with `Flag:`. Garbage symbols mean you decoded once too many: remove the last pipe."],
+    "Find and replace": ["Find the junk string that repeats in `message.txt` - it is wedged between every character of the flag. Then read `sed --help` for the **substitute** command.",
+                         "`sed 's/JUNK//g' message.txt` replaces every copy of the junk with nothing. Use the exact junk string you spotted."],
+    "Forge the key": ["`awk '/admin/{print $3}' records.txt` prints the token (3rd field) of every admin row. There are three, in order.",
+                      "Save them to a file, then forge the flag:  `awk '/admin/{print $3}' records.txt > keys.txt`  then  `forge keys.txt`."],
     "Endgame": ["**Piece 1:** hidden names start with a dot. `find vault -name \".*\" -type f` lists every hidden file in the tree. `cat` each one: the decoys say so.",
-                "**Piece 2:** `grep` the intruder's name in `auth.log`. The token is everything after `token=`. Decode it with `echo TOKEN | base64 -d`.",
+                "**Piece 2:** `grep` the intruder's name in `auth.log`. The token is everything after `token=`; `cut -d= -f4` pulls it out.",
                 "**Piece 3:** `unlock.sh` is locked, just like Mission 7: `chmod +x unlock.sh`, then `./unlock.sh`.",
                 "Join the three 6-character values with dashes, in order: `CYBA{piece1-piece2-piece3}`. Leave out the words \"piece 1:\"."],
 }
@@ -221,8 +233,7 @@ def brief_warmup2():
     return "\n".join(out) + "\n"
 
 def overview():
-    lines = ["Your missions:", "   0  %-28s %-9s %4d pts  (bonus, untimed)" % ("Warm-up (optional)", "Bonus", WARMUP["points"]),
-             "  %2d  %-28s %-9s %4d pts  (bonus, untimed)" % (SPEED, "Speed drills (optional)", "Bonus", WARMUP2["points"])] + ["  %2d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
+    lines = ["Your missions:"] + ["  %2d  %-28s %-9s %4d pts" % (i + 1, m["title"], m["level"], m["points"]) for i, m in enumerate(MISSIONS)]
     lines += ["  %s %4d pts" % (" " * 42, TOTAL_POINTS)]
     return "\n".join(lines + ["", "Read one with: mission 1   (up to %d)" % N]) + "\n"
 
@@ -249,8 +260,7 @@ def readme_home(kc=False):
                       "with that mission's instructions. Read one with:  cat README.txt", "", "How to play"] + steps +
                      ["", "Missions"] + rows + ["  %s %4d pts" % (" " * 42, TOTAL_POINTS), "",
                       "Flags change every time the %s." % ("scenario starts" if kc else "page loads"), "",
-                      "New to CTFs? Warm up first (optional, %d bonus points):  cat orientation.txt" % WARMUP["points"],
-                      "Then build speed (optional, %d more):                   cd ~/speed" % WARMUP2["points"], ""])
+                      "New to CTFs? Do the Warm-ups module first (on the home page): it covers how a CTF works and the keyboard basics.", ""])
 
 def orientation(kc=False):
     check = "     then press CHECK" if kc else ""
@@ -311,7 +321,7 @@ def hint_file(i):
     return "\n".join(out) + "\n"
 
 def readmes(loglines, kc=False):
-    r = {"home": readme_home(kc), "orientation": orientation(kc), "speed": brief_warmup2()}
+    r = {"home": readme_home(kc)}
 
     r.update({str(i + 1): readme(i, loglines, kc) for i in range(N)})
     return r
@@ -321,8 +331,7 @@ def hint_line(i): return "Mission %d: %s" % (i + 1, MISSIONS[i]["short"])
 def write_guest():
     sh = ["#!/bin/sh", "# mission [N]  prints a mission brief, the same text as the panel on the page.",
           "# Generated by guest/make-missions.py: edit that file, not this one.", 'case "$1" in']
-    sh += ["  0) cat <<'EOF'", brief_warmup() + "EOF", "  ;;"]
-    sh += ["  %d|speed) cat <<'EOF'" % SPEED, brief_warmup2() + "EOF", "  ;;"]
+    pass
     for i in range(N):
         sh += ["  %d) cat <<'EOF'" % (i + 1), brief(i, WEB_LOG) + "EOF", "  ;;"]
     sh += ["  *) cat <<'EOF'", overview() + "EOF", "  ;;", "esac", ""]
@@ -333,8 +342,7 @@ def write_guest():
          "# charged once: the page keeps the score when it sees the [quest] line. The warm-up hint is free.",
          "# Generated by guest/make-missions.py: edit that file, not this one.",
          'case "$1" in',
-         "  0) echo %s; exit 0 ;;" % sq("Mission 0: " + WARMUP["hint"]),
-         "  %d|speed) echo %s; exit 0 ;;" % (SPEED, sq("Speed drills: " + WARMUP2["hint"]))]
+         ]
     for i, m in enumerate(MISSIONS):
         h += ["  %d) pts=%d; cost=%d; total=%d" % (i + 1, m["points"], hint_cost(m), len(m["hints"]))]
         h += ["     h%d=%s" % (k + 1, sq(t)) for k, t in enumerate(m["hints"])]
@@ -354,12 +362,12 @@ def write_guest():
           'echo "Hint $((have + 1)) of $total costs $cost points (5% of $pts), charged once."',
           'echo "To see it, type:  hint $1 --show"', ""]
     open(os.path.join(HERE, "hint"), "w").write("\n".join(h))
-    pts = " ".join(str(m["points"]) for m in [WARMUP] + MISSIONS + [WARMUP2])
+    pts = " ".join(str(m["points"]) for m in MISSIONS)
     sub = ["#!/bin/sh", "# submit <flag>  checks your flag against every mission and shows its points.",
            "# Generated by guest/make-missions.py: edit that file, not this one.",
            'if [ -z "$1" ]; then echo "Usage: submit CYBA{...}"; exit 1; fi',
            "h=$(printf '%s' \"$1\" | sha256sum | cut -d' ' -f1)",
-           "n=-1",
+           "n=0",
            "for p in %s; do" % pts,
            "  n=$((n + 1))",
            '  if [ "$h" = "$(cat /etc/quest/$n)" ]; then',
@@ -382,11 +390,8 @@ def patch(path, start, end, new):
 def write_lite():
     p = os.path.join(ROOT, "public", "lite.js")
     texts = {str(i + 1): brief(i, WEB_LOG) for i in range(N)}
-    texts["0"] = brief_warmup()
-    texts[str(SPEED)] = texts["speed"] = brief_warmup2()
+    pass
     hints = {i + 1: [plain(t) for t in m["hints"]] for i, m in enumerate(MISSIONS)}
-    hints[0] = "Mission 0: " + plain(WARMUP["hint"])
-    hints[SPEED] = "Speed drills: " + plain(WARMUP2["hint"])
     block = ("  // Mission briefs and hints. Generated by guest/make-missions.py.\n"
              "  const MISSION_TEXT = " + json.dumps(texts, indent=0) + ";\n"
              "  const MISSION_OVERVIEW = " + json.dumps(overview()) + ";\n"
@@ -394,7 +399,7 @@ def write_lite():
              "  const MISSION_COUNT = " + str(N) + ";\n"
              "  const README_TEXT = " + json.dumps(readmes(WEB_LOG), indent=0) + ";\n"
              "  const HINT_COST = " + json.dumps({i + 1: hint_cost(m) for i, m in enumerate(MISSIONS)}) + ";\n"
-             "  const MISSION_POINTS = " + json.dumps(dict([(0, WARMUP["points"])] + [(i + 1, m["points"]) for i, m in enumerate(MISSIONS)] + [(SPEED, WARMUP2["points"])])) + ";\n"
+             "  const MISSION_POINTS = " + json.dumps(dict([(i + 1, m["points"]) for i, m in enumerate(MISSIONS)])) + ";\n"
              "  // End of generated briefs.\n")
     s = open(p).read()
     if "// Mission briefs and hints. Generated" in s:
@@ -411,16 +416,9 @@ def write_panel():
         notes = [html(fill(b, WEB_LOG)) for b in m["body"] if isinstance(b, str) and not b.endswith(":")]
         out.append(dict(title=m["title"], level=m["level"], points=m["points"], hintCost=hint_cost(m), objective=m["objective"], run=m["run"],
                         ref=[list(r) for r in m["ref"]], notes=notes, hints=[html(t) for t in m["hints"]]))
-    w = WARMUP
-    warm = dict(title=w["title"], level=w["level"], points=w["points"], objective=w["objective"], run=w["run"],
-                ref=[list(r) for r in w["ref"]], notes=[html(b) for b in w["body"]], hints=[html(w["hint"])], hintCost=0)
-    w2 = WARMUP2
-    warm2 = dict(title=w2["title"], level=w2["level"], points=w2["points"], objective=w2["objective"], run=w2["run"],
-                 ref=[list(r) for r in w2["ref"]], notes=[html(b) for b in w2["body"]], hints=[html(w2["hint"])], hintCost=0, id=SPEED)
     block = ("  // Generated by guest/make-missions.py: edit that file, not this one.\n"
              "  const MISSIONS = " + json.dumps(out, indent=2).replace("\n", "\n  ") + ";\n"
-             "  const WARMUP = " + json.dumps(warm) + ";\n"
-             "  const WARMUP2 = " + json.dumps(warm2) + ";\n")
+             "  const LEARNED = " + json.dumps(LEARNED) + ";\n")
     p = os.path.join(ROOT, "public", "guide.js")
     s = open(p).read()
     a = s.index("  // Generated by guest/make-missions.py") if "// Generated by guest/make-missions.py" in s else s.index("  const MISSIONS = [")
@@ -482,5 +480,5 @@ def write_killercoda():
                              for i, m in enumerate(MISSIONS)]
     open(p, "w").write(json.dumps(j, indent=2) + "\n")
 
-write_guest(); write_lite(); write_panel(); write_killercoda()
+write_guest(); write_lite(); write_panel()
 print("Wrote %d missions." % N)
